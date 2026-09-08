@@ -86,9 +86,9 @@ def test_user_drag_emits_once(control: ColormapIntesityControlFull, qtbot: QtBot
     emissions = []
     control.state_changed.connect(lambda: emissions.append(1))
 
-    def send(event_type, button, buttons):
+    def send(event_type, trigger_button, held_buttons):
         position = QtCore.QPointF(viewport.rect().center())
-        event = QtGui.QMouseEvent(event_type, position, button, buttons, QtCore.Qt.NoModifier)
+        event = QtGui.QMouseEvent(event_type, position, trigger_button, held_buttons, QtCore.Qt.NoModifier)
         QtWidgets.QApplication.sendEvent(viewport, event)
 
     send(QtCore.QEvent.MouseButtonPress, QtCore.Qt.LeftButton, QtCore.Qt.LeftButton)
