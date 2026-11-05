@@ -35,7 +35,7 @@ from devices import (
     load_screen,
 )
 from pydm.utilities import IconFont
-from qtpy.QtCore import QEvent, QPoint, QRect, QSize, Qt
+from qtpy.QtCore import QEvent, QPoint, QRect, QRectF, QSize, Qt
 from qtpy.QtGui import QBrush, QColor, QIcon, QMouseEvent, QPainter, QPen
 from qtpy.QtWidgets import QHBoxLayout, QMenu, QPushButton, QSizePolicy, QToolButton, QToolTip, QVBoxLayout, QWidget
 
@@ -464,13 +464,16 @@ class AreaButton(OpenerButtonMixin, QPushButton):
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        rect = self.rect().adjusted(0, 0, -1, -1)
+        rect = self.rect()
         painter.fillRect(rect, self.color)
         hovered = self.openers and self.underMouse()
         if hovered:
             painter.fillRect(rect, PRESSED_FILL if self.isDown() else HOVER_FILL)
-        painter.setPen(QPen(HOVER_BORDER, 2) if hovered else QPen(self.border, 1))
-        painter.drawRect(rect)
+        pen = QPen(HOVER_BORDER, 2) if hovered else QPen(self.border, 1)
+        painter.setPen(pen)
+        # Lines are centered on their coordinates; inset by half the pen so the outline covers whole pixels
+        half = pen.widthF() / 2
+        painter.drawRect(QRectF(rect).adjusted(half, half, -half, -half))
         font = painter.font()
         font.setPixelSize(max(7, round(self.hall_height * self.label_size)))
         painter.setFont(font)
@@ -641,7 +644,7 @@ class Hall(QWidget):
                 if openers:
                     tooltip = f"{rack}:\n" + "\n".join(opener.title for opener in openers)
                 else:
-                    tooltip = f'{rack}: no toolbar button named "... ({rack})" (or add opens: in config/floorplan.yaml)'
+                    tooltip = f'{rack}: no toolbar button named "... ({rack})"'
                 area = self.make_area(
                     rack,
                     openers,
