@@ -22,7 +22,6 @@ Macros (all optional):
 """
 
 import logging
-import os
 import sys
 from pathlib import Path
 
@@ -51,10 +50,6 @@ logger = logging.getLogger(__name__)
 DEFAULT_TOOLBAR = APP_DIR / "config" / "las_toolbar.yaml"
 DOCK_WIDTH = 850
 
-# Let toolbar/BTPS shell buttons find dev/v1/bin/las-open-device with the same python we run in.
-os.environ["PATH"] = f"{APP_DIR / 'bin'}{os.pathsep}{os.environ.get('PATH', '')}"
-os.environ.setdefault("LAS_DEV_PYTHON", sys.executable)
-
 
 class LasHome(Display):
     def __init__(self, parent=None, args=None, macros=None):
@@ -76,6 +71,8 @@ class LasHome(Display):
             self.grid.deviceTypes = device_types
         if device_db:
             self.grid.deviceDatabase = device_db
+        # The BTPS cell runs this toolbar's "BTPS Overview", as in dev/las
+        self.grid.toolbarFile = self.toolbar_file
         self.grid.beamline = self.beamline
 
         self.dock = TabDock()

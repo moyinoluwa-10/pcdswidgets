@@ -1,31 +1,58 @@
 import json
 import os
-import re
 import subprocess
 import sys
 from pathlib import Path
 
+import grid as grid_module
 import pytest
 from alarm import AlarmLevel, PVAlarmCircle
 from devices import (
     DeviceInfo,
     _entry_to_info,
-    find_device,
     find_device_type,
     group_devices,
     load_device_types,
     load_devices,
 )
-from grid import GridAlarmCircle, LasIndicatorGrid, PVIndicatorCell
+from grid import GridAlarmCircle, LasIndicatorGrid, PVIndicatorCell, PVIndicatorGroup, load_toolbar_tools
 from pydm.display import ScreenTarget, load_file
 from pydm.widgets import PyDMEmbeddedDisplay
 from pyqtgraph import GraphicsView
 from pytestqt.qtbot import QtBot
-from qtpy.QtWidgets import QWidget
+from qtpy.QtCore import QEvent, QPoint, Qt
+from qtpy.QtGui import QMouseEvent
+from qtpy.QtWidgets import QLabel, QWidget
+
+from pcdswidgets.common.dock.tab_dock import TabDock
 
 APP_DIR = Path(__file__).resolve().parent.parent
 FORBIDDEN = ("happi", "ophyd", "pcdsdevices", "typhos", "lucid")
 CAM = {"CAM": "LAS:LHN:BAY1:CAM:02", "NAME": "cam", "DESC": "Bay 1 cam"}
+RUN_BTPS = "/cds/group/pcds/epics-dev/screens/pydm/las/bts/run_btps.sh"
+
+
+@pytest.fixture(autouse=True)
+def no_external_commands(monkeypatch):
+    """Never launch the BTPS or other external tools from the tests."""
+    launched = []
+    monkeypatch.setattr(grid_module, "run_command", lambda commands: launched.extend(commands))
+    return launched
+
+
+@pytest.fixture
+def grid(qtbot: QtBot) -> LasIndicatorGrid:
+    widget = LasIndicatorGrid()
+    qtbot.addWidget(widget)
+    widget.beamline = "LAS"
+    return widget
+
+
+def press(widget: QWidget, button=Qt.LeftButton) -> bool:
+    """Send a mouse press through the widget's event filter, as a click on it (or its indicator) does."""
+    event = QMouseEvent(QEvent.MouseButtonPress, QPoint(2, 2), button, button, Qt.NoModifier)
+    return widget.eventFilter(widget, event)
+
 
 # Screens with pyqtgraph views (the camera image) live for the whole session:
 # deleting one mid-session can segfault in pyqtgraph's named-ViewBox "destroyed" handler, in a later test.
@@ -71,9 +98,6 @@ def test_json_database_filters_like_happi_search(tmp_path):
     path.write_text(json.dumps(db))
     assert [dev.name for dev in load_devices("LAS", path)] == ["a", "d"]
     assert load_devices("LAS", path)[1].prefix == ""
-    assert find_device("c", path).name == "c"
-    with pytest.raises(KeyError):
-        find_device("nope", path)
 
 
 def test_group_devices_skips_missing_keys():
@@ -98,8 +122,14 @@ def test_happi_kwargs_are_filled_in_from_the_entry():
 
 
 def test_every_las_device_has_a_screen():
+    """Every device opens a screen, except the toolbar devices (the BTPS), which run a toolbar button."""
     types = load_device_types()
+    tools = load_toolbar_tools()
+    assert list(tools) == ["las_btps"]
     for device in load_devices("LAS"):
+        if device.name in tools:
+            assert find_device_type(device, types) is None, device
+            continue
         dtype = find_device_type(device, types)
         assert dtype is not None, device
         assert Path(dtype.screen_path()).is_file(), dtype.screen_path()
@@ -111,7 +141,8 @@ def test_device_types_point_at_local_screens():
     types = load_device_types()
     assert types["pcdsdevices.epics_motor.SmarAct"].screen_path() == str(APP_DIR / "screens" / "smaract.py")
     assert types["pcdsdevices.epics_motor.SmarAct"].indicator_pvs == ["{prefix}.RBV"]
-    assert len(types["pcdsdevices.lasers.btps.BtpsState"].indicator_pvs) == 732
+    # The BTPS runs the toolbar's "BTPS Overview" and has no status dot, so it has no device type (as in dev/las)
+    assert "pcdsdevices.lasers.btps.BtpsState" not in types
     for dtype in types.values():
         assert Path(dtype.screen_path()).is_relative_to(APP_DIR), dtype.device_class
 
@@ -136,15 +167,13 @@ def test_find_device_type_by_short_name():
         ("las_basler_settings.ui", {"CAM": CAM["CAM"]}),
         ("smaract.py", {"MOTOR": "LAS:BTS:MCS2:01:m1", "NAME": "m1"}),
         ("env_monitor.ui", {"PREFIX": "LAS:LHN:ADC:01:BHC:AI2", "NAME": "env"}),
-        ("btps/btps.ui", {}),
     ],
 )
 def test_screens_load_with_all_macros_filled(qtbot: QtBot, screen: str, macros: dict[str, str]):
     display = load_file(str(APP_DIR / "screens" / screen), macros=macros, target=ScreenTarget.DIALOG)
     add_widget(qtbot, display)
-    # Embedded displays load lazily (hidden BTPS tabs only when shown); force them so their macros are checked too
+    # Embedded displays load lazily; force them so their macros are checked too
     for child in display.findChildren(PyDMEmbeddedDisplay):
-        child.loadWhenShown = False
         child.load_if_needed()
         assert child.embedded_widget is not None, child.filename
     addresses = channel_addresses(display)
@@ -179,27 +208,22 @@ def test_smaract_screen_has_expert_and_advanced_panels(qtbot: QtBot):
     assert display.windowTitle() == "las_bts_mcs2_01_m1"
 
 
-def test_btps_screens_have_no_typhos_commands():
-    for path in (APP_DIR / "screens" / "btps").glob("*.ui"):
-        assert not re.search(r"<string>typhos ", path.read_text()), path
-
-
-def test_grid_builds_from_snapshot(qtbot: QtBot):
-    grid = LasIndicatorGrid()
-    qtbot.addWidget(grid)
-    grid.beamline = "LAS"
+def test_grid_builds_from_snapshot(grid: LasIndicatorGrid):
     cells = grid.findChildren(PVIndicatorCell)
-    indicators = grid.findChildren(GridAlarmCircle)
     assert len(grid.devices) == 44
-    assert len(indicators) == 44
     assert sum(len(cell.devices) for cell in cells) == 44
+    # Every device but the BTPS has a status dot, with a thin black outline as in dev/las
+    dots = grid.findChildren(GridAlarmCircle)
+    assert len(dots) == 43
+    assert all(dot.penStyle == Qt.SolidLine and dot.penColor.name() == "#000000" and dot.penWidth == 1 for dot in dots)
 
 
-def test_grid_opens_pydm_screen(qtbot: QtBot):
-    grid = LasIndicatorGrid()
-    qtbot.addWidget(grid)
-    grid.beamline = "LAS"
-    cell = next(cell for cell in grid.findChildren(PVIndicatorCell) if cell.devices)
+def test_grid_opens_pydm_screen(qtbot: QtBot, grid: LasIndicatorGrid):
+    cell = next(
+        cell
+        for cell in grid.findChildren(PVIndicatorCell)
+        if cell.devices and not cell.tools.keys() & {device.name for device in cell.devices}
+    )
     device = cell.devices[0]
     widget = cell.show_device(device)
     add_widget(qtbot, widget)
@@ -207,9 +231,44 @@ def test_grid_opens_pydm_screen(qtbot: QtBot):
     assert cell.show_device(device) is widget
 
 
-def test_unknown_class_gets_placeholder(qtbot: QtBot):
-    grid = LasIndicatorGrid()
-    qtbot.addWidget(grid)
+def test_btps_cell_runs_the_toolbar_command(grid: LasIndicatorGrid, no_external_commands):
+    """As in dev/las: no status dot, and a click runs the toolbar's "BTPS Overview" in its own window."""
+    cell = next(cell for cell in grid.findChildren(PVIndicatorCell) if [d.name for d in cell.devices] == ["las_btps"])
+    assert not cell.findChildren(GridAlarmCircle)
+    assert cell.findChildren(QLabel)
+    assert press(cell)
+    assert no_external_commands == [RUN_BTPS]
+    # Its row header (the BTPS row has only the BTPS) does the same
+    row = next(group for group in grid.findChildren(PVIndicatorGroup) if group.title == "BTPS")
+    assert press(row)
+    assert no_external_commands == [RUN_BTPS, RUN_BTPS]
+
+
+def test_btps_is_an_external_entry_in_menus(qtbot: QtBot, grid: LasIndicatorGrid, no_external_commands):
+    """The Bay 1 column menu lists the BTPS as an external entry, and "Open All" leaves it out."""
+    # The menus' dock entries need a TabDock, as in the home screen
+    dock = TabDock()
+    qtbot.addWidget(dock)
+    bay1 = next(group for group in grid.findChildren(PVIndicatorGroup) if group.title == "Bay 1")
+    assert "las_btps" in [device.name for device in bay1.devices]
+    assert "las_btps" not in bay1.get_all_titles()
+    bay1._menu_shown()
+    actions = {action.text(): action for action in bay1.device_menu.actions()}
+    assert "Open All" in actions and "las_btps" not in actions
+    actions["BTPS Overview \u2197"].trigger()
+    assert no_external_commands == [RUN_BTPS]
+    # Showing the menu again doesn't add duplicates
+    bay1._menu_shown()
+    assert [action.text() for action in bay1.device_menu.actions()].count("BTPS Overview \u2197") == 1
+
+
+def test_missing_toolbar_button_runs_nothing(tmp_path):
+    toolbar = tmp_path / "toolbar.yaml"
+    toolbar.write_text("Tools:\n  buttons: {}\n")
+    assert load_toolbar_tools(toolbar)["las_btps"].commands == []
+
+
+def test_unknown_class_gets_placeholder(qtbot: QtBot, grid: LasIndicatorGrid):
     device = DeviceInfo(name="mystery", device_class="x.Unknown", location_group="L", functional_group="F")
     widget = grid.screens.display_for_device(device)
     qtbot.addWidget(widget)
@@ -241,18 +300,6 @@ def test_grid_cell_tooltip_names_the_device(qtbot: QtBot):
     circle.update_connection(True, "ca://A")
     circle.update_severity(0, "ca://A")
     assert circle.cell_tooltip() == "Device las_cam"
-
-
-def test_open_device_prints_pydm_command():
-    result = subprocess.run(
-        [sys.executable, str(APP_DIR / "open_device.py"), "--print", "las_bts_mcs2_01_m1"],
-        capture_output=True,
-        text=True,
-        check=True,
-        env={**os.environ, "PYTHONPATH": os.pathsep.join(filter(None, [str(APP_DIR), os.environ.get("PYTHONPATH")]))},
-    )
-    assert "smaract.py" in result.stdout
-    assert '"MOTOR": "LAS:BTS:MCS2:01:m1"' in result.stdout
 
 
 def test_home_screen_imports_nothing_forbidden():

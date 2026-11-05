@@ -188,22 +188,6 @@ def load_devices(beamline: str, path: str | os.PathLike | None = None) -> list[D
     ]
 
 
-def find_device(name: str, path: str | os.PathLike | None = None) -> DeviceInfo:
-    """Look up a single device by name, from any beamline (used by open_device.py)."""
-    if path is None:
-        path = default_database_path()
-    path = Path(path)
-    with open(path) as fd:
-        if path.suffix in (".yaml", ".yml"):
-            entries = yaml.safe_load(fd) or []
-        else:
-            entries = list(json.load(fd).values())
-    for entry in entries:
-        if entry.get("name") == name:
-            return _entry_to_info(entry)
-    raise KeyError(f"No device named {name} in {path}")
-
-
 def group_devices(devices: list[DeviceInfo]) -> dict[str, list[DeviceInfo]]:
     """
     Group devices into the ``"{location_group}|{functional_group}"`` dict that IndicatorGrid expects.

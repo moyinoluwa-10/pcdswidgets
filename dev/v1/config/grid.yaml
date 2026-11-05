@@ -1,0 +1,6 @@
+# Grid devices that run a LAS toolbar button instead of opening a screen in the dock, as in dev/las:
+# their cell shows an icon instead of a status dot, a click runs the button's command in its own window,
+# and row/column menus list them as an external entry.
+#   <happi name>: { toolbar: [<tab>, <button>], icon: <FontAwesome name> }
+toolbar_devices:
+  las_btps: { toolbar: ["NEH Beam Transport", "BTPS Overview"], icon: shield-alt }

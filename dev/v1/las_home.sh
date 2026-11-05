@@ -27,9 +27,5 @@ if type subnet_check &>/dev/null; then
 fi
 
 export PYTHONPATH="${REPO_DIR}:${APP_DIR}"
-# The BTPS screens' "open device" buttons run bin/las-open-device, with the same python as this pydm
-export PATH="${APP_DIR}/bin:${PATH}"
-LAS_DEV_PYTHON="$(command -v python)"
-export LAS_DEV_PYTHON
 
 exec pydm --hide-nav-bar --hide-menu-bar --hide-status-bar "$@" "${APP_DIR}/las_home.py"
