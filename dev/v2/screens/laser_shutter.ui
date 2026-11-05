@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LaserShutter</class>
+ <widget class="QWidget" name="LaserShutter">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>520</width>
+    <height>380</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>${TITLE}</string>
+  </property>
+  <layout class="QVBoxLayout" name="main_layout">
+   <item>
+    <widget class="QLabel" name="title">
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>${TITLE} shutter</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="lss_group">
+     <property name="title">
+      <string>Laser Safety Shutter (LTLHN:${LS}:LST)</string>
+     </property>
+     <layout class="QGridLayout" name="lss_layout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="opened_title">
+        <property name="text">
+         <string>Opened</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="PyDMByteIndicator" name="opened">
+        <property name="channel" stdset="0">
+         <string>ca://LTLHN:${LS}:LST:OPN_RBV</string>
+        </property>
+        <property name="showLabels" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="circles" stdset="0">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLabel" name="closed_title">
+        <property name="text">
+         <string>Closed</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="PyDMByteIndicator" name="closed">
+        <property name="channel" stdset="0">
+         <string>ca://LTLHN:${LS}:LST:CLS_RBV</string>
+        </property>
+        <property name="showLabels" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="circles" stdset="0">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="permission_title">
+        <property name="text">
+         <string>LSS Permission</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="PyDMByteIndicator" name="permission">
+        <property name="channel" stdset="0">
+         <string>ca://LTLHN:${LS}:LST:LSS_RBV</string>
+        </property>
+        <property name="showLabels" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="circles" stdset="0">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="request_title">
+        <property name="text">
+         <string>Open Request</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="PyDMByteIndicator" name="request">
+        <property name="channel" stdset="0">
+         <string>ca://LTLHN:${LS}:LST:REQ_RBV</string>
+        </property>
+        <property name="showLabels" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="circles" stdset="0">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="valve_title">
+        <property name="text">
+         <string>Entry Valve</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1" colspan="3">
+       <widget class="PyDMLabel" name="valve">
+        <property name="channel" stdset="0">
+         <string>ca://LTLHN:${LS}:VGC:01:POS_STATE_RBV</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="btps_group">
+     <property name="title">
+      <string>BTPS (LTLHN:${LS}:BTPS)</string>
+     </property>
+     <layout class="QGridLayout" name="btps_layout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="safe_title">
+        <property name="text">
+         <string>Safe to Open</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="PyDMByteIndicator" name="safe">
+        <property name="channel" stdset="0">
+         <string>ca://LTLHN:${LS}:BTPS:Safe_RBV</string>
+        </property>
+        <property name="showLabels" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="circles" stdset="0">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLabel" name="dest_title">
+        <property name="text">
+         <string>Current Destination</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="PyDMLabel" name="dest">
+        <property name="channel" stdset="0">
+         <string>ca://LTLHN:${LS}:BTPS:CurrentLD_RBV</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="lss_request_title">
+        <property name="text">
+         <string>LSS Open Request</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="PyDMByteIndicator" name="lss_request">
+        <property name="channel" stdset="0">
+         <string>ca://LTLHN:${LS}:BTPS:LSS:OpenRequest_RBV</string>
+        </property>
+        <property name="showLabels" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="circles" stdset="0">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="override_title">
+        <property name="text">
+         <string>Override</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="PyDMByteIndicator" name="override">
+        <property name="channel" stdset="0">
+         <string>ca://LTLHN:${LS}:BTPS:Override_RBV</string>
+        </property>
+        <property name="showLabels" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="circles" stdset="0">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="error_title">
+        <property name="text">
+         <string>Latched Error</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="PyDMByteIndicator" name="error">
+        <property name="channel" stdset="0">
+         <string>ca://LTLHN:${LS}:BTPS:Error_RBV</string>
+        </property>
+        <property name="showLabels" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="circles" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="onColor" stdset="0">
+         <color>
+          <red>255</red>
+          <green>0</green>
+          <blue>0</blue>
+         </color>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2" colspan="2">
+       <widget class="PyDMPushButton" name="acknowledge">
+        <property name="toolTip">
+         <string>Acknowledge the latched BTPS error</string>
+        </property>
+        <property name="text">
+         <string>Acknowledge</string>
+        </property>
+        <property name="channel" stdset="0">
+         <string>ca://LTLHN:${LS}:BTPS:Acknowledge</string>
+        </property>
+        <property name="pressValue" stdset="0">
+         <string>1</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="user_title">
+        <property name="text">
+         <string>User Request</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="PyDMByteIndicator" name="user_open">
+        <property name="channel" stdset="0">
+         <string>ca://LTLHN:${LS}:BTPS:UserOpen_RBV</string>
+        </property>
+        <property name="showLabels" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="circles" stdset="0">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="PyDMPushButton" name="user_close">
+        <property name="text">
+         <string>Close</string>
+        </property>
+        <property name="channel" stdset="0">
+         <string>ca://LTLHN:${LS}:BTPS:UserOpen</string>
+        </property>
+        <property name="pressValue" stdset="0">
+         <string>0</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <widget class="PyDMPushButton" name="user_open_button">
+        <property name="text">
+         <string>Open</string>
+        </property>
+        <property name="channel" stdset="0">
+         <string>ca://LTLHN:${LS}:BTPS:UserOpen</string>
+        </property>
+        <property name="pressValue" stdset="0">
+         <string>1</string>
+        </property>
+        <property name="showConfirmDialog" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="confirmMessage" stdset="0">
+         <string>Request to open the ${LS} shutter?</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer name="bottom_spacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Expanding</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PyDMLabel</class>
+   <extends>QLabel</extends>
+   <header>pydm.widgets.label</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMByteIndicator</class>
+   <extends>QWidget</extends>
+   <header>pydm.widgets.byte</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMPushButton</class>
+   <extends>QPushButton</extends>
+   <header>pydm.widgets.pushbutton</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

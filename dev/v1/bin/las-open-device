@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Open a device's pcdswidgets screen by happi name (replaces "typhos <name>" in the dev LAS screens).
+DEV_DIR="$(dirname "$(dirname "$(realpath "${BASH_SOURCE[0]}")")")"
+exec "${LAS_DEV_PYTHON:-python}" "${DEV_DIR}/open_device.py" "$@"

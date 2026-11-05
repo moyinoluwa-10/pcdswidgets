@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SmarActDetailed</class>
+ <widget class="QWidget" name="SmarActDetailed">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>620</width>
+    <height>640</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>${NAME}</string>
+  </property>
+  <layout class="QVBoxLayout" name="main_layout">
+   <item>
+    <widget class="MotorClassicFull" name="motor">
+     <property name="MOTOR" stdset="0">
+      <string>${MOTOR}</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="config_group">
+     <property name="title">
+      <string>Motor Configuration</string>
+     </property>
+     <layout class="QGridLayout" name="config_layout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="desc_title">
+        <property name="text">
+         <string>Description</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" colspan="3">
+       <widget class="PyDMLineEdit" name="desc">
+        <property name="channel" stdset="0">
+         <string>ca://${MOTOR}.DESC</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="dial_title">
+        <property name="text">
+         <string>Dial Position</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="PyDMLabel" name="dial">
+        <property name="channel" stdset="0">
+         <string>ca://${MOTOR}.DRBV</string>
+        </property>
+        <property name="showUnits" stdset="0">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="moving_title">
+        <property name="text">
+         <string>Moving / Done</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <layout class="QHBoxLayout" name="moving_layout">
+        <item>
+         <widget class="PyDMByteIndicator" name="moving">
+          <property name="channel" stdset="0">
+           <string>ca://${MOTOR}.MOVN</string>
+          </property>
+          <property name="showLabels" stdset="0">
+           <bool>false</bool>
+          </property>
+          <property name="circles" stdset="0">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="PyDMByteIndicator" name="done">
+          <property name="channel" stdset="0">
+           <string>ca://${MOTOR}.DMOV</string>
+          </property>
+          <property name="showLabels" stdset="0">
+           <bool>false</bool>
+          </property>
+          <property name="circles" stdset="0">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="hlm_title">
+        <property name="text">
+         <string>High Limit</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="PyDMLineEdit" name="hlm">
+        <property name="channel" stdset="0">
+         <string>ca://${MOTOR}.HLM</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QLabel" name="llm_title">
+        <property name="text">
+         <string>Low Limit</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3">
+       <widget class="PyDMLineEdit" name="llm">
+        <property name="channel" stdset="0">
+         <string>ca://${MOTOR}.LLM</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="velo_title">
+        <property name="text">
+         <string>Velocity</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="PyDMLineEdit" name="velo">
+        <property name="channel" stdset="0">
+         <string>ca://${MOTOR}.VELO</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QLabel" name="vmax_title">
+        <property name="text">
+         <string>Max Velocity</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <widget class="PyDMLabel" name="vmax">
+        <property name="channel" stdset="0">
+         <string>ca://${MOTOR}.VMAX</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="accl_title">
+        <property name="text">
+         <string>Acceleration</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="PyDMLineEdit" name="accl">
+        <property name="channel" stdset="0">
+         <string>ca://${MOTOR}.ACCL</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QLabel" name="egu_title">
+        <property name="text">
+         <string>Units</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="3">
+       <widget class="PyDMLabel" name="egu">
+        <property name="channel" stdset="0">
+         <string>ca://${MOTOR}.EGU</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="off_title">
+        <property name="text">
+         <string>User Offset</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="PyDMLineEdit" name="off">
+        <property name="channel" stdset="0">
+         <string>ca://${MOTOR}.OFF</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2">
+       <widget class="QLabel" name="dir_title">
+        <property name="text">
+         <string>User Direction</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="3">
+       <widget class="PyDMEnumComboBox" name="dir">
+        <property name="channel" stdset="0">
+         <string>ca://${MOTOR}.DIR</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="home_title">
+        <property name="text">
+         <string>Home</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1">
+       <widget class="PyDMPushButton" name="home_rev">
+        <property name="text">
+         <string>Home Reverse</string>
+        </property>
+        <property name="channel" stdset="0">
+         <string>ca://${MOTOR}.HOMR</string>
+        </property>
+        <property name="pressValue" stdset="0">
+         <string>1</string>
+        </property>
+        <property name="showConfirmDialog" stdset="0">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="3">
+       <widget class="PyDMPushButton" name="home_fwd">
+        <property name="text">
+         <string>Home Forward</string>
+        </property>
+        <property name="channel" stdset="0">
+         <string>ca://${MOTOR}.HOMF</string>
+        </property>
+        <property name="pressValue" stdset="0">
+         <string>1</string>
+        </property>
+        <property name="showConfirmDialog" stdset="0">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="smaract_group">
+     <property name="title">
+      <string>SmarAct Channel</string>
+     </property>
+     <layout class="QGridLayout" name="smaract_layout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="ptype_title">
+        <property name="text">
+         <string>Positioner Type</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="PyDMEnumComboBox" name="ptype">
+        <property name="channel" stdset="0">
+         <string>ca://${MOTOR}:PTYPE</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2" colspan="2">
+       <widget class="PyDMLabel" name="ptype_rbv">
+        <property name="channel" stdset="0">
+         <string>ca://${MOTOR}:PTYPE_RBV</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="calib_title">
+        <property name="text">
+         <string>Needs Calibration</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="PyDMLabel" name="needs_calib">
+        <property name="channel" stdset="0">
+         <string>ca://${MOTOR}:NEED_CALIB</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2" colspan="2">
+       <widget class="PyDMPushButton" name="do_calib">
+        <property name="toolTip">
+         <string>Run the SmarAct calibration routine (DO_CALIB.PROC)</string>
+        </property>
+        <property name="text">
+         <string>Calibrate</string>
+        </property>
+        <property name="channel" stdset="0">
+         <string>ca://${MOTOR}:DO_CALIB.PROC</string>
+        </property>
+        <property name="pressValue" stdset="0">
+         <string>1</string>
+        </property>
+        <property name="showConfirmDialog" stdset="0">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="state_title">
+        <property name="text">
+         <string>Channel State</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1" colspan="3">
+       <widget class="PyDMLabel" name="state">
+        <property name="channel" stdset="0">
+         <string>ca://${MOTOR}:STATE_RBV</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="temp_title">
+        <property name="text">
+         <string>Channel / Module Temp</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="PyDMLabel" name="chan_temp">
+        <property name="channel" stdset="0">
+         <string>ca://${MOTOR}:CHANTEMP</string>
+        </property>
+        <property name="showUnits" stdset="0">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2" colspan="2">
+       <widget class="PyDMLabel" name="mod_temp">
+        <property name="channel" stdset="0">
+         <string>ca://${MOTOR}:MODTEMP</string>
+        </property>
+        <property name="showUnits" stdset="0">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="open_loop_group">
+     <property name="title">
+      <string>Open Loop</string>
+     </property>
+     <layout class="QVBoxLayout" name="open_loop_layout">
+      <item>
+       <widget class="SmaractOpenLoopContextDouble" name="open_loop">
+        <property name="motor" stdset="0">
+         <string>${MOTOR}</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer name="bottom_spacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Expanding</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PyDMLabel</class>
+   <extends>QLabel</extends>
+   <header>pydm.widgets.label</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMByteIndicator</class>
+   <extends>QWidget</extends>
+   <header>pydm.widgets.byte</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMEnumComboBox</class>
+   <extends>QComboBox</extends>
+   <header>pydm.widgets.enum_combo_box</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>pydm.widgets.line_edit</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMPushButton</class>
+   <extends>QPushButton</extends>
+   <header>pydm.widgets.pushbutton</header>
+  </customwidget>
+  <customwidget>
+   <class>MotorClassicFull</class>
+   <extends>QWidget</extends>
+   <header>pcdswidgets.motion.common.motor_classic_full</header>
+  </customwidget>
+  <customwidget>
+   <class>SmaractOpenLoopContextDouble</class>
+   <extends>QWidget</extends>
+   <header>pcdswidgets.motion.smaract.smaract_open_loop_context_double</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
