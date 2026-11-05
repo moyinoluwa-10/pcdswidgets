@@ -9,6 +9,7 @@ from floorplan import FloorPlan, FloorPlanContext
 from pydm.display import ScreenTarget, load_file
 from pytestqt.qtbot import QtBot
 from qtpy.QtCore import QPoint, QRect, Qt
+from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QWidget
 
 from pcdswidgets.common.dock.tab_dock import TabDock
@@ -70,29 +71,78 @@ def test_every_las_device_is_reachable(context: FloorPlanContext):
     assert sorted(seen) == sorted(dev.name for dev in context.devices)
 
 
-def test_layout_is_inside_the_image(context: FloorPlanContext):
-    image = QRect(0, 0, 1356, 672)
-    config = context.config
-    for group in ("bays", "areas", "racks"):
-        for name, cfg in config[group].items():
-            assert image.contains(QRect(*cfg["rect"])), name
-    for icon in config["icons"]:
-        assert image.contains(QPoint(*icon["pos"])), icon
+ALL_RACKS = [f"R{n:02d}" for n in range(1, 21)]
+PDU_RACKS = ["R01", "R03", "R06", "R07", "R08", "R13", "R18"]
+
+
+def test_hall_config_is_consistent(context: FloorPlanContext):
+    """Column shares are sane, and every icon sits inside a known area."""
+    hall = context.config["hall"]
+    names = set()
+    for column in hall["columns"]:
+        if "racks" in column:
+            names.update(r for group in column["racks"] for r in floorplan.rack_names(group["range"]))
+        elif "bay" in column or "area" in column:
+            names.add(column.get("bay") or column.get("area"))
+            assert column["top"] + column["height"] <= 100, column
+    assert {f"Bay {n}" for n in range(1, 5)} | {"BTS"} | set(ALL_RACKS) == names
+    for icon in context.config["icons"]:
+        assert icon["in"] in names, icon
+        assert all(0 <= value <= 100 for value in icon["at"]), icon
 
 
 def test_floor_plan_builds(plan: FloorPlan):
     names = [button.objectName() for button, _ in plan.areas]
-    assert names[:5] == ["Bay_1", "Bay_2", "Bay_3", "Bay_4", "BTS"]
+    # Left to right: Bay 1, the R01-R10 column, Bay 2, BTS, Bay 3, the R11-R20 column, Bay 4
+    assert names == ["Bay_1", *ALL_RACKS[:10], "Bay_2", "BTS", "Bay_3", *ALL_RACKS[10:], "Bay_4"]
     assert len(plan.icons) == 22
-    clickable_racks = sorted(
-        button.objectName() for button, _ in plan.areas if button.objectName().startswith("R") and button.openers
-    )
-    assert clickable_racks == ["R01", "R03", "R06", "R07", "R08", "R13", "R18"]
+    clickable_racks = sorted(name for button, name in plan.areas if name.startswith("R") and button.openers)
+    assert clickable_racks == PDU_RACKS
 
 
-def test_full_size_geometry_matches_config(plan: FloorPlan):
-    for button, rect in plan.areas:
-        assert button.geometry() == rect, button.objectName()
+def test_racks_without_pdu_are_grey(plan: FloorPlan, context: FloorPlanContext):
+    grey = QColor(context.config["hall"]["inactive"])
+    for button, name in plan.areas:
+        if name.startswith("R"):
+            assert (button.color == grey) == (name not in PDU_RACKS), name
+            assert (button.badge is not None) == (name in PDU_RACKS), name
+
+
+def test_drawing_is_roughly_the_old_image(plan: FloorPlan):
+    """At the old image size, areas land within a few pixels of where bg.png had them."""
+    old_rects = {
+        "Bay_1": QRect(47, 86, 163, 548),
+        "Bay_3": QRect(851, 81, 156, 548),
+        "BTS": QRect(550, 278, 261, 176),
+        "R01": QRect(251, 37, 55, 55),
+        "R19": QRect(1054, 521, 55, 55),
+    }
+    for button, _ in plan.areas:
+        old = old_rects.get(button.objectName())
+        if old is None:
+            continue
+        new = QRect(button.mapTo(plan, QPoint(0, 0)), button.size())
+        for a, b in ((new.x(), old.x()), (new.y(), old.y()), (new.width(), old.width()), (new.height(), old.height())):
+            assert abs(a - b) <= 15, (button.objectName(), new, old)
+
+
+def test_icons_stay_inside_their_area(plan: FloorPlan):
+    for button, (area_name, _, _) in plan.icons:
+        area = plan.area(area_name)
+        area_rect = QRect(area.mapTo(plan, QPoint(0, 0)), area.size())
+        assert area_rect.contains(button.geometry().center()), (button.text(), area_name)
+
+
+def test_new_toolbar_pdu_lights_up_its_rack(qtbot: QtBot, context: FloorPlanContext):
+    """R05 has no PDU today; naming a toolbar button "... (R05)" is all it takes."""
+    context.toolbar["PDUs"]["buttons"]["New PDU (R05)"] = {"type": "shell", "commands": ["echo r05"]}
+    dock = TabDock()
+    qtbot.addWidget(dock)
+    widget = FloorPlan(context)
+    qtbot.addWidget(widget)
+    r05 = widget.area("R05")
+    assert r05.single().command == ["echo r05"]
+    assert r05.color != QColor(context.config["hall"]["inactive"])
 
 
 def test_bay_menu_lists_controls(plan: FloorPlan):
@@ -121,13 +171,13 @@ def test_racks_follow_toolbar_labels(context: FloorPlanContext):
         match = floorplan.RACK_IN_NAME.search(name)
         if match:
             labelled.setdefault(match.group(1), []).append(name)
-    for rack, cfg in context.config["racks"].items():
-        titles = [opener.title for opener in context.rack_openers(rack, cfg)]
+    for rack in ALL_RACKS:
+        titles = [opener.title for opener in context.rack_openers(rack, {})]
         assert titles == labelled.get(rack, []), rack
 
 
 def test_rack_opens_override(context: FloorPlanContext):
-    openers = context.rack_openers("R02", {"rect": [0, 0, 1, 1], "opens": [{"device": "las_lhn_bay1_env_sens_1"}]})
+    openers = context.rack_openers("R02", {"opens": [{"device": "las_lhn_bay1_env_sens_1"}]})
     assert [opener.device_name for opener in openers] == ["las_lhn_bay1_env_sens_1"]
 
 

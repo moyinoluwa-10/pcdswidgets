@@ -1,6 +1,6 @@
 # v2: LAS floor-plan home screen (lasdev style)
 
-A proof of concept of the **lasdev** home-screen style applied to the **LAS** PVs: a drawing of the laser hall in which you click a bay, rack or icon to open the matching screen in a `TabDock`.
+A proof of concept of the **lasdev** home-screen style applied to the **LAS** PVs: a drawing of the laser hall in which you click a bay, rack or icon to open the matching screen in a `TabDock`. The hall is drawn by Qt from `config/floorplan.yaml`, not from a background image.
 
 How `lasdev` works today is in [lasdev_launch_internals.md](lasdev_launch_internals.md). v1 (the LUCID-style grid) is in [../v1](../v1).
 
@@ -23,7 +23,7 @@ The environment is the same as v1: `ctrlenv-widgets/v1.2.1`, this checkout's pcd
 | **Bay 1–4** (the coloured area) | menu | Every control in the bay, as drop-downs: Cameras, SmarAct Motors, Temperature / Humidity (from happi `location_group`), then Shutters, then Tools (that bay's buttons from the LAS toolbar). Each device entry has the dock options; clicking the entry opens it in the dock. Groups have "Open All". |
 | **BTS** | menu | BTS cameras, plus the external tools BTPS Overview, BTMS Overview, Laser Hall Vacuum, Shutters, BTS motors, RGA and QPCs (marked ↗). |
 | **Racks** with a plug badge (R01, R03, R06, R07, R08, R13, R18) | direct | Runs the LAS toolbar "PDUs" button whose name ends with that rack, e.g. "Zone 1 TiSaph PSU/Chiller PDU (R07)", which opens the IOC's EDM PDU screen in its own window. Matching is automatic: add a toolbar button named "... (R12)" and R12 lights up. |
-| Other racks | — | Tooltip only. No toolbar PDU button names them yet. |
+| Other racks (grey) | — | Tooltip only. No toolbar PDU button names them yet. All 20 racks (R01–R20) are always drawn, so a new "(R05)" button lights up R05 with no other change. |
 | **T/H** icons | direct | That environmental sensor (v1 screen). |
 | **Cameras** / **SmarAct** icons | menu | That bay's cameras or motors (v1 screens). |
 | **Shutters** icons | direct or menu | The laser-source shutter screen (new): LS1 in Bay 1, LS3/LS4 in Bay 2, LS5/LS6 in Bay 3, LS8 in Bay 4. |
@@ -33,7 +33,7 @@ The environment is the same as v1: `ctrlenv-widgets/v1.2.1`, this checkout's pcd
 
 Each icon uses the same glyph pcdswidgets uses for the screen it opens: `CameraViewerStretch`'s camera, the SmarAct tip/tilt icon, pcdswidgets' fast-shutter symbol, a thermometer, a plug for PDUs, and a shield for BTPS. Each icon also has a small status dot. It works like v1's grid circle (typhos colours), summarising the PVs of everything the icon opens.
 
-The image scales with the window, and so do the click areas. Below 75 % scale the icons drop their labels.
+The drawing keeps its proportions and scales with the window; text stays sharp at any size. Below 75 % scale the icons drop their labels.
 
 Under the floor plan is the full LAS toolbar (v1's copy of `LAS_toolbar.yaml`), placed as in v1.
 
@@ -41,16 +41,15 @@ Under the floor plan is the full LAS toolbar (v1's copy of `LAS_toolbar.yaml`), 
 
 | Path | What it is |
 |---|---|
-| `bg.png` | The floor plan drawing (1356 × 672). Click areas are measured from its coloured shapes. |
 | `bg-with exp.png` | The annotated sketch of what each area should do. Documentation only. |
-| `config/floorplan.yaml` | **All layout and behaviour**: bay/BTS/rack rectangles, icon positions, what each opens, laser source → bay, bay tools, and which toolbar tab racks are matched against. A rack can override the automatic match with its own `opens:` list. Edit this to move or add things; no code changes needed. |
+| `config/floorplan.yaml` | **All layout and behaviour**: the hall drawing (columns left to right, with relative widths, heights and colours; racks generated as R01–R20 in coloured groups of five), icon positions (percent of their area), what each opens, laser source → bay, bay tools, and which toolbar tab racks are matched against. A rack can override the automatic match with its own `opens:` list. Edit this to move or add things; no code changes needed. |
 | `floorplan.py` | `FloorPlan` widget, `AreaButton` / `IconButton`, and `FloorPlanContext`, which turns config entries into things to open. |
 | `las_home.py` | Home screen: floor plan with the LAS toolbar under it, `TabDock` on the right (v1's arrangement, with the floor plan in place of the grid). |
 | `las_home.sh` | Launcher. |
 | `screens/smaract_r4.py` | SmarAct screen from the IOC release's own widgets (`common/smaract/R4.0.0/motorScreens`, the release `ioc-las-bts-mcs1` builds against): the expert panel with the advanced-controls tabs (Open-loop, Closed-loop, Diagnostics, Configuration) always shown under it. This is `smaract_expert_screen.py` without the collapsible section and without the PicoScale tab. It uses the release's generated widget classes, because loading `smaract_advanced_controls.ui` directly hits a circular import in that package. |
 | `config/device_types.yaml` | v2-only overrides of v1's device types (currently: SmarAct → `smaract_r4.py`). Keys left out, such as `indicator_pvs`, come from v1. v1 is unchanged. |
 | `screens/laser_shutter.ui` | **New.** One laser source: LSS opened/closed/permission/request, entry valve, BTPS safe-to-open, destination, override, latched error + Acknowledge, user Open/Close. |
-| `tests/` | pytest-qt tests (20). |
+| `tests/` | pytest-qt tests (23). |
 
 From v1 (used as-is, not copied, except for the overrides above): `las_devices.py`, `las_grid.py` (`DeviceScreenCache`, `PVAlarmCircle`), the device screens and `device_types.yaml`, the toolbar YAML, and `bin/las-open-device`. (v1's copied BTPS screens are no longer used by v2.)
 
@@ -91,20 +90,21 @@ The tests point channel access at `127.0.0.1` only, use v1's YAML device snapsho
 
 - every config reference resolves
 - every active LAS device appears in exactly one bay or area menu
-- all geometry is inside the image
-- at full size the click areas match the config exactly
+- the hall config is consistent and every icon sits in a known area
+- the drawing lands within a few pixels of the old `bg.png` layout, and icons stay inside their area
+- all 20 racks are drawn, racks without a PDU are grey, and a new "(R05)" toolbar button lights up R05
 - the menus contain the expected entries
 - rack clicks run their PDU toolbar button, icon clicks open the right screen in the dock
 - status dots watch the right PVs
-- icons shrink with the image
+- icons shrink with the drawing
 - the new screens load with all macros filled
 - the home screen imports nothing forbidden
 
 ## Known gaps / next steps
 
 - **Not tested against live IOCs.** The shutter PVs have only been checked offline.
-- **7 labelled racks have no PDU yet**: R02, R04, R11, R12, R16, R17 and R19. The 10 grey slots are unlabelled. They light up automatically once the toolbar has a "... (Rxx)" PDU button for them.
+- **7 labelled racks have no PDU yet**: R02, R04, R11, R12, R16, R17 and R19. They, and the other unused rack numbers, are drawn grey and light up automatically once the toolbar has a "... (Rxx)" PDU button for them.
 - **Racks open only the PDU.** The sketch mentions "maybe some monitoring, or all of the controls in it". Rack entries already accept a list of `opens`, so adding more is a config change.
-- **Icon positions are rough**, as the sketch says. Fine-tune them in `floorplan.yaml`.
+- **Icon positions are rough**, as the sketch says. Fine-tune them in `floorplan.yaml` (`at: [x %, y %]` within their area).
 - **SmarAct screens are pinned to R4.0.0.** When `ioc-las-bts-mcs1` moves to a new release, update `SMARACT_SCREENS` in `screens/smaract_r4.py`, or pass it as a macro.
 - **Mixed data sources.** Rack → PDU comes from the toolbar labels, while `ioc-las-lhn-pwr-02.cfg` says "LHN Timing PDU Bay 2" for the PDU the toolbar calls "Zone 2 OPCPA Controls PDU (R03)". Confirm with the LAS team.

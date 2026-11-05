@@ -1,9 +1,10 @@
 """
-Floor-plan home screen pieces for v2: an image of the laser hall with clickable areas and icons.
+Floor-plan home screen pieces for v2: a drawing of the laser hall with clickable areas and icons.
 
-This follows the lasdev style (a picture with buttons placed on it that open screens in a TabDock),
-but the buttons are generated from ``config/floorplan.yaml`` instead of being hand-placed in a .ui,
-and the devices and screens come from v1 (happi JSON + pcdswidgets screens, no happi/ophyd/typhos).
+This follows the lasdev style (a floor plan with buttons that open screens in a TabDock), but the hall
+is drawn by Qt from ``config/floorplan.yaml`` (bays, racks R01-R20, BTS as laid-out colored areas)
+instead of being a background image with hand-placed buttons, and the devices and screens come from v1
+(happi JSON + pcdswidgets screens, no happi/ophyd/typhos).
 
 Every clickable thing resolves to a list of ``Opener`` objects:
 
@@ -29,8 +30,8 @@ from pydm.display import ScreenTarget, load_file
 from pydm.utilities import IconFont
 from pydm.utilities.stylesheet import merge_widget_stylesheet
 from qtpy.QtCore import QPoint, QRect, QSize, Qt
-from qtpy.QtGui import QBrush, QColor, QIcon, QMouseEvent, QPainter, QPixmap
-from qtpy.QtWidgets import QMenu, QPushButton, QSizePolicy, QToolButton, QWidget
+from qtpy.QtGui import QBrush, QColor, QIcon, QMouseEvent, QPainter, QPen
+from qtpy.QtWidgets import QHBoxLayout, QMenu, QPushButton, QSizePolicy, QToolButton, QVBoxLayout, QWidget
 
 V2_DIR = Path(__file__).resolve().parent
 V1_DIR = V2_DIR.parent / "v1"
@@ -172,10 +173,6 @@ class FloorPlanContext:
         self._screen_cache: dict[str, QWidget] = {}
         self.functions: dict[str, dict[str, str]] = self.config.get("functions", {})
         self.shutters: dict[str, dict[str, str]] = self.config.get("shutters", {})
-
-    @property
-    def image_path(self) -> Path:
-        return self.config_dir.parent / self.config.get("image", "bg.png")
 
     # Openers for each kind of entry
 
@@ -452,42 +449,80 @@ class OpenerButtonMixin:
         super().mousePressEvent(event)
 
 
-AREA_STYLE = """
-QPushButton {{ background: transparent; border: none; {extra} }}
-QPushButton:hover {{ background: rgba(20, 140, 210, 40); border: 2px solid rgba(20, 140, 210, 200); }}
-QPushButton:pressed {{ background: rgba(20, 140, 210, 90); }}
-"""
+HOVER_FILL = QColor(20, 140, 210, 40)
+PRESSED_FILL = QColor(20, 140, 210, 90)
+HOVER_BORDER = QColor(20, 140, 210, 200)
 
 
 class AreaButton(OpenerButtonMixin, QPushButton):
-    """Invisible button over a drawn area (a bay, the BTS, a rack). Highlights on hover."""
+    """A drawn area of the hall (a bay, the BTS, a rack): colored box with a centered label."""
 
-    def __init__(self, name: str, openers: list[Opener], tooltip: str = "", parent: QWidget | None = None):
+    def __init__(
+        self,
+        name: str,
+        openers: list[Opener],
+        tooltip: str = "",
+        color: str = "#ffffff",
+        border: str = "#595959",
+        inactive: str | None = None,
+        label_size: float = 0.04,
+        parent: QWidget | None = None,
+    ):
         super().__init__(parent)
         self.setObjectName(name.replace(" ", "_"))
         self.openers = openers
         self.menu_title = name
+        self.label = name
         self.badge: QIcon | None = None
+        # Racks with nothing to open are greyed out; bays and areas always keep their color
+        self.color = QColor(inactive if (inactive and not openers) else color)
+        self.border = QColor(border)
+        self.text_color = QColor(90, 90, 90) if (inactive and not openers) else QColor(0, 0, 0)
+        # label height as a fraction of the hall height, so text scales with the drawing
+        self.label_size = label_size
+        self.hall_height = 600
         self.setCursor(Qt.PointingHandCursor if openers else Qt.ArrowCursor)
         self.setToolTip(tooltip or name)
-        self.setStyleSheet(AREA_STYLE.format(extra=""))
         self.setFocusPolicy(Qt.NoFocus)
+        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+
+    @property
+    def inactive(self) -> bool:
+        return not self.openers
+
+    def enterEvent(self, event):
+        super().enterEvent(event)
+        self.update()
+
+    def leaveEvent(self, event):
+        super().leaveEvent(event)
+        self.update()
 
     def paintEvent(self, event):
-        """Draw the optional badge (e.g. the PDU plug on racks) in the bottom-right corner."""
-        super().paintEvent(event)
-        if self.badge is None:
-            return
-        size = max(8, min(self.width(), self.height()) // 3)
         painter = QPainter(self)
-        self.badge.paint(painter, QRect(self.width() - size - 2, self.height() - size - 2, size, size))
+        painter.setRenderHint(QPainter.Antialiasing)
+        rect = self.rect().adjusted(0, 0, -1, -1)
+        painter.fillRect(rect, self.color)
+        hovered = self.openers and self.underMouse()
+        if hovered:
+            painter.fillRect(rect, PRESSED_FILL if self.isDown() else HOVER_FILL)
+        painter.setPen(QPen(HOVER_BORDER, 2) if hovered else QPen(self.border, 1))
+        painter.drawRect(rect)
+        font = painter.font()
+        font.setPixelSize(max(7, round(self.hall_height * self.label_size)))
+        painter.setFont(font)
+        painter.setPen(self.text_color)
+        painter.drawText(rect, Qt.AlignCenter, self.label)
+        if self.badge is not None:
+            size = max(8, min(self.width(), self.height()) // 4)
+            self.badge.paint(painter, QRect(self.width() - size - 3, self.height() - size - 3, size, size))
 
 
 class IconButton(OpenerButtonMixin, QToolButton):
     """A small labeled icon placed on the floor plan, with an optional status dot."""
 
     icon_size = 22
-    # Below this image scale the label is dropped and only the icon is shown
+    # Below this hall scale the label is dropped and only the icon is shown
     label_min_scale = 0.75
 
     def __init__(
@@ -548,44 +583,140 @@ class IconButton(OpenerButtonMixin, QToolButton):
             self.status.move(self.width() - 11, 1)
 
 
+def rack_names(spec: str) -> list[str]:
+    """ "R01-R05" -> ["R01", ..., "R05"]"""
+    first, last = (int(part.strip().lstrip("R")) for part in spec.split("-"))
+    return [f"R{n:02d}" for n in range(first, last + 1)]
+
+
+def stretch(percent: float) -> int:
+    """QBoxLayout stretch factors are ints; keep two decimals of the configured shares."""
+    return max(0, round(percent * 100))
+
+
+class Hall(QWidget):
+    """
+    The laser hall drawing, built from the "hall" section of floorplan.yaml.
+
+    A QHBoxLayout of columns, left to right. Each column is a QVBoxLayout whose stretch factors
+    place its area(s) vertically, so everything is proportional and there are no coordinates.
+    """
+
+    def __init__(self, floor: "FloorPlan", parent: QWidget | None = None):
+        super().__init__(parent)
+        context = floor.context
+        self.cfg = context.config["hall"]
+        self.background = QColor(self.cfg.get("background", "#eeeeee"))
+        self.border = QColor(self.cfg.get("border", "#595959"))
+        self.areas: dict[str, AreaButton] = {}
+        row = QHBoxLayout(self)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(0)
+        for column in self.cfg["columns"]:
+            if "gap" in column:
+                row.addStretch(stretch(column["gap"]))
+            elif "bay" in column:
+                bay = column["bay"]
+                bay_cfg = context.config.get("bays", {}).get(bay, {})
+                openers = context.bay_openers(bay, bay_cfg)
+                area = self.make_area(bay, openers, f"{bay}: click for all controls in the bay", column["color"])
+                row.addLayout(self.area_column(area, column), stretch(column["width"]))
+            elif "area" in column:
+                name = column["area"]
+                area_cfg = context.config.get("areas", {}).get(name, {})
+                openers = context.resolve(area_cfg.get("opens", []))
+                area = self.make_area(name, openers, f"{name}: click for options", column["color"])
+                row.addLayout(self.area_column(area, column), stretch(column["width"]))
+            elif "racks" in column:
+                row.addLayout(self.rack_column(column, context), stretch(column["width"]))
+            else:
+                logger.error("Unknown hall column %s", column)
+
+    def make_area(self, name: str, openers: list[Opener], tooltip: str, color: str, **kwargs) -> AreaButton:
+        area = AreaButton(name, openers, tooltip, color=color, border=self.cfg.get("border", "#595959"), **kwargs)
+        self.areas[name] = area
+        return area
+
+    @staticmethod
+    def area_column(area: AreaButton, column: dict[str, Any]) -> QVBoxLayout:
+        layout = QVBoxLayout()
+        layout.setSpacing(0)
+        top, height = column["top"], column["height"]
+        layout.addStretch(stretch(top))
+        layout.addWidget(area, stretch(height))
+        layout.addStretch(stretch(100 - top - height))
+        return layout
+
+    def rack_column(self, column: dict[str, Any], context: "FloorPlanContext") -> QVBoxLayout:
+        """Stacks of racks, e.g. R01-R05 and R06-R10, each group in its own color."""
+        layout = QVBoxLayout()
+        layout.setSpacing(0)
+        groups = column["racks"]
+        margin, gap = column.get("top", 5), column.get("group_gap", 4)
+        count = sum(len(rack_names(group["range"])) for group in groups)
+        rack_height = (100 - 2 * margin - gap * (len(groups) - 1)) / count
+        overrides = context.config.get("racks") or {}
+        layout.addStretch(stretch(margin))
+        for index, group in enumerate(groups):
+            if index:
+                layout.addStretch(stretch(gap))
+            for rack in rack_names(group["range"]):
+                openers = context.rack_openers(rack, overrides.get(rack, {}))
+                if openers:
+                    tooltip = f"{rack}:\n" + "\n".join(opener.title for opener in openers)
+                else:
+                    tooltip = f'{rack}: no toolbar button named "... ({rack})" (or add opens: in config/floorplan.yaml)'
+                area = self.make_area(
+                    rack,
+                    openers,
+                    tooltip,
+                    group["color"],
+                    inactive=self.cfg.get("inactive", "#b7b7b7"),
+                    label_size=0.03,
+                )
+                if openers:
+                    area.badge = make_icon("pdu")
+                layout.addWidget(area, stretch(rack_height))
+        layout.addStretch(stretch(margin))
+        return layout
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        rect = self.rect().adjusted(0, 0, -1, -1)
+        painter.fillRect(rect, self.background)
+        painter.setPen(QPen(self.border, 1))
+        painter.drawRect(rect)
+
+
 class FloorPlan(QWidget):
     """
-    The laser hall image with area buttons and icons on top.
+    The drawn laser hall with icons on top.
 
-    The image keeps its aspect ratio and scales with the widget. Areas scale with it;
-    icons keep their size and stay centered on their configured position.
+    The hall keeps its aspect ratio (hall.aspect in floorplan.yaml) and is centered in the widget.
+    Icons are positioned at a percentage of their area and resized with the hall.
     """
+
+    # Size of the original drawing; the hall is laid out at any size, this is only the preferred one
+    reference_height = 659
 
     def __init__(self, context: FloorPlanContext, parent: QWidget | None = None):
         super().__init__(parent)
         self.context = context
-        self.pixmap = QPixmap(str(context.image_path))
-        if self.pixmap.isNull():
-            raise FileNotFoundError(f"Could not load floor plan image {context.image_path}")
+        self.aspect = float(context.config["hall"].get("aspect", 2.0))
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.areas: list[tuple[AreaButton, QRect]] = []
-        self.icons: list[tuple[IconButton, QPoint]] = []
+        self.hall = Hall(self, parent=self)
+        # Racks are generated, so list areas in a stable order for callers: (button, kind)
+        self.areas: list[tuple[AreaButton, str]] = [(area, name) for name, area in self.hall.areas.items()]
+        self.icons: list[tuple[IconButton, tuple[str, float, float]]] = []
         self._scale = 1.0
-        self._offset = QPoint(0, 0)
-        self.build()
+        self.build_icons()
 
-    def build(self):
-        config = self.context.config
-        for bay, cfg in config.get("bays", {}).items():
-            openers = self.context.bay_openers(bay, cfg)
-            self.add_area(bay, cfg["rect"], openers, f"{bay}: click for all controls in the bay")
-        for name, cfg in config.get("areas", {}).items():
-            self.add_area(name, cfg["rect"], self.context.resolve(cfg.get("opens", [])), f"{name}: click for options")
-        for rack, cfg in config.get("racks", {}).items():
-            openers = self.context.rack_openers(rack, cfg)
-            if openers:
-                tooltip = f"{rack}:\n" + "\n".join(opener.title for opener in openers)
-            else:
-                tooltip = f'{rack}: no toolbar button named "... ({rack})" (or add opens: in config/floorplan.yaml)'
-            area = self.add_area(rack, cfg["rect"], openers, tooltip)
-            if openers:
-                area.badge = make_icon("pdu")
-        for icon_cfg in config.get("icons", []):
+    def build_icons(self):
+        for icon_cfg in self.context.config.get("icons", []):
+            area_name = icon_cfg["in"]
+            if area_name not in self.hall.areas:
+                logger.error("Icon %s is in unknown area %r", icon_cfg.get("label"), area_name)
+                continue
             openers = self.context.resolve(icon_cfg.get("opens", []))
             button = IconButton(
                 label=icon_cfg.get("label", ""),
@@ -594,50 +725,42 @@ class FloorPlan(QWidget):
                 status=icon_cfg.get("status", True),
                 parent=self,
             )
-            self.icons.append((button, QPoint(*icon_cfg["pos"])))
+            x_pct, y_pct = icon_cfg.get("at", [50, 50])
+            self.icons.append((button, (area_name, x_pct / 100, y_pct / 100)))
 
-    def add_area(self, name: str, rect: list[int], openers: list[Opener], tooltip: str) -> AreaButton:
-        button = AreaButton(name, openers, tooltip, parent=self)
-        self.areas.append((button, QRect(*rect)))
-        return button
+    def area(self, name: str) -> AreaButton:
+        return self.hall.areas[name]
 
     def sizeHint(self) -> QSize:
-        return self.pixmap.size()
+        return QSize(round(self.reference_height * self.aspect), self.reference_height)
 
     def minimumSizeHint(self) -> QSize:
-        return self.pixmap.size() / 2
+        return self.sizeHint() / 2
 
     def hasHeightForWidth(self) -> bool:
         return True
 
     def heightForWidth(self, width: int) -> int:
-        return int(width * self.pixmap.height() / self.pixmap.width())
-
-    def map_point(self, point: QPoint) -> QPoint:
-        return QPoint(int(self._offset.x() + point.x() * self._scale), int(self._offset.y() + point.y() * self._scale))
-
-    def map_rect(self, rect: QRect) -> QRect:
-        top_left = self.map_point(rect.topLeft())
-        return QRect(top_left, QSize(int(rect.width() * self._scale), int(rect.height() * self._scale)))
+        return int(width / self.aspect)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        self._scale = min(self.width() / self.pixmap.width(), self.height() / self.pixmap.height())
-        drawn = self.pixmap.size() * self._scale
-        self._offset = QPoint((self.width() - drawn.width()) // 2, (self.height() - drawn.height()) // 2)
-        for button, rect in self.areas:
-            button.setGeometry(self.map_rect(rect))
-        for button, pos in self.icons:
+        width = min(self.width(), int(self.height() * self.aspect))
+        height = int(width / self.aspect)
+        self.hall.setGeometry((self.width() - width) // 2, (self.height() - height) // 2, width, height)
+        # Lay out the hall now so area geometry is final before placing icons
+        self.hall.layout().activate()
+        self._scale = height / self.reference_height
+        for area in self.hall.areas.values():
+            area.hall_height = height
+            area.update()
+        for button, (area_name, x_frac, y_frac) in self.icons:
+            area = self.hall.areas[area_name]
+            origin = area.mapTo(self, QPoint(0, 0))
+            center = QPoint(origin.x() + round(area.width() * x_frac), origin.y() + round(area.height() * y_frac))
             button.set_scale(self._scale)
-            center = self.map_point(pos)
             size = button.sizeHint()
             button.setGeometry(
                 center.x() - size.width() // 2, center.y() - size.height() // 2, size.width(), size.height()
             )
             button.raise_()
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.SmoothPixmapTransform)
-        target = QRect(self._offset, self.pixmap.size() * self._scale)
-        painter.drawPixmap(target, self.pixmap)
