@@ -23,7 +23,7 @@ pcdsdevices.areadetector.detectors.LasBasler:
   - '{prefix}Stats2:SigmaX_RBV'
   - '{prefix}Stats2:SigmaY_RBV'
 pcdsdevices.epics_motor.SmarAct:
-  screen: smaract_r4.py
+  screen: smaract.py
   macros:
     MOTOR: '{prefix}'
     NAME: '{name}'

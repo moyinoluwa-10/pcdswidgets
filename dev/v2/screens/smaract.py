@@ -11,7 +11,8 @@ because loading smaract_advanced_controls.ui on its own hits a circular import i
 
 Macros:
     MOTOR            motor PV, e.g. LAS:BTS:MCS2:01:m1
-    SMARACT_SCREENS  motorScreens directory of the IOC release (default: R4.0.0, which the LAS BTS IOC uses)
+    NAME             window title (default: MOTOR)
+    SMARACT_SCREENS  motorScreens directory of the IOC release (default: R4.0.0)
 """
 
 import os
@@ -19,12 +20,12 @@ import sys
 
 from pydm import Display
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QVBoxLayout
+from qtpy.QtWidgets import QSizePolicy, QVBoxLayout
 
 SMARACT_SCREENS = "/cds/group/pcds/epics/ioc/common/smaract/R4.0.0/motorScreens"
 
 
-class SmarActR4(Display):
+class SmarActScreen(Display):
     def __init__(self, parent=None, args=None, macros=None):
         super().__init__(parent=parent, args=args, macros=macros)
         macros = macros or {}
@@ -42,10 +43,17 @@ class SmarActR4(Display):
         self.advanced = SmaractAdvancedControlsBase()
         self.advanced.set_macro("motor", motor)
 
-        # Both panels at their natural size, top-left, with the spare space below
+        # Drop the expert form's fixed 287 px minimum height
+        self.expert.setMinimumHeight(0)
+        # Fit the layout-less advanced form to its tab widget, which overhangs it by 2 px
+        self.advanced.setMinimumHeight(self.advanced.childrenRect().bottom() + 1 + 9)
         layout = QVBoxLayout()
-        layout.addWidget(self.expert, alignment=Qt.AlignLeft)
-        layout.addWidget(self.advanced, alignment=Qt.AlignLeft)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        # Panels at natural height so the stretch below gets the spare space
+        for panel in (self.expert, self.advanced):
+            panel.setSizePolicy(panel.sizePolicy().horizontalPolicy(), QSizePolicy.Maximum)
+            layout.addWidget(panel, alignment=Qt.AlignLeft)
         layout.addStretch()
         self.setLayout(layout)
 

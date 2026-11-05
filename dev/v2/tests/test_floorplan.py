@@ -7,6 +7,7 @@ import floorplan
 import pytest
 from floorplan import FloorPlan, FloorPlanContext
 from pydm.display import ScreenTarget, load_file
+from pydm.widgets import PyDMEmbeddedDisplay
 from pytestqt.qtbot import QtBot
 from qtpy.QtCore import QPoint, QRect, Qt
 from qtpy.QtGui import QColor
@@ -216,7 +217,7 @@ def test_icons_shrink_with_the_image(plan: FloorPlan):
 def test_device_types_point_at_v2_screens():
     """Every configured screen is in dev/v2 and exists."""
     types = floorplan.load_device_types()
-    assert types["pcdsdevices.epics_motor.SmarAct"].screen_path() == str(V2_DIR / "screens" / "smaract_r4.py")
+    assert types["pcdsdevices.epics_motor.SmarAct"].screen_path() == str(V2_DIR / "screens" / "smaract.py")
     assert types["pcdsdevices.epics_motor.SmarAct"].indicator_pvs == ["{prefix}.RBV"]
     # The BTPS opens through the toolbar and has no status dot, so it has no device type
     assert "pcdsdevices.lasers.btps.BtpsState" not in types
@@ -243,7 +244,7 @@ def test_btps_runs_toolbar_command(plan: FloorPlan, no_external_commands):
 
 def test_smaract_screen_has_expert_and_advanced_panels(qtbot: QtBot):
     display = load_file(
-        str(V2_DIR / "screens" / "smaract_r4.py"),
+        str(V2_DIR / "screens" / "smaract.py"),
         macros={"MOTOR": "LAS:BTS:MCS2:01:m1", "NAME": "las_bts_mcs2_01_m1"},
         target=ScreenTarget.DIALOG,
     )
@@ -264,15 +265,25 @@ def test_smaract_screen_has_expert_and_advanced_panels(qtbot: QtBot):
     "screen,macros",
     [
         ("laser_shutter.ui", {"LS": "LS1", "TITLE": "LS1 (Bay 1)"}),
-        ("smaract_r4.py", {"MOTOR": "LAS:BTS:MCS2:01:m1", "NAME": "m1"}),
+        ("smaract.py", {"MOTOR": "LAS:BTS:MCS2:01:m1", "NAME": "m1"}),
+        ("las_basler.ui", {"CAM": "LAS:LHN:BAY1:CAM:01", "NAME": "cam", "DESC": "Bay 1 cam"}),
+        ("las_basler_settings.ui", {"CAM": "LAS:LHN:BAY1:CAM:01"}),
     ],
 )
 def test_v2_screens_load(qtbot: QtBot, screen: str, macros: dict[str, str]):
     display = load_file(str(V2_DIR / "screens" / screen), macros=macros, target=ScreenTarget.DIALOG)
     qtbot.addWidget(display)
+    # Embedded displays load lazily; force them so their macros are checked too
+    embedded = display.findChildren(PyDMEmbeddedDisplay)
+    for child in embedded:
+        child.load_if_needed()
+        assert child.embedded_widget is not None, child.filename
     addresses = channel_addresses(display)
     assert addresses
     assert not [addr for addr in addresses if "${" in addr]
+    if screen == "las_basler.ui":
+        assert [child.objectName() for child in embedded] == ["las_settings"]
+        assert "ca://LAS:LHN:BAY1:CAM:01:RESET.PROC" in addresses
 
 
 def test_minimum_height_fits_toolbar_and_floor_plan(qtbot: QtBot):

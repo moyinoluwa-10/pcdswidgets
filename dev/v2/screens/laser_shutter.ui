@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>520</width>
-    <height>380</height>
+    <width>600</width>
+    <height>340</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>600</width>
+    <height>340</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>${TITLE}</string>
@@ -43,13 +49,25 @@
       </item>
       <item row="0" column="1">
        <widget class="PyDMByteIndicator" name="opened">
-        <property name="channel" stdset="0">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="channel">
          <string>ca://LTLHN:${LS}:LST:OPN_RBV</string>
         </property>
-        <property name="showLabels" stdset="0">
+        <property name="showLabels">
          <bool>false</bool>
         </property>
-        <property name="circles" stdset="0">
+        <property name="circles">
          <bool>true</bool>
         </property>
        </widget>
@@ -63,13 +81,25 @@
       </item>
       <item row="0" column="3">
        <widget class="PyDMByteIndicator" name="closed">
-        <property name="channel" stdset="0">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="channel">
          <string>ca://LTLHN:${LS}:LST:CLS_RBV</string>
         </property>
-        <property name="showLabels" stdset="0">
+        <property name="showLabels">
          <bool>false</bool>
         </property>
-        <property name="circles" stdset="0">
+        <property name="circles">
          <bool>true</bool>
         </property>
        </widget>
@@ -83,13 +113,25 @@
       </item>
       <item row="1" column="1">
        <widget class="PyDMByteIndicator" name="permission">
-        <property name="channel" stdset="0">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="channel">
          <string>ca://LTLHN:${LS}:LST:LSS_RBV</string>
         </property>
-        <property name="showLabels" stdset="0">
+        <property name="showLabels">
          <bool>false</bool>
         </property>
-        <property name="circles" stdset="0">
+        <property name="circles">
          <bool>true</bool>
         </property>
        </widget>
@@ -103,13 +145,25 @@
       </item>
       <item row="1" column="3">
        <widget class="PyDMByteIndicator" name="request">
-        <property name="channel" stdset="0">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="channel">
          <string>ca://LTLHN:${LS}:LST:REQ_RBV</string>
         </property>
-        <property name="showLabels" stdset="0">
+        <property name="showLabels">
          <bool>false</bool>
         </property>
-        <property name="circles" stdset="0">
+        <property name="circles">
          <bool>true</bool>
         </property>
        </widget>
@@ -123,7 +177,10 @@
       </item>
       <item row="2" column="1" colspan="3">
        <widget class="PyDMLabel" name="valve">
-        <property name="channel" stdset="0">
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="channel">
          <string>ca://LTLHN:${LS}:VGC:01:POS_STATE_RBV</string>
         </property>
        </widget>
@@ -146,13 +203,25 @@
       </item>
       <item row="0" column="1">
        <widget class="PyDMByteIndicator" name="safe">
-        <property name="channel" stdset="0">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="channel">
          <string>ca://LTLHN:${LS}:BTPS:Safe_RBV</string>
         </property>
-        <property name="showLabels" stdset="0">
+        <property name="showLabels">
          <bool>false</bool>
         </property>
-        <property name="circles" stdset="0">
+        <property name="circles">
          <bool>true</bool>
         </property>
        </widget>
@@ -166,7 +235,10 @@
       </item>
       <item row="0" column="3">
        <widget class="PyDMLabel" name="dest">
-        <property name="channel" stdset="0">
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="channel">
          <string>ca://LTLHN:${LS}:BTPS:CurrentLD_RBV</string>
         </property>
        </widget>
@@ -180,13 +252,25 @@
       </item>
       <item row="1" column="1">
        <widget class="PyDMByteIndicator" name="lss_request">
-        <property name="channel" stdset="0">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="channel">
          <string>ca://LTLHN:${LS}:BTPS:LSS:OpenRequest_RBV</string>
         </property>
-        <property name="showLabels" stdset="0">
+        <property name="showLabels">
          <bool>false</bool>
         </property>
-        <property name="circles" stdset="0">
+        <property name="circles">
          <bool>true</bool>
         </property>
        </widget>
@@ -200,13 +284,25 @@
       </item>
       <item row="1" column="3">
        <widget class="PyDMByteIndicator" name="override">
-        <property name="channel" stdset="0">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="channel">
          <string>ca://LTLHN:${LS}:BTPS:Override_RBV</string>
         </property>
-        <property name="showLabels" stdset="0">
+        <property name="showLabels">
          <bool>false</bool>
         </property>
-        <property name="circles" stdset="0">
+        <property name="circles">
          <bool>true</bool>
         </property>
        </widget>
@@ -220,21 +316,33 @@
       </item>
       <item row="2" column="1">
        <widget class="PyDMByteIndicator" name="error">
-        <property name="channel" stdset="0">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="channel">
          <string>ca://LTLHN:${LS}:BTPS:Error_RBV</string>
         </property>
-        <property name="showLabels" stdset="0">
-         <bool>false</bool>
-        </property>
-        <property name="circles" stdset="0">
-         <bool>true</bool>
-        </property>
-        <property name="onColor" stdset="0">
+        <property name="onColor">
          <color>
           <red>255</red>
           <green>0</green>
           <blue>0</blue>
          </color>
+        </property>
+        <property name="showLabels">
+         <bool>false</bool>
+        </property>
+        <property name="circles">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -246,10 +354,10 @@
         <property name="text">
          <string>Acknowledge</string>
         </property>
-        <property name="channel" stdset="0">
+        <property name="channel">
          <string>ca://LTLHN:${LS}:BTPS:Acknowledge</string>
         </property>
-        <property name="pressValue" stdset="0">
+        <property name="pressValue">
          <string>1</string>
         </property>
        </widget>
@@ -263,13 +371,25 @@
       </item>
       <item row="3" column="1">
        <widget class="PyDMByteIndicator" name="user_open">
-        <property name="channel" stdset="0">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="channel">
          <string>ca://LTLHN:${LS}:BTPS:UserOpen_RBV</string>
         </property>
-        <property name="showLabels" stdset="0">
+        <property name="showLabels">
          <bool>false</bool>
         </property>
-        <property name="circles" stdset="0">
+        <property name="circles">
          <bool>true</bool>
         </property>
        </widget>
@@ -279,10 +399,10 @@
         <property name="text">
          <string>Close</string>
         </property>
-        <property name="channel" stdset="0">
+        <property name="channel">
          <string>ca://LTLHN:${LS}:BTPS:UserOpen</string>
         </property>
-        <property name="pressValue" stdset="0">
+        <property name="pressValue">
          <string>0</string>
         </property>
        </widget>
@@ -292,17 +412,17 @@
         <property name="text">
          <string>Open</string>
         </property>
-        <property name="channel" stdset="0">
+        <property name="channel">
          <string>ca://LTLHN:${LS}:BTPS:UserOpen</string>
         </property>
-        <property name="pressValue" stdset="0">
-         <string>1</string>
-        </property>
-        <property name="showConfirmDialog" stdset="0">
+        <property name="showConfirmDialog">
          <bool>true</bool>
         </property>
-        <property name="confirmMessage" stdset="0">
+        <property name="confirmMessage">
          <string>Request to open the ${LS} shutter?</string>
+        </property>
+        <property name="pressValue">
+         <string>1</string>
         </property>
        </widget>
       </item>
@@ -329,9 +449,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>PyDMLabel</class>
-   <extends>QLabel</extends>
-   <header>pydm.widgets.label</header>
+   <class>PyDMPushButton</class>
+   <extends>QPushButton</extends>
+   <header>pydm.widgets.pushbutton</header>
   </customwidget>
   <customwidget>
    <class>PyDMByteIndicator</class>
@@ -339,9 +459,9 @@
    <header>pydm.widgets.byte</header>
   </customwidget>
   <customwidget>
-   <class>PyDMPushButton</class>
-   <extends>QPushButton</extends>
-   <header>pydm.widgets.pushbutton</header>
+   <class>PyDMLabel</class>
+   <extends>QLabel</extends>
+   <header>pydm.widgets.label</header>
   </customwidget>
  </customwidgets>
  <resources/>
