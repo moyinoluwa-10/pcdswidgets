@@ -1,21 +1,21 @@
-# v2: LAS floor-plan home screen (lasdev style)
+# LAS floor-plan home screen (lasdev style)
 
 A proof of concept of the **lasdev** home-screen style applied to the **LAS** PVs: a drawing of the laser hall in which you click a bay, rack or icon to open the matching screen in a `TabDock`. The hall is drawn by Qt from `config/floorplan.yaml`, not from a background image.
 
 How `lasdev` works today is in [lasdev_launch_internals.md](lasdev_launch_internals.md).
 
-**v2 is standalone**: everything it needs is in this directory, so it can be copied as a template for other migrations. It only needs a pcdswidgets (from `PYTHONPATH` or the environment) and PyDM. (v1, the LUCID-style grid, lives in [../v1](../v1) and is not used.)
+**It is standalone**: everything it needs is in this directory, so it can be copied as a template for other migrations. It only needs a pcdswidgets (from `PYTHONPATH` or the environment) and PyDM.
 
 It has **no runtime dependency on happi, ophyd, pcdsdevices, typhos or lucid**, and nothing outside `dev/` was changed.
 
 ## Run it
 
 ```bash
-pcdswidgets/dev/v2/las_home.sh &      # foreground without "&", like the production las_home.sh
-pcdswidgets/dev/v2/las_home.sh -m '{"TOOLBAR": "/cds/group/pcds/pyps/apps/hutch-python/lucid_config/LAS_toolbar.yaml"}' &   # live toolbar
+pcdswidgets/dev/las/las_home.sh &      # foreground without "&", like the production las_home.sh
+pcdswidgets/dev/las/las_home.sh -m '{"TOOLBAR": "/cds/group/pcds/pyps/apps/hutch-python/lucid_config/LAS_toolbar.yaml"}' &   # live toolbar
 ```
 
-Environment: `ctrlenv-widgets/v1.2.1`, with this checkout's pcdswidgets and `dev/v2` first on `PYTHONPATH`. **It connects to the real IOCs.**
+Environment: `ctrlenv-widgets/v1.2.1`, with this checkout's pcdswidgets and `dev/las` first on `PYTHONPATH`. **It connects to the real IOCs.**
 
 ## What you can click
 
@@ -44,7 +44,7 @@ Under the floor plan is the full LAS toolbar (`config/las_toolbar.yaml`, a copy 
 
 | Path | What it is |
 |---|---|
-| `bg-with exp.png` | The annotated sketch of what each area should do. Documentation only. |
+| `bg-with-exp.png` | The annotated sketch of what each area should do. Documentation only. |
 | `config/floorplan.yaml` | **All layout and behaviour**: the hall drawing (columns left to right, with relative widths, heights and colours; racks generated as R01–R20 in coloured groups of five), icon positions (percent of their area), what each opens, laser source → bay, bay tools, and which toolbar tab racks are matched against. A rack can override the automatic match with its own `opens:` list. Edit this to move or add things; no code changes needed. |
 | `floorplan.py` | `FloorPlan` widget, `AreaButton` / `IconButton`, and `FloorPlanContext`, which turns config entries into things to open. |
 | `las_home.py` | Home screen: floor plan with the LAS toolbar under it, `TabDock` on the right. |
@@ -54,7 +54,7 @@ Under the floor plan is the full LAS toolbar (`config/las_toolbar.yaml`, a copy 
 | `screens/smaract.py` | SmarAct screen from the IOC release's own widgets (`common/smaract/R4.0.0/motorScreens`, the release `ioc-las-bts-mcs1` builds against): the expert panel with the advanced-controls tabs (Open-loop, Closed-loop, Diagnostics, Configuration) always shown under it. This is `smaract_expert_screen.py` without the collapsible section and without the PicoScale tab. It uses the release's generated widget classes, because loading `smaract_advanced_controls.ui` directly hits a circular import in that package. |
 | `config/device_types.yaml` | Device class → screen, macros, and status PVs: LasBasler → `las_basler.ui`, SmarAct → `smaract.py`, and EnvironmentalMonitor → `env_monitor.ui`. The BTPS isn't listed: it opens through the toolbar and has no status dot. |
 | `config/las_toolbar.yaml` | The LAS toolbar (copy of `lucid_config/LAS_toolbar.yaml`, refreshed 2026-11-04). Rack → PDU matching, the bay tools and the BTS tools come from here, by tab and button name. **When deploying, switch to the live file** (`/cds/group/pcds/pyps/apps/hutch-python/lucid_config/LAS_toolbar.yaml`, e.g. via the `TOOLBAR` macro or the default in `floorplan.py`); a renamed button the floor plan refers to then shows as "(missing)". |
-| `screens/las_basler.ui`, `screens/env_monitor.ui` | LasBasler camera and environmental monitor screens (built for v1, copied here). |
+| `screens/las_basler.ui`, `screens/env_monitor.ui` | LasBasler camera and environmental monitor screens. |
 | `screens/las_basler_settings.ui` | The "LAS Basler Settings" sidebar panel of `las_basler.ui` (manufacturer, sensor, data type, trigger, binning, user sets, reset), embedded there as a `PyDMEmbeddedDisplay` so it can be edited on its own. It inherits the parent's macros (`CAM`); open it alone with `pydm -m CAM=... las_basler_settings.ui`. The embedded display has `minimumSize` width 1 so the sidebar can squeeze it like the other panels (otherwise the PV labels' text width pushes the sidebar wider than its scroll area). |
 | `tools/gen_indicator_pvs.py` | **Dev-time only, uses ophyd** (run with the pcds conda python). Regenerates `indicator_pvs` in `config/device_types.yaml`. |
 | `tools/export_happi_devices.py` | Regenerates `tests/devices_snapshot.yaml` from happi (`$HAPPI_CFG`, never `$LAS_DEVICE_DB`), sorted by name. No happi import; runs with any python that has PyYAML. |
@@ -89,7 +89,7 @@ One entry means a click opens it directly; several mean a click shows a menu.
 ## Tests
 
 ```bash
-cd pcdswidgets/dev/v2
+cd pcdswidgets/dev/las
 QT_QPA_PLATFORM=offscreen PYTHONPATH=../..:. \
   /reg/g/pcds/pyps/pixi/ctrlenv-widgets/v1.2.1/src/rhel9-x86_64/.pixi/envs/default/bin/python -m pytest tests -q
 ```
@@ -106,7 +106,7 @@ The tests point channel access at `127.0.0.1` only, use the YAML device snapshot
 - status dots watch the right PVs, and the icon tooltip lists the bad ones
 - icons shrink with the drawing
 - the new screens load with all macros filled, including embedded displays (forced to load)
-- the home screen imports nothing forbidden, and nothing from `dev/v1`
+- the home screen imports nothing forbidden, and nothing from the rest of `dev/`
 
 ## Known gaps / next steps
 

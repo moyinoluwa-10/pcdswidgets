@@ -8,8 +8,8 @@ Runs with any python that has PyYAML.
 
 Usage::
 
-    python dev/v2/tools/export_happi_devices.py LAS dev/v2/tests/devices_snapshot.yaml
-    LAS_DEVICE_DB=dev/v2/tests/devices_snapshot.yaml dev/v2/las_home.sh
+    python dev/las/tools/export_happi_devices.py LAS dev/las/tests/devices_snapshot.yaml
+    LAS_DEVICE_DB=dev/las/tests/devices_snapshot.yaml dev/las/las_home.sh
 """
 
 import argparse
@@ -36,7 +36,7 @@ def main():
     devices = sorted(load_devices(args.beamline, database), key=lambda dev: dev.name)
     with open(args.output, "w") as fd:
         fd.write(f"# Snapshot of active {args.beamline} devices from {database}, taken {date.today().isoformat()}\n")
-        fd.write(f"# Regenerate with: python dev/v2/tools/export_happi_devices.py {args.beamline} <this file>\n")
+        fd.write(f"# Regenerate with: python dev/las/tools/export_happi_devices.py {args.beamline} <this file>\n")
         yaml.safe_dump([asdict(dev) for dev in devices], fd, sort_keys=False)
     print(f"Wrote {len(devices)} devices to {args.output}")
 

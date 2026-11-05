@@ -1,7 +1,7 @@
 # What happens when you type `lasdev`
 
 A trace of the LASDEV home screen launch, from the shell command to the window.
-Traced 2026-10-22. Paths and versions are as found on that date. The `las` (v1) trace is in [../v1/las_launch_internals.md](../v1/las_launch_internals.md).
+Traced 2026-10-22. Paths and versions are as found on that date.
 
 **Short version:** unlike `las`, `lasdev` already runs a pcdswidgets home screen (no LUCID, no happi, no ophyd at runtime). It is a hand-built Designer `.ui`: a floor-plan image of the lab with camera buttons placed on it, which open camera screens in a `TabDock`. It runs from personal checkouts.
 
@@ -20,7 +20,7 @@ lasdev                                   (bash function, /reg/g/pcds/setup/pcds_
 
 ## 1. `lasdev` and `subnet_check`
 
-These work the same way as for `las` (see the v1 trace). `lasdev` is defined in `pcds_shortcuts.sh:437`, and the write-enabled subnets are `LASDEV_SUBNET=(12 13)`.
+These work the same way as for `las`: a bash function that calls `subnet_check`, which only prints a read-only or write-enabled message depending on the host's subnet, then starts the launcher in the background. `lasdev` is defined in `pcds_shortcuts.sh:437`, and the write-enabled subnets are `LASDEV_SUBNET=(12 13)`.
 
 ## 2. `lasdev_home.sh`
 
@@ -101,17 +101,17 @@ The same `CameraViewerStretch` sidebar (Centroid on `ROI1`), plus `MotorTipTiltF
 
 ## How `lasdev` compares with `las`
 
-| | `las` (v1 basis) | `lasdev` (v2 basis) |
+| | `las` | `lasdev` |
 |---|---|---|
 | Framework | LUCID (happi + ophyd + typhos) | pydm + pcdswidgets (already) |
 | Env | shared `pcds-6.0.1` conda (`dev_conda`) | personal pixi workspace via `pixi run --as-is` |
 | Device list | happi DB, 44 active LAS entries | hard-coded per button in the `.ui` (plus `dev_devices.json` for loops) |
 | Layout | auto-generated grid (location × function) | hand-placed buttons on a floor-plan image |
 | Status at a glance | alarm circle per device | none |
-| Screens | typhos (v1: new pcdswidgets screens) | pcdswidgets camera screens from `laser_alignment_lock` + a placeholder |
+| Screens | typhos | pcdswidgets camera screens from `laser_alignment_lock` + a placeholder |
 | Toolbar | 68 buttons / 10 tabs | 2 buttons / 1 tab |
 
-## Fragile points to keep in mind for v2
+## Fragile points of `lasdev` to keep in mind
 
 - **Runs from personal checkouts.** The env (`ipotanin/cam_widget_2`, branch `pcdsImageView`) and the screens (`ipotanin/laser_alignment_lock`, branch `oct-dev`) are working trees. Any edit or branch switch there changes the production `lasdev` screen immediately.
 - **`--as-is`.** The env is never re-resolved, so it can silently drift from its `pixi.lock`.

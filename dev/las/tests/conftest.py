@@ -10,11 +10,11 @@ os.environ["EPICS_CA_AUTO_ADDR_LIST"] = "NO"
 os.environ["EPICS_CA_ADDR_LIST"] = "127.0.0.1"
 
 # Only this directory is added here; pcdswidgets comes from PYTHONPATH (a checkout) or the environment.
-V2_DIR = Path(__file__).resolve().parent.parent
-if str(V2_DIR) not in sys.path:
-    sys.path.insert(0, str(V2_DIR))
+LAS_DIR = Path(__file__).resolve().parent.parent
+if str(LAS_DIR) not in sys.path:
+    sys.path.insert(0, str(LAS_DIR))
 
-SNAPSHOT = V2_DIR / "tests" / "devices_snapshot.yaml"
+SNAPSHOT = LAS_DIR / "tests" / "devices_snapshot.yaml"
 
 
 @pytest.fixture(autouse=True)

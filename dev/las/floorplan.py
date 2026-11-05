@@ -1,5 +1,5 @@
 """
-Floor-plan home screen pieces for v2: a drawing of the laser hall with clickable areas and icons.
+Floor-plan home screen pieces: a drawing of the laser hall with clickable areas and icons.
 
 This follows the lasdev style (a floor plan with buttons that open screens in a TabDock), but the hall
 is drawn by Qt from ``config/floorplan.yaml`` (bays, racks R01-R20, BTS as laid-out colored areas)
@@ -42,15 +42,15 @@ from qtpy.QtWidgets import QHBoxLayout, QMenu, QPushButton, QSizePolicy, QToolBu
 import pcdswidgets
 from pcdswidgets.common.dock.tab_dock import TabDock
 
-V2_DIR = Path(__file__).resolve().parent
+LAS_DIR = Path(__file__).resolve().parent
 
 logger = logging.getLogger(__name__)
 
-CONFIG_FILE = V2_DIR / "config" / "floorplan.yaml"
+CONFIG_FILE = LAS_DIR / "config" / "floorplan.yaml"
 # "Zone 1 TiSaph PSU/Chiller PDU (R07)" -> R07
 RACK_IN_NAME = re.compile(r"\((R\d+)\)")
-SCREENS_DIR = V2_DIR / "screens"
-TOOLBAR_FILE = V2_DIR / "config" / "las_toolbar.yaml"
+SCREENS_DIR = LAS_DIR / "screens"
+TOOLBAR_FILE = LAS_DIR / "config" / "las_toolbar.yaml"
 # Found through the pcdswidgets package on PYTHONPATH, wherever this directory is copied to
 SMARACT_ICON = Path(pcdswidgets.__file__).resolve().parent / "icons" / "smaract_tip_tilt_qt_icon.png"
 

@@ -15,7 +15,7 @@ from qtpy.QtWidgets import QWidget
 
 from pcdswidgets.common.dock.tab_dock import TabDock
 
-V2_DIR = Path(__file__).resolve().parent.parent
+LAS_DIR = Path(__file__).resolve().parent.parent
 FORBIDDEN = ("happi", "ophyd", "pcdsdevices", "typhos", "lucid")
 
 
@@ -234,17 +234,17 @@ def test_icons_shrink_with_the_image(plan: FloorPlan):
     assert icon.toolButtonStyle() == Qt.ToolButtonTextUnderIcon
 
 
-def test_device_types_point_at_v2_screens():
-    """Every configured screen is in dev/v2 and exists."""
+def test_device_types_point_at_local_screens():
+    """Every configured screen is in this directory and exists."""
     types = floorplan.load_device_types()
-    assert types["pcdsdevices.epics_motor.SmarAct"].screen_path() == str(V2_DIR / "screens" / "smaract.py")
+    assert types["pcdsdevices.epics_motor.SmarAct"].screen_path() == str(LAS_DIR / "screens" / "smaract.py")
     assert types["pcdsdevices.epics_motor.SmarAct"].indicator_pvs == ["{prefix}.RBV"]
     # The BTPS opens through the toolbar and has no status dot, so it has no device type
     assert "pcdsdevices.lasers.btps.BtpsState" not in types
     for dtype in types.values():
         if dtype.screen_path():
             assert Path(dtype.screen_path()).is_file(), dtype.device_class
-            assert Path(dtype.screen_path()).is_relative_to(V2_DIR), dtype.device_class
+            assert Path(dtype.screen_path()).is_relative_to(LAS_DIR), dtype.device_class
 
 
 def test_btps_runs_toolbar_command(plan: FloorPlan, no_external_commands):
@@ -264,7 +264,7 @@ def test_btps_runs_toolbar_command(plan: FloorPlan, no_external_commands):
 
 def test_smaract_screen_has_expert_and_advanced_panels(qtbot: QtBot):
     display = load_file(
-        str(V2_DIR / "screens" / "smaract.py"),
+        str(LAS_DIR / "screens" / "smaract.py"),
         macros={"MOTOR": "LAS:BTS:MCS2:01:m1", "NAME": "las_bts_mcs2_01_m1"},
         target=ScreenTarget.DIALOG,
     )
@@ -290,8 +290,8 @@ def test_smaract_screen_has_expert_and_advanced_panels(qtbot: QtBot):
         ("las_basler_settings.ui", {"CAM": "LAS:LHN:BAY1:CAM:01"}),
     ],
 )
-def test_v2_screens_load(qtbot: QtBot, screen: str, macros: dict[str, str]):
-    display = load_file(str(V2_DIR / "screens" / screen), macros=macros, target=ScreenTarget.DIALOG)
+def test_screens_load(qtbot: QtBot, screen: str, macros: dict[str, str]):
+    display = load_file(str(LAS_DIR / "screens" / screen), macros=macros, target=ScreenTarget.DIALOG)
     qtbot.addWidget(display)
     # Embedded displays load lazily; force them so their macros are checked too
     embedded = display.findChildren(PyDMEmbeddedDisplay)
@@ -308,7 +308,7 @@ def test_v2_screens_load(qtbot: QtBot, screen: str, macros: dict[str, str]):
 
 def test_minimum_height_fits_toolbar_and_floor_plan(qtbot: QtBot):
     """At the smallest window size, no toolbar tab scrolls and the floor plan keeps its minimum."""
-    home = load_file(str(V2_DIR / "las_home.py"), target=None)
+    home = load_file(str(LAS_DIR / "las_home.py"), target=None)
     qtbot.addWidget(home)
     home.show()
     home.resize(home.minimumSizeHint())
@@ -322,28 +322,30 @@ def test_minimum_height_fits_toolbar_and_floor_plan(qtbot: QtBot):
 
 
 def test_home_screen_imports_nothing_forbidden():
-    """Load the full v2 home screen in a fresh interpreter and check sys.modules."""
+    """Load the full home screen in a fresh interpreter: nothing forbidden, nothing from the rest of dev/."""
     script = (
         "import os, sys\n"
         "from pydm import PyDMApplication\n"
         "from pydm.display import load_file\n"
         "app = PyDMApplication(hide_nav_bar=True, hide_menu_bar=True, hide_status_bar=True)\n"
         # target=None loads in this process; the default (NEW_PROCESS) would spawn a separate pydm.
-        f"display = load_file({str(V2_DIR / 'las_home.py')!r}, target=None)\n"
+        f"display = load_file({str(LAS_DIR / 'las_home.py')!r}, target=None)\n"
         "assert len(display.floorplan.icons) == 22\n"
         "assert display.toolbar.tab.count() == 10\n"
         f"bad = sorted(m for m in sys.modules if m.split('.')[0] in {FORBIDDEN!r})\n"
         "print('FORBIDDEN', bad)\n"
-        f"v1 = sorted(m for m, mod in sys.modules.items() if '/dev/v1/' in (getattr(mod, '__file__', '') or ''))\n"
-        "print('FROM_V1', v1)\n"
+        f"dev_dir, las_dir = {str(LAS_DIR.parent) + os.sep!r}, {str(LAS_DIR) + os.sep!r}\n"
+        "files = [getattr(mod, '__file__', '') or '' for mod in list(sys.modules.values())]\n"
+        "outside = sorted(f for f in files if f.startswith(dev_dir) and not f.startswith(las_dir))\n"
+        "print('OUTSIDE', outside)\n"
         "sys.stdout.flush()\n"
         "os._exit(0)\n"
     )
     env = {
         **os.environ,
-        "PYTHONPATH": os.pathsep.join(filter(None, [str(V2_DIR), os.environ.get("PYTHONPATH", "")])),
+        "PYTHONPATH": os.pathsep.join(filter(None, [str(LAS_DIR), os.environ.get("PYTHONPATH", "")])),
         "QT_QPA_PLATFORM": "offscreen",
     }
     result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, env=env, timeout=120)
     assert "FORBIDDEN []" in result.stdout, result.stdout + result.stderr[-2000:]
-    assert "FROM_V1 []" in result.stdout, result.stdout
+    assert "OUTSIDE []" in result.stdout, result.stdout

@@ -1,4 +1,4 @@
-# Layout and click behavior for the v2 LAS floor plan.
+# Layout and click behavior for the LAS floor plan.
 #
 # The laser hall is drawn by the screen itself, from the "hall" section below: a row of
 # columns (bays, rack columns, the BTS) with relative widths and heights, laid out by Qt.

@@ -1,5 +1,5 @@
 """
-v2 LAS home screen: the lasdev style (floor plan + TabDock) driven by the LAS PVs.
+LAS home screen: the lasdev style (floor plan + TabDock) driven by the LAS PVs.
 
 Floor plan on top, toolbar under it, dock on the right:
 
@@ -12,22 +12,22 @@ Floor plan on top, toolbar under it, dock on the right:
 
 The toolbar is the full LAS toolbar (config/las_toolbar.yaml).
 
-Run it with ``dev/v2/las_home.sh``, or directly::
+Run it with ``dev/las/las_home.sh``, or directly::
 
-    pydm --hide-nav-bar --hide-menu-bar --hide-status-bar dev/v2/las_home.py
+    pydm --hide-nav-bar --hide-menu-bar --hide-status-bar dev/las/las_home.py
 
 Macros (all optional):
-    FLOORPLAN   layout yaml (default: dev/v2/config/floorplan.yaml)
-    TOOLBAR     toolbar yaml (default: dev/v2/config/las_toolbar.yaml)
+    FLOORPLAN   layout yaml (default: dev/las/config/floorplan.yaml)
+    TOOLBAR     toolbar yaml (default: dev/las/config/las_toolbar.yaml)
     DEVICE_DB   happi JSON database or YAML snapshot (default: from $LAS_DEVICE_DB / $HAPPI_CFG)
 """
 
 import sys
 from pathlib import Path
 
-V2_DIR = Path(__file__).resolve().parent
-if str(V2_DIR) not in sys.path:
-    sys.path.insert(0, str(V2_DIR))
+LAS_DIR = Path(__file__).resolve().parent
+if str(LAS_DIR) not in sys.path:
+    sys.path.insert(0, str(LAS_DIR))
 
 from floorplan import CONFIG_FILE, TOOLBAR_FILE, FloorPlan, FloorPlanContext  # noqa: E402
 from pydm import Display  # noqa: E402
@@ -52,7 +52,7 @@ def toolbar_full_height(toolbar: YamlToolbar) -> int:
     return content + tabs.tabBar().sizeHint().height() + pane_frame + margins.top() + margins.bottom()
 
 
-class LasHomeV2(Display):
+class LasHome(Display):
     def __init__(self, parent=None, args=None, macros=None):
         super().__init__(parent=parent, args=args, macros=macros)
         macros = macros or {}
@@ -68,7 +68,7 @@ class LasHomeV2(Display):
         return None
 
     def setup_ui(self, toolbar_file: str):
-        self.setWindowTitle("LAS Home v2 (pcdswidgets dev)")
+        self.setWindowTitle("LAS Home (pcdswidgets dev)")
 
         self.floorplan = FloorPlan(self.context)
         self.toolbar = YamlToolbar()

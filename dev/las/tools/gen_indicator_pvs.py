@@ -1,7 +1,7 @@
 """
 Regenerate the ``indicator_pvs`` lists in config/device_types.yaml.
 
-This is a development-time tool and the only place in dev/v2 that imports ophyd and pcdsdevices.
+This is a development-time tool and the only place in dev/las that imports ophyd and pcdsdevices.
 The runtime screens only read the YAML this writes.
 
 LUCID's grid uses a TyphosAlarmCircle per device, which watches the device's
@@ -12,8 +12,8 @@ always connected with no alarm, so they never change the summary color.
 
 Usage (with the shared pcds conda python, nothing is installed or modified)::
 
-    python dev/v2/tools/gen_indicator_pvs.py            # rewrite config/device_types.yaml
-    python dev/v2/tools/gen_indicator_pvs.py --dry-run  # print counts only
+    python dev/las/tools/gen_indicator_pvs.py            # rewrite config/device_types.yaml
+    python dev/las/tools/gen_indicator_pvs.py --dry-run  # print counts only
 """
 
 import argparse

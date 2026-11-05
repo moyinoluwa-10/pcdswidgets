@@ -1,5 +1,5 @@
 """
-Device list loading and device screens for the v2 LAS home screen, without happi, ophyd, or pcdsdevices.
+Device list loading and device screens for the LAS home screen, without happi, ophyd, or pcdsdevices.
 
 We only need a handful of metadata fields per device, so we read the happi JSON database as plain JSON
 (or a YAML snapshot exported from it, see ``tools/export_happi_devices.py``) and never import happi.
