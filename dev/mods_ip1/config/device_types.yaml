@@ -6,6 +6,7 @@
 #
 # SmarAct and QminiSpectrometer use their IOC release's own screens (common/smaract R4.0.0, common/qmini R3.1.1).
 # Tip/tilt stages use pcdswidgets' MotorTipTiltDouble (screens/tip_tilt.py).
+# Elliptecs share screens/elliptec.py; STAGE picks the sections their IOC records have.
 # Classes without a screen open a placeholder (name, class, prefix) and still have status dots.
 pcdsdevices.areadetector.detectors.LasBasler:
   screen: las_basler.ui
@@ -86,24 +87,44 @@ pcdsdevices.device_types.QminiSpectrometer:
   - '{prefix}:W0_FIT'
   - '{prefix}:WAVELENGTHS'
 pcdsdevices.device_types.EllRotation:
+  screen: elliptec.py
+  macros:
+    MOTOR: '{prefix}:M{channel}'
+    NAME: '{name}'
+    STAGE: continuous
   template_kwargs:
   - channel
   - port
   indicator_pvs:
   - '{prefix}:M{channel}:CURPOS'
 pcdsdevices.device_types.EllLinear:
+  screen: elliptec.py
+  macros:
+    MOTOR: '{prefix}:M{channel}'
+    NAME: '{name}'
+    STAGE: continuous
   template_kwargs:
   - channel
   - port
   indicator_pvs:
   - '{prefix}:M{channel}:CURPOS'
 pcdsdevices.device_types.Ell6:
+  screen: elliptec.py
+  macros:
+    MOTOR: '{prefix}:M{channel}'
+    NAME: '{name}'
+    STAGE: ell6
   template_kwargs:
   - channel
   - port
   indicator_pvs:
   - '{prefix}:M{channel}:CURPOS'
 pcdsdevices.device_types.Ell9:
+  screen: elliptec.py
+  macros:
+    MOTOR: '{prefix}:M{channel}'
+    NAME: '{name}'
+    STAGE: ell9
   template_kwargs:
   - channel
   - port

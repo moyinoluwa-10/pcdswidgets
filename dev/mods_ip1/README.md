@@ -58,9 +58,9 @@ Under the floor plan is the full IP1_MODS toolbar (`config/ip1_mods_toolbar.yaml
 | `SmarActTipTilt` (12), `SmarActEncodedTipTilt` (1) | 13 | `screens/tip_tilt.py`, pcdswidgets' `MotorTipTiltDouble`: d-pad, step size and position per axis, invert, per-axis expert buttons. Tip (`{prefix}{tip_pv}`) is left/right, tilt is up/down, as in pcdsdevices' screen. Open-loop stages use the SmarAct step fields; the encoded one (`STYLE: MotorRecord`) its motor records |
 | `EnvironmentalMonitor` | 4 | `screens/env_monitor.ui` |
 | `El3174AiCh` | 1 | `screens/power_meter.ui` (the EJX power meter, an EL3174 analog-input channel): large `.VAL` readout with units, 5-minute trend, calibration fields (raw ADC, units, slope, offset, conversion, precision) |
-| `EllRotation` (4), `Ell9` (2), `EllLinear` (1), `Ell6` (1) | 8 | **placeholder** for now (name, class, prefix, "no screen yet"), with status dots |
+| `EllRotation` (4), `Ell9` (2), `EllLinear` (1), `Ell6` (1) | 8 | `screens/elliptec.py` + `elliptec.ui`, one screen for every Thorlabs Elliptec (thorlabs-ell IOC, PVs `{prefix}:M{channel}:...`): status, current position, move to, jog, jog step, home / optimize / clean / stop, position names, stage info. The `STAGE` macro (`continuous`, `ell6`, `ell9`) drops the sections whose records that stage type doesn't load (see the IOC's `st.cmd`). Scrolls in a short dock |
 
-Placeholder classes get real screens one at a time: add a file in `screens/` and its `screen:` / `macros:` in `config/device_types.yaml`.
+Every active class has a screen. A class without `screen:` in `config/device_types.yaml` opens a placeholder (name, class, prefix, "no screen yet") and still has a status dot.
 
 ### Per-device happi kwargs
 
@@ -78,11 +78,11 @@ Tip/tilt stages and Elliptecs can't be described by `{prefix}` alone: their PVs 
 | `alarm.py` | `PVAlarmCircle`, the status dot: worst alarm across a list of PVs, in typhos's colours. |
 | `config/device_types.yaml` | Device class → screen, macros, `template_kwargs` and status PVs. |
 | `config/ip1_mods_toolbar.yaml` | The toolbar (copy of `lucid_config/IP1_MODS_toolbar.yaml`, taken 2026-11-05). Station tools and shutter icons refer to it by tab, button and title. **When deploying, switch to the live file** (e.g. via the `TOOLBAR` macro); a renamed button the floor plan refers to then shows as "(missing)". |
-| `screens/` | `smaract.py`, `las_basler.ui`, `las_basler_settings.ui`, `env_monitor.ui` (from `dev/las`, unchanged); `qmini.py` (wraps the qmini IOC release's embedded screen); `tip_tilt.py` (pcdswidgets' `MotorTipTiltDouble`); `power_meter.ui`. |
+| `screens/` | `smaract.py`, `las_basler.ui`, `las_basler_settings.ui`, `env_monitor.ui` (from `dev/las`, unchanged); `qmini.py` (wraps the qmini IOC release's embedded screen); `tip_tilt.py` (pcdswidgets' `MotorTipTiltDouble`); `power_meter.ui`; `elliptec.py` + `elliptec.ui` (all Elliptecs). |
 | `tools/gen_indicator_pvs.py` | **Dev-time only, uses ophyd** (run with the pcds conda python). Regenerates `indicator_pvs` in `config/device_types.yaml`. |
 | `tools/export_happi_devices.py` | Regenerates `tests/devices_snapshot.yaml` from happi (`$HAPPI_CFG`, never `$MODS_IP1_DEVICE_DB`), sorted by name. No happi import; runs with any python that has PyYAML. |
 | `floorplan.png` | Screenshot of the floor plan (documentation only). |
-| `tests/` | pytest-qt tests (32). `tests/devices_snapshot.yaml` is a dated snapshot of the 59 active IP1_MODS happi entries that the tests use instead of the live database. |
+| `tests/` | pytest-qt tests (37). `tests/devices_snapshot.yaml` is a dated snapshot of the 59 active IP1_MODS happi entries that the tests use instead of the live database. |
 
 ## Config entry types (`opens:`)
 
@@ -115,7 +115,7 @@ The tests point channel access at `127.0.0.1` only, use the YAML device snapshot
 - multi-command toolbar buttons (nf-ff-alignment) split by title
 - station tools and shutter icons run their toolbar commands; icon clicks open the right screen in the dock
 - status dots fill in per-device happi kwargs (tip/tilt suffixes, Elliptec channels), and the icon tooltip lists bad PVs
-- spectrometers open the Qmini screen, which scrolls in a short dock; tip/tilts open the tip/tilt screen with the right axes; the power meter screen fits the dock; classes without a screen open the placeholder
+- spectrometers open the Qmini screen, which scrolls in a short dock; tip/tilts open the tip/tilt screen with the right axes; the power meter screen fits the dock; each Elliptec type gets exactly its sections; classes without a screen open the placeholder
 - icons shrink with the drawing; at the minimum window size no toolbar tab scrolls
 - the screens load with all macros filled
 - the home screen imports nothing forbidden, and nothing from the rest of `dev/`
@@ -123,7 +123,6 @@ The tests point channel access at `127.0.0.1` only, use the YAML device snapshot
 ## Known gaps / next steps
 
 - **Not tested against live IOCs.**
-- **8 devices open a placeholder**, all Elliptecs.
 - **Spectrometer status dots watch big waveforms.** `QminiSpectrometer`'s generated `indicator_pvs` include `:SPECTRUM` and `:WAVELENGTHS` (the same signals typhos watched). They work, but each update is a full array; trimming them to `:STATUS` / `:W0_FIT` would be cheaper. `gen_indicator_pvs.py` would put them back on the next run, so this needs a small exclude option there first.
 - **Station layout is schematic** (equal boxes in beam order), not the real table. Fine-tune widths, heights and icon positions in `config/floorplan.yaml`, or replace with a sketch of the table.
 - **Station titles** (`stations.*.title`, shown in tooltips) use the happi location-group names; give them proper names (what COM / HRM / EJX stand for) when known.

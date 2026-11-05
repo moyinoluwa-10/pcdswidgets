@@ -1,11 +1,12 @@
 import os
 import subprocess
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 import floorplan
 import pytest
-from devices import DeviceInfo, _entry_to_info
+from devices import DeviceInfo, DeviceScreenCache, DeviceType, _entry_to_info
 from floorplan import FloorPlan, FloorPlanContext
 from pydm.display import ScreenTarget, load_file
 from pydm.widgets import PyDMEmbeddedDisplay
@@ -195,11 +196,13 @@ def test_happi_kwargs_are_filled_in_from_the_entry():
 
 
 def test_devices_without_a_screen_open_a_placeholder(context: FloorPlanContext, qtbot: QtBot):
-    device = context.devices_by_name["lm1k4_atm_mp1_wp2_rm1"]
-    display = context.screens.display_for_device(device)
+    # Every configured class has a screen now, so use a class whose device type has none
+    device = replace(context.devices_by_name["lm1k4_atm_mp1_wp2_rm1"], device_class="pcdsdevices.device_types.Unknown")
+    types = {**context.types, device.device_class: DeviceType(device.device_class, indicator_pvs=["{prefix}"])}
+    display = DeviceScreenCache(types).display_for_device(device)
     qtbot.addWidget(display)
     text = display.findChild(QLabel).text()
-    assert "EllRotation" in text and "no screen" in text
+    assert "Unknown" in text and "no screen" in text
     assert isinstance(device, DeviceInfo)
 
 
@@ -231,6 +234,48 @@ def test_power_meter_opens_its_screen_and_fits_the_dock(context: FloorPlanContex
     assert "ca://LM1K4:EJX_DP12_TF1_PM1.VAL" in channel_addresses(display)
     # The dock is about 440 px tall at the home screen's minimum size
     assert display.minimumSizeHint().height() <= 440
+
+
+@pytest.mark.parametrize(
+    "name,stage,motor,present,absent",
+    [
+        (
+            "lm1k4_ejx_mp1_wp1",
+            "continuous",
+            "LM1K4:EJX:ELL:2:M1",
+            ["move_value", "jog_step", "clean", "stop"],
+            ["move_choice", "names_box"],
+        ),
+        ("lm1k4_atm_mp1_wp2_lm1", "continuous", "LM1K4:ATM:ELL:1:M4", ["move_value", "home"], ["move_choice"]),
+        (
+            "lm1k4_ejx_dp12_tf1_sl1",
+            "ell6",
+            "LM1K4:EJX:ELL:3:M1",
+            ["move_choice", "name1"],
+            ["move_value", "jog_step_row", "home", "name2", "clean"],
+        ),
+        (
+            "lm1k4_ejx_mp1_s41",
+            "ell9",
+            "LM1K4:EJX:ELL:1:M3",
+            ["move_choice", "name3", "jog_step", "home"],
+            ["move_value", "clean", "stop"],
+        ),
+    ],
+)
+def test_elliptecs_share_one_screen(context: FloorPlanContext, qtbot: QtBot, name, stage, motor, present, absent):
+    """One screen for every Elliptec class: the sections match the records the IOC loads for that stage."""
+    display = context.screens.display_for_device(context.devices_by_name[name])
+    qtbot.addWidget(display)
+    assert display.stage == stage
+    assert display.windowTitle() == name
+    for widget in present:
+        assert display.findChild(QWidget, widget) is not None, widget
+    for widget in absent:
+        assert display.findChild(QWidget, widget) is None, widget
+    assert f"ca://{motor}:CURPOS" in channel_addresses(display)
+    # Scrolls in a short dock instead of squashing; never needs to scroll sideways at the dock's width
+    assert display.findChild(QWidget, "content").minimumSizeHint().width() <= 420
 
 
 def test_spectrometers_open_the_qmini_screen(context: FloorPlanContext, qtbot: QtBot):
@@ -296,6 +341,7 @@ def test_every_active_class_has_a_device_type(context: FloorPlanContext):
         ("env_monitor.ui", {"PREFIX": "LM1K4:INJ_BHC_AI_01", "NAME": "lm1k4_inj_env_sens"}),
         ("qmini.py", {"prefix": "LM1K4:EJX_DP1_SP1", "NAME": "lm1k4_ejx_dp1_sp1"}),
         ("power_meter.ui", {"PREFIX": "LM1K4:EJX_DP12_TF1_PM1", "NAME": "lm1k4_ejx_dp12_tf1_pm1"}),
+        ("elliptec.py", {"MOTOR": "LM1K4:EJX:ELL:1:M3", "NAME": "s41", "STAGE": "ell9"}),
         ("tip_tilt.py", {"TIP": "LM1K4:OPA_MP1_MR1_TIP1", "TILT": "LM1K4:OPA_MP1_MR1_TILT1", "NAME": "mr1"}),
     ],
 )
