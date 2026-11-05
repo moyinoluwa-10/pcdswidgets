@@ -57,7 +57,6 @@ class DeviceInfo:
             "prefix": self.prefix,
             "prefix_nocolon": self.prefix.rstrip(":"),
             "doc": self.documentation,
-            "app": str(APP_DIR),
         }
 
 
@@ -74,7 +73,7 @@ class DeviceType:
         """Absolute path to the screen file, or "" if there is none. Relative paths are relative to screens/."""
         if not self.screen:
             return ""
-        path = Path(self.screen.format(app=str(APP_DIR)))
+        path = Path(self.screen)
         if not path.is_absolute():
             path = SCREENS_DIR / path
         return str(path)

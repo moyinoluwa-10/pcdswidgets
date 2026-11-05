@@ -215,7 +215,7 @@ def test_icons_shrink_with_the_image(plan: FloorPlan):
 
 def test_device_types_point_at_v2_screens():
     """Every configured screen is in dev/v2 and exists."""
-    types = floorplan.load_device_types(floorplan.DEVICE_TYPES_FILE)
+    types = floorplan.load_device_types()
     assert types["pcdsdevices.epics_motor.SmarAct"].screen_path() == str(V2_DIR / "screens" / "smaract_r4.py")
     assert types["pcdsdevices.epics_motor.SmarAct"].indicator_pvs == ["{prefix}.RBV"]
     # The BTPS opens through the toolbar and has no status dot, so it has no device type

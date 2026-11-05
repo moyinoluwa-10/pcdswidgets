@@ -1,25 +1,26 @@
 # Layout and click behavior for the v2 LAS floor plan.
 #
-# The laser hall is drawn by the screen itself (no background image), from the "hall" section below:
-# a row of columns (bays, rack columns, the BTS) with relative widths and heights, laid out by Qt.
+# The laser hall is drawn by the screen itself, from the "hall" section below: a row of
+# columns (bays, rack columns, the BTS) with relative widths and heights, laid out by Qt.
 # Icons are placed inside their area by percentage, so they move and scale with it.
 #
 # What a click opens is a list of "opens" entries. One entry: a click opens it directly
 # (ctrl+click new tab, shift+click new window, right click for the menu). Several: a click shows a menu.
 #   device: <happi name>                  that device's screen (config/device_types.yaml)
 #   devices: {location: [...], function: [...]}   every matching happi device, as a sub-menu
+#   shutter: <LSn>                        that laser source's shutter screen (screens/laser_shutter.ui)
 #   screen: <file in screens/>, macros: {...}, title: ...   any pydm screen
 #   toolbar: [<tab>, <button>]            run that button's command from the LAS toolbar yaml (external window)
 #
 # icon names: camera, smaract, thermometer, shutter, pdu, btps, or any FontAwesome 5 name.
 
 # The hall, left to right. width = relative share of the hall width (gaps included);
-# top / height = % of the hall height. Colors match the original drawing.
+# top / height = % of the hall height. Colors match the original drawing (bg-with-exp.png).
 hall:
   aspect: 2.03 # width / height of the whole hall
   background: "#eeeeee"
   border: "#595959"
-  inactive: "#b7b7b7" # racks with nothing to open
+  inactive: "#d7d7d7" # racks with nothing to open
   columns:
     - { gap: 3.5 }
     - { bay: Bay 1, width: 16, top: 12, height: 83, color: "#d9ead3" }

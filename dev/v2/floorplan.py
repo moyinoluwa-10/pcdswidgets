@@ -42,7 +42,6 @@ V2_DIR = Path(__file__).resolve().parent
 logger = logging.getLogger(__name__)
 
 CONFIG_FILE = V2_DIR / "config" / "floorplan.yaml"
-DEVICE_TYPES_FILE = V2_DIR / "config" / "device_types.yaml"
 # "Zone 1 TiSaph PSU/Chiller PDU (R07)" -> R07
 RACK_IN_NAME = re.compile(r"\((R\d+)\)")
 SCREENS_DIR = V2_DIR / "screens"
@@ -149,7 +148,7 @@ class FloorPlanContext:
             self.toolbar: dict[str, Any] = yaml.safe_load(fd) or {}
         self.devices = load_devices(beamline, device_db)
         self.devices_by_name = {dev.name: dev for dev in self.devices}
-        self.types = load_device_types(DEVICE_TYPES_FILE)
+        self.types = load_device_types()
         self.screens = DeviceScreenCache(self.types)
         self._screen_cache: dict[str, QWidget] = {}
         self.functions: dict[str, dict[str, str]] = self.config.get("functions", {})
