@@ -19,8 +19,8 @@
 # The hall, left to right. width = relative share of the hall width (gaps included);
 # top / height = % of the hall height. Colors match the original drawing (bg-with-exp.png).
 hall:
-  aspect: 2.03 # width / height of the whole hall
-  reference_height: 659 # preferred height in px (icon scale 1.0); icons drop their labels below 75 % of it
+  aspect: 2.0 # width / height of the whole hall
+  reference_height: 660 # preferred height in px (icon scale 1.0); icons drop their labels below 75 % of it
   background: "#eeeeee"
   border: "#595959"
   inactive: "#d7d7d7" # racks with nothing to open

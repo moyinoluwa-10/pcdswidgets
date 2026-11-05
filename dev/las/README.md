@@ -45,6 +45,7 @@ Under the floor plan is the full LAS toolbar (`config/las_toolbar.yaml`, a copy 
 | Path | What it is |
 |---|---|
 | `bg-with-exp.png` | The annotated sketch of what each area should do. Documentation only. |
+| `floorplan.png` | Screenshot of the floor plan as built (documentation only). |
 | `config/floorplan.yaml` | **All layout and behaviour**: the hall drawing (columns left to right, with relative widths, heights and colours; racks generated as R01–R20 in coloured groups of five), icon positions (percent of their area), what each opens, laser source → bay, bay tools, which toolbar tab racks are matched against, and `reference_height` (the drawing height at icon scale 1.0, the old `bg.png`'s 659 px). A rack can override the automatic match with its own `opens:` list. Edit this to move or add things; no code changes needed. |
 | `floorplan.py` | `FloorPlan` widget, `AreaButton` / `IconButton`, and `FloorPlanContext`, which turns config entries into things to open. |
 | `las_home.py` | Home screen: floor plan with the LAS toolbar under it, `TabDock` on the right. |
