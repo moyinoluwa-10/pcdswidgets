@@ -140,6 +140,11 @@ MODS:
       type: shell
       commands:
         - /cds/group/pcds/setup/lucid-launcher.sh QRIX_MODS
+    3RIX MODS:
+      type: shell
+      commands:
+        - /cds/group/pcds/epics-dev/screens/pydm/las/mods_3rix/mods_3rix_home.sh
+
 #    Laser Lab:
 #      type: shell
 #      commands:
