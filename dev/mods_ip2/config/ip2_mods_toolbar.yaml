@@ -1,0 +1,67 @@
+General:
+  config:
+    cols: 4
+  buttons:
+    LCLS Home:
+      type: shell
+      redirectCommandOutput: true
+      commands:
+        - /reg/g/pcds/setup/pydm_lclshome.sh
+    Cam Viewer:
+      type: shell
+      commands:
+        - /reg/g/pcds/pyps/config/las/camviewer.sh
+
+
+# EVRs:
+#   config:
+#     cols: 1
+
+#   buttons:
+#     ioc-las-lm2k4-tpr-01:
+#       type: shell
+#       commands:
+#         - 
+
+
+Digitizers:
+  config:
+    cols: 1
+
+  buttons:
+    Wave8-01:
+      type: shell
+      commands:
+        - /reg/g/pcds/epics-dev/cpino/ioc/las/ioc-las-pgpWave8/build/iocBoot/ioc-las-ip2-pgpw8-01/edm-ioc-las-ip2-pgpw8-01.cmd
+
+    QADC Digitizer:
+      type: shell
+      commands:
+        - /cds/group/pcds/epics/ioc/las/qadc/R3.0.5/build/iocBoot/ioc-lm2k4-qadc134-01/pydm-ioc-lm2k4-qadc134-01.cmd
+
+Tools:
+  config:
+    cols: 2
+  buttons:
+    iocmanager:
+      type: shell
+      commands:
+        - /cds/group/pcds/pyps/config/las/iocmanager.sh
+    Dispersion Scan:
+      type: shell
+      commands:
+        - /cds/home/t/tjohnson/trunk/las-dispersion-scan/run-tmo-ip2.sh
+    ATM non-LSS Shutter:
+      type: shell
+      commands:
+        - /cds/home/a/aberges/trunk/screens/tmo_mods_shutter/launchgui_lm2k4_atm_shutter.cmd
+    EJX non-LSS Shutter:
+      type: shell
+      commands:
+        - /cds/home/a/aberges/trunk/screens/tmo_mods_shutter/launchgui_lm2k4_ejx_shutter.cmd
+
+    # WFS Expert Screen:
+    #   type: shell
+    #   commands:
+    #     - /cds/group/pcds/epics-dev/mods/lm1k4/inj/Thorlabs-WFS/build/iocBoot/ioc-lm1k4-inj-wfs-01/edm-ioc-lm1k4-inj-wfs-01.cmd
+ 

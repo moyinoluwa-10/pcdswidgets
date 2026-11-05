@@ -1,0 +1,347 @@
+# Snapshot of active IP2_MODS devices from /reg/g/pcds/pyps/apps/hutch-python/device_config/db.json, taken 2026-11-05
+# Regenerate with: python dev/mods_ip2/tools/export_happi_devices.py IP2_MODS <this file>
+- name: lm2k4_atm_dp1_ff1
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LM2K4:ATM_DP1_FF1:'
+  location_group: 4_lm2k4_atm
+  functional_group: cameras
+  documentation: IP2 ATM FF1
+  kwargs: {}
+- name: lm2k4_atm_dp1_nf1
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LM2K4:ATM_DP1_NF1:'
+  location_group: 4_lm2k4_atm
+  functional_group: cameras
+  documentation: IP2 ATM NF1
+  kwargs: {}
+- name: lm2k4_atm_dp2_ff1
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LM2K4:ATM_DP2_FF1:'
+  location_group: 4_lm2k4_atm
+  functional_group: cameras
+  documentation: IP2 ATM FF2
+  kwargs: {}
+- name: lm2k4_atm_dp2_nf1
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LM2K4:ATM_DP2_NF1:'
+  location_group: 4_lm2k4_atm
+  functional_group: cameras
+  documentation: IP2 ATM NF2
+  kwargs: {}
+- name: lm2k4_atm_mp1_img1_bs1
+  device_class: pcdsdevices.epics_motor.SmarActEncodedTipTilt
+  prefix: LM2K4:ATM_MP1_IMG1_BS1
+  location_group: 4_lm2k4_atm
+  functional_group: smaract
+  documentation: ''
+  kwargs:
+    tilt_pv: _TILT1
+    tip_pv: _TIP1
+- name: lm2k4_atm_mp1_mr1
+  device_class: pcdsdevices.epics_motor.SmarActEncodedTipTilt
+  prefix: LM2K4:ATM_MP1_MR1
+  location_group: 4_lm2k4_atm
+  functional_group: smaract
+  documentation: ''
+  kwargs:
+    tilt_pv: _TILT1
+    tip_pv: _TIP1
+- name: lm2k4_atm_mp1_mr3
+  device_class: pcdsdevices.epics_motor.SmarActEncodedTipTilt
+  prefix: LM2K4:ATM_MP1_MR3
+  location_group: 4_lm2k4_atm
+  functional_group: smaract
+  documentation: ''
+  kwargs:
+    tilt_pv: _TILT1
+    tip_pv: _TIP1
+- name: lm2k4_atm_mp1_wp1
+  device_class: pcdsdevices.device_types.EllRotation
+  prefix: LM2K4:ATM:ELL:1
+  location_group: 4_lm2k4_atm
+  functional_group: elliptecs
+  documentation: ''
+  kwargs:
+    channel: '1'
+    port: '15'
+- name: lm2k4_com_dp1_tf1_nf1
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LM2K4:COM_DP1_TF1_NF1:'
+  location_group: 2_lm2k4_com
+  functional_group: cameras
+  documentation: IP2 COM NF1
+  kwargs: {}
+- name: lm2k4_com_env_sens
+  device_class: pcdsdevices.device_types.EnvironmentalMonitor
+  prefix: LM2K4:COM_BHC_AI_01
+  location_group: 2_lm2k4_com
+  functional_group: env sensors
+  documentation: COM tile ENV sensor
+  kwargs: {}
+- name: lm2k4_com_mp1_psm1
+  device_class: pcdsdevices.device_types.EllLinear
+  prefix: LM2K4:COM:ELL:1
+  location_group: 2_lm2k4_com
+  functional_group: elliptecs
+  documentation: ''
+  kwargs:
+    channel: '1'
+    port: '15'
+- name: lm2k4_com_mp1_psm2
+  device_class: pcdsdevices.device_types.EllLinear
+  prefix: LM2K4:COM:ELL:1
+  location_group: 2_lm2k4_com
+  functional_group: elliptecs
+  documentation: ''
+  kwargs:
+    channel: '2'
+    port: '15'
+- name: lm2k4_com_mp2_bs7
+  device_class: pcdsdevices.epics_motor.SmarActEncodedTipTilt
+  prefix: LM2K4:COM_MP2_BS7
+  location_group: 2_lm2k4_com
+  functional_group: smaract
+  documentation: ''
+  kwargs:
+    tilt_pv: _TILT1
+    tip_pv: _TIP1
+- name: lm2k4_com_mp2_dly1
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LM2K4:COM_MP2_DLY1
+  location_group: 2_lm2k4_com
+  functional_group: smaract
+  documentation: '{''PTYP'':420}'
+  kwargs: {}
+- name: lm2k4_com_mp2_mr4
+  device_class: pcdsdevices.epics_motor.SmarActTipTilt
+  prefix: LM2K4:COM_MP2_MR4
+  location_group: 2_lm2k4_com
+  functional_group: smaract
+  documentation: '"Use Open-loop ONLY"'
+  kwargs:
+    tilt_pv: _TILT1
+    tip_pv: _TIP1
+- name: lm2k4_com_mp2_psm1
+  device_class: pcdsdevices.device_types.EllLinear
+  prefix: LM2K4:COM:ELL:1
+  location_group: 2_lm2k4_com
+  functional_group: elliptecs
+  documentation: ''
+  kwargs:
+    channel: '3'
+    port: '15'
+- name: lm2k4_com_mp2_psm2
+  device_class: pcdsdevices.device_types.EllLinear
+  prefix: LM2K4:COM:ELL:1
+  location_group: 2_lm2k4_com
+  functional_group: elliptecs
+  documentation: ''
+  kwargs:
+    channel: '4'
+    port: '15'
+- name: lm2k4_ejx_dp1_dly1
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LM2K4:EJX_DP1_DLY1
+  location_group: 5_lm2k4_ejx
+  functional_group: smaract
+  documentation: ''
+  kwargs: {}
+- name: lm2k4_ejx_dp1_sp1
+  device_class: pcdsdevices.device_types.QminiSpectrometer
+  prefix: LM2K4:EJX_DP1_SP1
+  location_group: 5_lm2k4_ejx
+  functional_group: spectrometers
+  documentation: NIR Qmini for EJX
+  kwargs: {}
+- name: lm2k4_ejx_dp2_mr1_lm1
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LM2K4:EJX_DP2_MR1_LM1
+  location_group: 5_lm2k4_ejx
+  functional_group: smaract
+  documentation: ''
+  kwargs: {}
+- name: lm2k4_ejx_dp2_tf1_ff1
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LM2K4:EJX_DP2_TF1_FF1:'
+  location_group: 5_lm2k4_ejx
+  functional_group: cameras
+  documentation: IP2 EJX DP2 TF1 FF1
+  kwargs: {}
+- name: lm2k4_ejx_dp2_tf1_nf1
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LM2K4:EJX_DP2_TF1_NF1:'
+  location_group: 5_lm2k4_ejx
+  functional_group: cameras
+  documentation: IP2 EJX DP2 TF1 NF1
+  kwargs: {}
+- name: lm2k4_ejx_loc1_ff1
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LM2K4:EJX_LOC1_FF1:'
+  location_group: 5_lm2k4_ejx
+  functional_group: cameras
+  documentation: IP2 EJX LOC1 FF1
+  kwargs: {}
+- name: lm2k4_ejx_loc1_nf1
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LM2K4:EJX_LOC1_NF1:'
+  location_group: 5_lm2k4_ejx
+  functional_group: cameras
+  documentation: IP2 EJX LOC1 NF1
+  kwargs: {}
+- name: lm2k4_ejx_mp1_mr97
+  device_class: pcdsdevices.epics_motor.SmarActEncodedTipTilt
+  prefix: LM2K4:EJX_MP1_MR97
+  location_group: 5_lm2k4_ejx
+  functional_group: smaract
+  documentation: ''
+  kwargs:
+    tilt_pv: _TILT1
+    tip_pv: _TIP1
+- name: lm2k4_ejx_mp1_mr99
+  device_class: pcdsdevices.epics_motor.SmarActEncodedTipTilt
+  prefix: LM2K4:EJX_MP1_MR99
+  location_group: 5_lm2k4_ejx
+  functional_group: smaract
+  documentation: ''
+  kwargs:
+    tilt_pv: _TILT1
+    tip_pv: _TIP1
+- name: lm2k4_ejx_mp1_mr99_lm1
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LM2K4:EJX_MP1_MR99_LM1
+  location_group: 5_lm2k4_ejx
+  functional_group: smaract
+  documentation: ''
+  kwargs: {}
+- name: lm2k4_ejx_mp1_s41_ic
+  device_class: pcdsdevices.device_types.Ell9
+  prefix: LM2K4:EJX:ELL:1
+  location_group: 5_lm2k4_ejx
+  functional_group: elliptecs
+  documentation: ''
+  kwargs:
+    channel: '1'
+    port: '15'
+- name: lm2k4_ejx_mp1_s42_oc
+  device_class: pcdsdevices.device_types.Ell9
+  prefix: LM2K4:EJX:ELL:1
+  location_group: 5_lm2k4_ejx
+  functional_group: elliptecs
+  documentation: ''
+  kwargs:
+    channel: '2'
+    port: '15'
+- name: lm2k4_ejx_mp2_ls1_lm1
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LM2K4:EJX_MP2_LS1_LM1
+  location_group: 5_lm2k4_ejx
+  functional_group: smaract
+  documentation: ''
+  kwargs: {}
+- name: lm2k4_ejx_mp2_ls1_lm2
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LM2K4:EJX_MP2_LS1_LM2
+  location_group: 5_lm2k4_ejx
+  functional_group: smaract
+  documentation: ''
+  kwargs: {}
+- name: lm2k4_ejx_mp2_ls1_lm3
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LM2K4:EJX_MP2_LS1_LM3
+  location_group: 5_lm2k4_ejx
+  functional_group: smaract
+  documentation: ''
+  kwargs: {}
+- name: lm2k4_hrm_env_sens
+  device_class: pcdsdevices.device_types.EnvironmentalMonitor
+  prefix: LM2K4:HRM_BHC_AI_01
+  location_group: 3_lm2k4_hrm
+  functional_group: env sensors
+  documentation: HRM tile ENV sensor
+  kwargs: {}
+- name: lm2k4_hrm_mp0_dly1
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LM2K4:HRM_MP0_DLY1
+  location_group: 3_lm2k4_hrm
+  functional_group: smaract
+  documentation: ''
+  kwargs: {}
+- name: lm2k4_hrm_mp1_pc1_lm1
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LM2K4:HRM_MP1_PC1_LM1
+  location_group: 3_lm2k4_hrm
+  functional_group: smaract
+  documentation: ''
+  kwargs: {}
+- name: lm2k4_hrm_mp1_pc1_pzm2
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LM2K4:HRM_MP1_PC1_PZM2
+  location_group: 3_lm2k4_hrm
+  functional_group: smaract
+  documentation: ''
+  kwargs: {}
+- name: lm2k4_inj_dp1_sp1
+  device_class: pcdsdevices.device_types.QminiSpectrometer
+  prefix: LM2K4:INJ_DP1_SP1
+  location_group: 1_lm2k4_inj
+  functional_group: spectrometers
+  documentation: NIR Qmini which is shared in IP1
+  kwargs: {}
+- name: lm2k4_inj_dp1_tf1_ff1
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LM2K4:INJ_DP1_TF1_FF1:'
+  location_group: 1_lm2k4_inj
+  functional_group: cameras
+  documentation: ''
+  kwargs: {}
+- name: lm2k4_inj_dp1_tf1_nf1
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LM2K4:INJ_DP1_TF1_NF1:'
+  location_group: 1_lm2k4_inj
+  functional_group: cameras
+  documentation: IP2 INJ NF1
+  kwargs: {}
+- name: lm2k4_inj_env_sens
+  device_class: pcdsdevices.device_types.EnvironmentalMonitor
+  prefix: LM2K4:INJ_BHC_AI_01
+  location_group: 1_lm2k4_inj
+  functional_group: env sensors
+  documentation: INJ tile ENV sensor
+  kwargs: {}
+- name: lm2k4_inj_mp1_att1_wp1
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LM2K4:INJ_MP1_ATT1_WP1
+  location_group: 1_lm2k4_inj
+  functional_group: smaract
+  documentation: ''
+  kwargs: {}
+- name: lm2k4_inj_mp1_mr1
+  device_class: pcdsdevices.epics_motor.SmarActEncodedTipTilt
+  prefix: LM2K4:INJ_MP1_MR1
+  location_group: 1_lm2k4_inj
+  functional_group: smaract
+  documentation: ''
+  kwargs:
+    tilt_pv: _TILT1
+    tip_pv: _TIP1
+- name: lm2k4_inj_mp1_zoo1_ls2
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LM2K4:INJ_MP1_ZOO1_LS2
+  location_group: 1_lm2k4_inj
+  functional_group: smaract
+  documentation: ''
+  kwargs: {}
+- name: lm2k4_inj_mp1_zoo1_ls3
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LM2K4:INJ_MP1_ZOO1_LS3
+  location_group: 1_lm2k4_inj
+  functional_group: smaract
+  documentation: ''
+  kwargs: {}
+- name: lm2k4_inj_mp2_ls2
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LM2K4:INJ_MP2_LS2
+  location_group: 1_lm2k4_inj
+  functional_group: smaract
+  documentation: ''
+  kwargs: {}
