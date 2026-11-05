@@ -29,7 +29,7 @@ Environment: `ctrlenv-widgets/v1.2.1`, with this checkout's pcdswidgets and `dev
 | **T/H** icons | direct | That environmental sensor (`screens/env_monitor.ui`). |
 | **Cameras** / **SmarAct** icons | menu | That bay's cameras or motors (`screens/las_basler.ui`, `screens/smaract_r4.py`). |
 | **Shutters** icons | direct or menu | The laser-source shutter screen (new): LS1 in Bay 1, LS3/LS4 in Bay 2, LS5/LS6 in Bay 3, LS8 in Bay 4. |
-| **BTPS** icon | direct | Runs the toolbar's "BTPS Overview" (`run_btps.sh`), which opens the btms-ui BTPS screen in its own window. The status dot still watches the BTPS PVs. |
+| **BTPS** icon | direct | Runs the toolbar's "BTPS Overview" (`run_btps.sh`), which opens the btms-ui BTPS screen in its own window. No status dot. |
 
 "Direct" items follow the `TabDock` conventions: a click replaces the current tab, ctrl+click opens a new tab, shift+click opens a new window, and a right click shows the options menu. External tools always open in their own window, since EDM can't be docked.
 
@@ -51,7 +51,7 @@ Under the floor plan is the full LAS toolbar (`config/las_toolbar.yaml`, a copy 
 | `devices.py` | Device list from happi's `db.json` read as plain JSON (path from `$LAS_DEVICE_DB` or `$HAPPI_CFG`) or a YAML snapshot; device types (`config/device_types.yaml`); the per-device screen cache. |
 | `alarm.py` | `PVAlarmCircle`, the status dot: worst alarm across a list of PVs, in typhos's colours. |
 | `screens/smaract_r4.py` | SmarAct screen from the IOC release's own widgets (`common/smaract/R4.0.0/motorScreens`, the release `ioc-las-bts-mcs1` builds against): the expert panel with the advanced-controls tabs (Open-loop, Closed-loop, Diagnostics, Configuration) always shown under it. This is `smaract_expert_screen.py` without the collapsible section and without the PicoScale tab. It uses the release's generated widget classes, because loading `smaract_advanced_controls.ui` directly hits a circular import in that package. |
-| `config/device_types.yaml` | Device class → screen, macros, and status PVs: LasBasler → `las_basler.ui`, SmarAct → `smaract_r4.py`, EnvironmentalMonitor → `env_monitor.ui`, and BtpsState (status PVs only; the BTPS opens via the toolbar). |
+| `config/device_types.yaml` | Device class → screen, macros, and status PVs: LasBasler → `las_basler.ui`, SmarAct → `smaract_r4.py`, and EnvironmentalMonitor → `env_monitor.ui`. The BTPS isn't listed: it opens through the toolbar and has no status dot. |
 | `config/las_toolbar.yaml` | The LAS toolbar (copy of `lucid_config/LAS_toolbar.yaml`). Rack → PDU matching and the bay tools come from here. |
 | `config/las_devices.yaml` | Snapshot of the 44 active LAS happi entries, used by the tests. Regenerate with `tools/export_happi_devices.py`. |
 | `screens/las_basler.ui`, `screens/env_monitor.ui` | LasBasler camera and environmental monitor screens (built for v1, copied here). |
@@ -71,7 +71,6 @@ Under the floor plan is the full LAS toolbar (`config/las_toolbar.yaml`, a copy 
   macros: {LS: LS1, TITLE: LS1 (Bay 1)}
   title: LS1 Shutter
 - toolbar: ["Bays 3/2", "Bay 3 Delay Feedback"]          # run a LAS toolbar button's command (external)
-  status: las_btps                                       # optional: status dot watches that device's PVs
 ```
 
 One entry means a click opens it directly; several mean a click shows a menu.

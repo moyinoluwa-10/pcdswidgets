@@ -10,7 +10,6 @@
 #   devices: {location: [...], function: [...]}   every matching happi device, as a sub-menu
 #   screen: <file in screens/>, macros: {...}, title: ...   any pydm screen
 #   toolbar: [<tab>, <button>]            run that button's command from the LAS toolbar yaml (external window)
-#     status: <happi name>                optional: the icon's status dot watches that device's PVs
 #
 # icon names: camera, smaract, thermometer, shutter, pdu, btps, or any FontAwesome 5 name.
 
@@ -256,13 +255,7 @@ icons:
       at: [25, 81],
       icon: btps,
       label: BTPS,
-      opens:
-        [
-          {
-            toolbar: ["NEH Beam Transport", "BTPS Overview"],
-            status: las_btps,
-          },
-        ],
+      opens: [{ toolbar: ["NEH Beam Transport", "BTPS Overview"] }],
     }
   - {
       in: BTS,
@@ -278,7 +271,7 @@ areas:
     opens:
       - { devices: { location: [Beam Transport], function: [cameras] } }
       - { toolbar: ["NEH Beam Transport", "BTMS Overview"] }
-      - { toolbar: ["NEH Beam Transport", "BTPS Overview"], status: las_btps }
+      - { toolbar: ["NEH Beam Transport", "BTPS Overview"] }
       - { toolbar: ["NEH Beam Transport", "NEH Laser Hall Vacuum"] }
       - { toolbar: ["NEH Beam Transport", "Shutters"] }
       - { toolbar: ["NEH Beam Transport", "BTS All Motors"] }

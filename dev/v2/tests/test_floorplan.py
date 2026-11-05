@@ -61,14 +61,14 @@ def test_config_references_resolve(context: FloorPlanContext):
 
 
 def test_every_las_device_is_reachable(context: FloorPlanContext):
-    """Every active LAS happi device is in exactly one bay or area menu."""
+    """Every active LAS happi device is in exactly one bay or area menu, except the BTPS (toolbar only)."""
     seen: list[str] = []
     for bay, cfg in context.config["bays"].items():
         seen.extend(leaf.device_name for opener in context.bay_openers(bay, cfg) for leaf in opener.leaves())
     for area in context.config["areas"].values():
         seen.extend(leaf.device_name for opener in context.resolve(area["opens"]) for leaf in opener.leaves())
     seen = [name for name in seen if name]
-    assert sorted(seen) == sorted(dev.name for dev in context.devices)
+    assert sorted(seen) == sorted(dev.name for dev in context.devices if dev.name != "las_btps")
 
 
 ALL_RACKS = [f"R{n:02d}" for n in range(1, 21)]
@@ -214,33 +214,31 @@ def test_icons_shrink_with_the_image(plan: FloorPlan):
 
 
 def test_device_types_point_at_v2_screens():
-    """Every configured screen is in dev/v2 and exists; BtpsState has none (it opens via the toolbar)."""
+    """Every configured screen is in dev/v2 and exists."""
     types = floorplan.load_device_types(floorplan.DEVICE_TYPES_FILE)
     assert types["pcdsdevices.epics_motor.SmarAct"].screen_path() == str(V2_DIR / "screens" / "smaract_r4.py")
     assert types["pcdsdevices.epics_motor.SmarAct"].indicator_pvs == ["{prefix}.RBV"]
-    assert types["pcdsdevices.lasers.btps.BtpsState"].screen_path() == ""
-    assert len(types["pcdsdevices.lasers.btps.BtpsState"].indicator_pvs) == 732
+    # The BTPS opens through the toolbar and has no status dot, so it has no device type
+    assert "pcdsdevices.lasers.btps.BtpsState" not in types
     for dtype in types.values():
         if dtype.screen_path():
             assert Path(dtype.screen_path()).is_file(), dtype.device_class
             assert Path(dtype.screen_path()).is_relative_to(V2_DIR), dtype.device_class
 
 
-def test_btps_runs_toolbar_command_and_keeps_status(plan: FloorPlan, no_external_commands):
-    """BTPS opens the toolbar's "BTPS Overview" (run_btps.sh) externally, with las_btps's status PVs."""
+def test_btps_runs_toolbar_command(plan: FloorPlan, no_external_commands):
+    """BTPS opens the toolbar's "BTPS Overview" (run_btps.sh) externally, with no status dot."""
     icon = next(button for button, _ in plan.icons if button.text() == "BTPS")
     target = icon.single()
     assert target.command == ["/cds/group/pcds/epics-dev/screens/pydm/las/bts/run_btps.sh"]
     assert not target.dockable
-    assert len(icon.status._pv_channels) == 732
+    assert icon.status is None
     icon.handle_click(Qt.LeftButton, QPoint(0, 0))
     assert no_external_commands == target.command
     # The BTS menu has one BTPS entry, the same command
     bts = next(button for button, _ in plan.areas if button.objectName() == "BTS")
     btps_entries = [opener for opener in bts.openers if "BTPS" in opener.title]
     assert [opener.command for opener in btps_entries] == [target.command]
-    # BtpsState is only there for its status PVs: no docked screen
-    assert floorplan.load_device_types(floorplan.DEVICE_TYPES_FILE)["pcdsdevices.lasers.btps.BtpsState"].screen == ""
 
 
 def test_smaract_screen_has_expert_and_advanced_panels(qtbot: QtBot):
