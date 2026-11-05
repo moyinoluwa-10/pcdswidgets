@@ -21,13 +21,13 @@ The environment is the same as v1: `ctrlenv-widgets/v1.2.1`, this checkout's pcd
 | Where | Click | Opens |
 |---|---|---|
 | **Bay 1–4** (the coloured area) | menu | Every control in the bay, as drop-downs: Cameras, SmarAct Motors, Temperature / Humidity (from happi `location_group`), then Shutters, then Tools (that bay's buttons from the LAS toolbar). Each device entry has the dock options; clicking the entry opens it in the dock. Groups have "Open All". |
-| **BTS** | menu | BTPS (docked, same screen as "BTPS Overview"), BTS cameras, plus the external tools BTMS Overview, BTPS Overview, Laser Hall Vacuum, Shutters, BTS motors, RGA and QPCs (marked ↗). |
+| **BTS** | menu | BTS cameras, plus the external tools BTPS Overview, BTMS Overview, Laser Hall Vacuum, Shutters, BTS motors, RGA and QPCs (marked ↗). |
 | **Racks** with a plug badge (R01, R03, R06, R07, R08, R13, R18) | direct | That rack's TrippLite PDU screen (new, PyDM). |
 | Other racks | — | Tooltip only. No PDU is known for them yet. |
 | **T/H** icons | direct | That environmental sensor (v1 screen). |
 | **Cameras** / **SmarAct** icons | menu | That bay's cameras or motors (v1 screens). |
 | **Shutters** icons | direct or menu | The laser-source shutter screen (new): LS1 in Bay 1, LS3/LS4 in Bay 2, LS5/LS6 in Bay 3, LS8 in Bay 4. |
-| **BTPS** icon | direct | The same BTPS screen as the toolbar's "BTPS Overview" (btms-ui v2.0.1), docked. |
+| **BTPS** icon | direct | Runs the toolbar's "BTPS Overview" (`run_btps.sh`), which opens the btms-ui BTPS screen in its own window. The status dot still watches the BTPS PVs. |
 
 "Direct" items follow the `TabDock` conventions: a click replaces the current tab, ctrl+click opens a new tab, shift+click opens a new window, and a right click shows the options menu. External tools always open in their own window, since EDM can't be docked.
 
@@ -49,10 +49,9 @@ Under the floor plan is the full LAS toolbar (v1's copy of `LAS_toolbar.yaml`), 
 | `las_home.sh` | Launcher. |
 | `screens/pdu_tripplite.py` | **New.** TrippLite PDU (pdu_snmp `TrippLitePdu_24.db`): name, location, model, status, input/output power, and per outlet: name, state, controllable, last command, and On / Off / Cycle buttons. |
 | `screens/smaract_r4.py` | SmarAct screen from the IOC release's own widgets (`common/smaract/R4.0.0/motorScreens`, the release `ioc-las-bts-mcs1` builds against): the expert panel with the advanced-controls tabs (Open-loop, Closed-loop, Diagnostics, Configuration) always shown under it. This is `smaract_expert_screen.py` without the collapsible section and without the PicoScale tab. It uses the release's generated widget classes, because loading `smaract_advanced_controls.ui` directly hits a circular import in that package. |
-| `config/device_types.yaml` | v2-only overrides of v1's device types (currently: SmarAct → `smaract_r4.py`, BtpsState → `btps_stacked.py`). Keys left out, such as `indicator_pvs`, come from v1. v1 is unchanged. |
-| `screens/btps_stacked.py` | The screen the toolbar's "BTPS Overview" runs (`run_btps.sh` → btms-ui v2.0.1 `BtpsStackedScreen`), opened in the dock. It loads that release's `.ui` files in place (not copied) and repeats `BtpsStackedScreen`'s logic: LS/LD selectors, one page per source/destination, View/Edit mode. It skips `btms_ui.core`/`util`, which import ophyd and pcdsdevices, and uses only the standard-library-only `btms_config` for the port list. In the 850 px dock it scrolls sideways; shift+click opens it full size. |
+| `config/device_types.yaml` | v2-only overrides of v1's device types (currently: SmarAct → `smaract_r4.py`). Keys left out, such as `indicator_pvs`, come from v1. v1 is unchanged. |
 | `screens/laser_shutter.ui` | **New.** One laser source: LSS opened/closed/permission/request, entry valve, BTPS safe-to-open, destination, override, latched error + Acknowledge, user Open/Close. |
-| `tests/` | pytest-qt tests (20). |
+| `tests/` | pytest-qt tests (19). |
 
 From v1 (used as-is, not copied, except for the overrides above): `las_devices.py`, `las_grid.py` (`DeviceScreenCache`, `PVAlarmCircle`), the device screens and `device_types.yaml`, the toolbar YAML, and `bin/las-open-device`. (v1's copied BTPS screens are no longer used by v2.)
 
@@ -66,6 +65,7 @@ From v1 (used as-is, not copied, except for the overrides above): `las_devices.p
   macros: {PRE: LAS:LHN:PWR:07}
   title: R07 PDU
 - toolbar: ["Bays 3/2", "Bay 3 Delay Feedback"]          # run a LAS toolbar button's command (external)
+  status: las_btps                                       # optional: status dot watches that device's PVs
 ```
 
 One entry means a click opens it directly; several mean a click shows a menu.
@@ -110,5 +110,4 @@ The tests point channel access at `127.0.0.1` only, use v1's YAML device snapsho
 - **Racks open only the PDU.** The sketch mentions "maybe some monitoring, or all of the controls in it". Rack entries already accept a list of `opens`, so adding more is a config change.
 - **Icon positions are rough**, as the sketch says. Fine-tune them in `floorplan.yaml`.
 - **SmarAct screens are pinned to R4.0.0.** When `ioc-las-bts-mcs1` moves to a new release, update `SMARACT_SCREENS` in `screens/smaract_r4.py`, or pass it as a macro.
-- **The BTPS screen is pinned to btms-ui v2.0.1**, the version `run_btps.sh` uses. If that script moves to a newer release, update `BTMS_UI` in `screens/btps_stacked.py`, or pass it as a macro.
 - **Mixed data sources.** Rack → PDU comes from the toolbar labels, while `ioc-las-lhn-pwr-02.cfg` says "LHN Timing PDU Bay 2" for the PDU the toolbar calls "Zone 2 OPCPA Controls PDU (R03)". Confirm with the LAS team.

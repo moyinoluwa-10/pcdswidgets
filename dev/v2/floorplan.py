@@ -254,6 +254,17 @@ class FloorPlanContext:
             return Opener(title=f"{button} (missing)", icon=make_icon("exclamation-triangle"))
         return Opener(title=button, icon=make_icon("external"), command=commands, tooltip="Opens in its own window")
 
+    def borrow_status(self, opener: Opener, device_name: str):
+        """Give an external tool a device's status PVs, so its icon still gets a status dot."""
+        device = self.devices_by_name.get(device_name)
+        if device is None:
+            logger.error("status device %s is not an active LAS device", device_name)
+            return
+        dtype = find_device_type(device, self.types)
+        if dtype is not None:
+            opener.channels = dtype.indicator_channels_for(device)
+        opener.device_name = device.name
+
     def pdu_opener(self, rack: str, cfg: dict[str, Any]) -> Opener:
         title = f"{rack} PDU"
         return self.screen_opener(
@@ -288,7 +299,10 @@ class FloorPlanContext:
             elif "screen" in entry:
                 openers.append(self.screen_opener(entry))
             elif "toolbar" in entry:
-                openers.append(self.toolbar_opener(*entry["toolbar"]))
+                opener = self.toolbar_opener(*entry["toolbar"])
+                if "status" in entry:
+                    self.borrow_status(opener, entry["status"])
+                openers.append(opener)
             else:
                 logger.error("Unknown opens entry %s", entry)
         return openers

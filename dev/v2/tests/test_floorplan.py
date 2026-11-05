@@ -156,36 +156,20 @@ def test_smaract_override_is_v2_only():
     assert v2.indicator_pvs == v1.indicator_pvs == ["{prefix}.RBV"]
 
 
-def test_btps_override_uses_btms_ui_screen():
-    btps = floorplan.load_v2_device_types()["pcdsdevices.lasers.btps.BtpsState"]
-    assert btps.screen_path() == str(V2_DIR / "screens" / "btps_stacked.py")
-    # 732 alarm-summary PVs, inherited from v1
-    assert len(btps.indicator_pvs) == 732
-
-
-def test_btps_screen_matches_btms_ui(qtbot: QtBot):
-    """Same ports and pages as btms-ui's BtpsStackedScreen, with no ophyd/pcdsdevices import."""
-    display = load_file(str(V2_DIR / "screens" / "btps_stacked.py"), target=ScreenTarget.DIALOG)
-    qtbot.addWidget(display)
-    display.show()
-    stacked = display.stacked
-    shown = sorted(
-        name for name in stacked.sources + stacked.destinations if getattr(stacked, f"{name}_button").isVisible()
-    )
-    assert shown == sorted(
-        ["LS1", "LS3", "LS4", "LS5", "LS6", "LS8"] + [f"LD{n}" for n in (1, 2, 4, 6, 8, 9, 10, 11, 12, 14)]
-    )
-    # 6 sources x 10 destinations, plus the landing page
-    assert stacked.stacked_widget.count() == 61
-    stacked.LS1_button.setChecked(True)
-    stacked.LD8_button.setChecked(True)
-    qtbot.wait(50)
-    page = stacked.stacked_widget.currentWidget()
-    assert page.objectName() == "LS1_LD8_widget"
-    assert "ca://LTLHN:LD8:LS1:BTPS:ChecksOK_RBV" in channel_addresses(page)
-    stacked.editor_button.setChecked(True)
-    assert stacked.editor_button.text() == "Edit Mode"
-    assert not [m for m in sys.modules if m.split(".")[0] in FORBIDDEN]
+def test_btps_runs_toolbar_command_and_keeps_status(plan: FloorPlan, no_external_commands):
+    """BTPS opens the toolbar's "BTPS Overview" (run_btps.sh) externally, with las_btps's status PVs."""
+    icon = next(button for button, _ in plan.icons if button.text() == "BTPS")
+    target = icon.single()
+    assert target.command == ["/cds/group/pcds/epics-dev/screens/pydm/las/bts/run_btps.sh"]
+    assert not target.dockable
+    assert len(icon.status._pv_channels) == 732
+    icon.handle_click(Qt.LeftButton, QPoint(0, 0))
+    assert no_external_commands == target.command
+    # The BTS menu has one BTPS entry, the same command
+    bts = next(button for button, _ in plan.areas if button.objectName() == "BTS")
+    btps_entries = [opener for opener in bts.openers if "BTPS" in opener.title]
+    assert [opener.command for opener in btps_entries] == [target.command]
+    assert "pcdsdevices.lasers.btps.BtpsState" not in floorplan.load_device_types(floorplan.DEVICE_TYPES_FILE)
 
 
 def test_smaract_screen_has_expert_and_advanced_panels(qtbot: QtBot):

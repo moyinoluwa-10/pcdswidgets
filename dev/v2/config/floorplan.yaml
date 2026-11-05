@@ -10,6 +10,7 @@
 #   devices: {location: [...], function: [...]}   every matching happi device, as a sub-menu
 #   screen: <file in screens/>, macros: {...}, title: ...   any pydm screen
 #   toolbar: [<tab>, <button>]            run that button's command from the LAS toolbar yaml (external window)
+#     status: <happi name>                optional: the icon's status dot watches that device's PVs
 #
 # icon names: camera, smaract, thermometer, shutter, pdu, btps, or any FontAwesome 5 name.
 
@@ -92,7 +93,7 @@ icons:
   - {pos: [1232, 225], icon: camera, label: Cameras, opens: [{devices: {location: [Bay 4], function: [cameras]}}]}
   - {pos: [1232, 470], icon: smaract, label: SmarAct, opens: [{devices: {location: [Bay 4], function: [smaract]}}]}
   # BTS
-  - {pos: [615, 420], icon: btps, label: BTPS, opens: [{device: las_btps}]}
+  - {pos: [615, 420], icon: btps, label: BTPS, opens: [{toolbar: ["NEH Beam Transport", "BTPS Overview"], status: las_btps}]}
   - {pos: [745, 420], icon: camera, label: Cameras, opens: [{devices: {location: [Beam Transport], function: [cameras]}}]}
 
 # BTS area: opens the BTPS / BTMS and the other beam transport tools
@@ -100,10 +101,9 @@ areas:
   BTS:
     rect: [550, 278, 261, 176]
     opens:
-      - {device: las_btps, title: BTPS (Beam Transport Protection System)}
       - {devices: {location: [Beam Transport], function: [cameras]}}
       - {toolbar: ["NEH Beam Transport", "BTMS Overview"]}
-      - {toolbar: ["NEH Beam Transport", "BTPS Overview"]}
+      - {toolbar: ["NEH Beam Transport", "BTPS Overview"], status: las_btps}
       - {toolbar: ["NEH Beam Transport", "NEH Laser Hall Vacuum"]}
       - {toolbar: ["NEH Beam Transport", "Shutters"]}
       - {toolbar: ["NEH Beam Transport", "BTS All Motors"]}
