@@ -508,6 +508,10 @@ class IconButton(OpenerButtonMixin, QToolButton):
             self.status = PVAlarmCircle(parent=self, channels=channels, title=label)
             self.status.setFixedSize(10, 10)
             self.status.setAttribute(Qt.WA_TransparentForMouseEvents)
+            # Black outline so the dot stays visible on the white icon background (e.g. when disconnected)
+            self.status.penStyle = Qt.SolidLine
+            self.status.penColor = QColor(0, 0, 0)
+            self.status.penWidth = 1
         self.adjustSize()
 
     def all_leaves(self) -> list[Opener]:
