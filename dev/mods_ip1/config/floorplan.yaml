@@ -52,31 +52,31 @@ functions:
 # Each station: its happi location groups, and the toolbar tools that belong to it
 stations:
   INJ:
-    title: 1 - Injection (1_lm1k4_inj)
+    title: Injection (1_lm1k4_inj)
     locations: [1_lm1k4_inj]
     tools:
       - [Tools, WFS Expert Screen]
   COM:
-    title: 2 - COM (2_lm1k4_com)
+    title: Compression (2_lm1k4_com)
     locations: [2_lm1k4_com]
     tools:
       - [Tools, nf-ff-alignment, COM_DP1]
   OPA:
-    title: 3 - OPA (3_lm1k4_opa)
+    title: Optical Parametric Amplification (3_lm1k4_opa)
     locations: [3_lm1k4_opa]
     tools: []
   HRM:
-    title: 4 - HRM (3/4_lm1k4_hrm, 4_lm1k4_int)
+    title: Harmonics (3/4_lm1k4_hrm, 4_lm1k4_int)
     locations: [3_lm1k4_hrm, 4_lm1k4_hrm, 4_lm1k4_int]
     tools: []
   ATM:
-    title: 5 - ATM (5_lm1k4_atm)
+    title: Arrival Time Monitor (5_lm1k4_atm)
     locations: [5_lm1k4_atm]
     tools:
       - [Tools, nf-ff-alignment, ATM_DP1]
       - [Tools, ATM non-LSS Shutter]
   EJX:
-    title: 6 - EJX (6_lm1k4_ejx)
+    title: Ejection (6_lm1k4_ejx)
     locations: [6_lm1k4_ejx]
     tools:
       - [Tools, EJX non-LSS Shutter]

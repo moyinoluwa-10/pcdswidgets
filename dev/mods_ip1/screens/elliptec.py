@@ -19,7 +19,19 @@ REMOVE = {
     # Numeric position with units; no position names
     "continuous": ["move_choice", "names_box"],
     # Enum position, 2 names; no jog step, home, clean or stop
-    "ell6": ["move_value", "jog_step_row", "home", "clean", "stop", "name2", "name2_label", "name3", "name3_label"],
+    "ell6": [
+        "move_value",
+        "jog_step_label",
+        "jog_step",
+        "jog_step_set",
+        "home",
+        "clean",
+        "stop",
+        "name2",
+        "name2_label",
+        "name3",
+        "name3_label",
+    ],
     # Enum position, 4 names, jog step and home; no clean or stop
     "ell9": ["move_value", "clean", "stop"],
 }
@@ -33,7 +45,6 @@ class ElliptecScreen(Display):
         self.setWindowTitle(macros.get("NAME") or macros.get("MOTOR", "Elliptec"))
         for name in REMOVE[self.stage]:
             widget = self.findChild(QWidget, name)
-            # Off the screen and out of findChildren now; deleted (and its PV disconnected) by Qt
+            # Deferred delete (disconnects its PV): freeing it now can crash pydm's rules thread
             widget.hide()
-            widget.setParent(None)
             widget.deleteLater()

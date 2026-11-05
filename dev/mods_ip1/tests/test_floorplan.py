@@ -10,8 +10,9 @@ from devices import DeviceInfo, DeviceScreenCache, DeviceType, _entry_to_info
 from floorplan import FloorPlan, FloorPlanContext
 from pydm.display import ScreenTarget, load_file
 from pydm.widgets import PyDMEmbeddedDisplay
+from pyqtgraph import GraphicsView
 from pytestqt.qtbot import QtBot
-from qtpy.QtCore import QEvent, QPoint, QRect, Qt
+from qtpy.QtCore import QCoreApplication, QEvent, QPoint, QRect, Qt
 from qtpy.QtGui import QHelpEvent
 from qtpy.QtWidgets import QLabel, QScrollArea, QWidget
 
@@ -40,6 +41,20 @@ def plan(qtbot: QtBot, context: FloorPlanContext) -> FloorPlan:
     widget.resize(1000, 526)
     widget.show()
     return widget
+
+
+# Screens with pyqtgraph views (camera image, Qmini and power-meter plots) live for the whole session:
+# deleting one mid-session can segfault in pyqtgraph's named-ViewBox "destroyed" handler, in a later test.
+_PLOT_SCREENS: list[QWidget] = []
+
+
+def add_widget(qtbot: QtBot, widget: QWidget) -> None:
+    """qtbot.addWidget, except screens with pyqtgraph views are kept (hidden) instead of being deleted."""
+    if widget.findChildren(GraphicsView):
+        _PLOT_SCREENS.append(widget)
+        widget.hide()
+    else:
+        qtbot.addWidget(widget)
 
 
 def channel_addresses(widget: QWidget) -> set[str]:
@@ -200,7 +215,7 @@ def test_devices_without_a_screen_open_a_placeholder(context: FloorPlanContext, 
     device = replace(context.devices_by_name["lm1k4_atm_mp1_wp2_rm1"], device_class="pcdsdevices.device_types.Unknown")
     types = {**context.types, device.device_class: DeviceType(device.device_class, indicator_pvs=["{prefix}"])}
     display = DeviceScreenCache(types).display_for_device(device)
-    qtbot.addWidget(display)
+    add_widget(qtbot, display)
     text = display.findChild(QLabel).text()
     assert "Unknown" in text and "no screen" in text
     assert isinstance(device, DeviceInfo)
@@ -216,7 +231,7 @@ def test_devices_without_a_screen_open_a_placeholder(context: FloorPlanContext, 
 def test_tip_tilts_open_the_tip_tilt_screen(context: FloorPlanContext, qtbot: QtBot, name: str, tip: str, style):
     """Tip (prefix + tip_pv) is left/right, tilt is up/down; encoded stages use motor-record fields."""
     display = context.screens.display_for_device(context.devices_by_name[name])
-    qtbot.addWidget(display)
+    add_widget(qtbot, display)
     widget = display.tip_tilt
     assert display.windowTitle() == name
     assert widget.motor_style == style
@@ -229,7 +244,7 @@ def test_tip_tilts_open_the_tip_tilt_screen(context: FloorPlanContext, qtbot: Qt
 
 def test_power_meter_opens_its_screen_and_fits_the_dock(context: FloorPlanContext, qtbot: QtBot):
     display = context.screens.display_for_device(context.devices_by_name["lm1k4_ejx_dp12_tf1_pm1"])
-    qtbot.addWidget(display)
+    add_widget(qtbot, display)
     assert display.windowTitle() == "lm1k4_ejx_dp12_tf1_pm1"
     assert "ca://LM1K4:EJX_DP12_TF1_PM1.VAL" in channel_addresses(display)
     # The dock is about 440 px tall at the home screen's minimum size
@@ -252,7 +267,7 @@ def test_power_meter_opens_its_screen_and_fits_the_dock(context: FloorPlanContex
             "ell6",
             "LM1K4:EJX:ELL:3:M1",
             ["move_choice", "name1"],
-            ["move_value", "jog_step_row", "home", "name2", "clean"],
+            ["move_value", "jog_step", "jog_step_set", "home", "name2", "clean"],
         ),
         (
             "lm1k4_ejx_mp1_s41",
@@ -266,9 +281,10 @@ def test_power_meter_opens_its_screen_and_fits_the_dock(context: FloorPlanContex
 def test_elliptecs_share_one_screen(context: FloorPlanContext, qtbot: QtBot, name, stage, motor, present, absent):
     """One screen for every Elliptec class: the sections match the records the IOC loads for that stage."""
     display = context.screens.display_for_device(context.devices_by_name[name])
-    qtbot.addWidget(display)
+    add_widget(qtbot, display)
     assert display.stage == stage
     assert display.windowTitle() == name
+    QCoreApplication.sendPostedEvents(None, QEvent.DeferredDelete)
     for widget in present:
         assert display.findChild(QWidget, widget) is not None, widget
     for widget in absent:
@@ -281,7 +297,7 @@ def test_elliptecs_share_one_screen(context: FloorPlanContext, qtbot: QtBot, nam
 def test_spectrometers_open_the_qmini_screen(context: FloorPlanContext, qtbot: QtBot):
     device = context.devices_by_name["lm1k4_ejx_dp1_sp1"]
     display = context.screens.display_for_device(device)
-    qtbot.addWidget(display)
+    add_widget(qtbot, display)
     assert type(display).__name__ == "QminiScreen"
     assert display.windowTitle() == "lm1k4_ejx_dp1_sp1"
     assert "ca://LM1K4:EJX_DP1_SP1:SPECTRUM" in [curve.y_address for curve in display.qmini.ui.plot._curves]
@@ -347,7 +363,7 @@ def test_every_active_class_has_a_device_type(context: FloorPlanContext):
 )
 def test_screens_load(qtbot: QtBot, screen: str, macros: dict[str, str]):
     display = load_file(str(APP_DIR / "screens" / screen), macros=macros, target=ScreenTarget.DIALOG)
-    qtbot.addWidget(display)
+    add_widget(qtbot, display)
     # Embedded displays load lazily; force them so their macros are checked too
     for child in display.findChildren(PyDMEmbeddedDisplay):
         child.load_if_needed()

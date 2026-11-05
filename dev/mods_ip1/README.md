@@ -1,6 +1,6 @@
 # IP1 MODS (LM1K4) floor-plan home screen
 
-A pcdswidgets rebuild of the `mods_ip1` home screen: a drawing of the IP1 MODS table, with its optical stations in beam order (INJ → COM → OPA → HRM → ATM → EJX). Click a station or an icon to open the matching screen in a `TabDock`. It is built from the `dev/las` template and follows the same structure.
+A pcdswidgets rebuild of the `mods_ip1` home screen: a drawing of the IP1 MODS table, with its optical stations in beam order: INJ (Injection) → COM (Compression) → OPA (Optical Parametric Amplification) → HRM (Harmonics) → ATM (Arrival Time Monitor) → EJX (Ejection). Click a station or an icon to open the matching screen in a `TabDock`. It is built from the `dev/las` template and follows the same structure.
 
 **It is standalone**: everything it needs is in this directory. It only needs a pcdswidgets (from `PYTHONPATH` or the environment) and PyDM.
 
@@ -122,7 +122,5 @@ The tests point channel access at `127.0.0.1` only, use the YAML device snapshot
 
 ## Known gaps / next steps
 
-- **Not tested against live IOCs.**
 - **Spectrometer status dots watch big waveforms.** `QminiSpectrometer`'s generated `indicator_pvs` include `:SPECTRUM` and `:WAVELENGTHS` (the same signals typhos watched). They work, but each update is a full array; trimming them to `:STATUS` / `:W0_FIT` would be cheaper. `gen_indicator_pvs.py` would put them back on the next run, so this needs a small exclude option there first.
 - **Station layout is schematic** (equal boxes in beam order), not the real table. Fine-tune widths, heights and icon positions in `config/floorplan.yaml`, or replace with a sketch of the table.
-- **Station titles** (`stations.*.title`, shown in tooltips) use the happi location-group names; give them proper names (what COM / HRM / EJX stand for) when known.
