@@ -62,7 +62,6 @@ FA_ALIASES = {
     "pdu": "plug",
     "btps": "shield-alt",
     "external": "external-link-alt",
-    "tools": "tools",
 }
 
 
@@ -146,9 +145,9 @@ class FloorPlanContext:
         device_db: str | os.PathLike | None = None,
         beamline: str = "LAS",
     ):
+        self.beamline = beamline
         with open(config_file) as fd:
             self.config: dict[str, Any] = yaml.safe_load(fd)
-        self.config_dir = Path(config_file).resolve().parent
         with open(toolbar_file) as fd:
             self.toolbar: dict[str, Any] = yaml.safe_load(fd) or {}
         self.devices = load_devices(beamline, device_db)
@@ -257,7 +256,7 @@ class FloorPlanContext:
             if "device" in entry:
                 device = self.devices_by_name.get(entry["device"])
                 if device is None:
-                    logger.error("Device %s is not an active %s device", entry["device"], "LAS")
+                    logger.error("Device %s is not an active %s device", entry["device"], self.beamline)
                     continue
                 openers.append(self.device_opener(device, entry.get("title", "")))
             elif "devices" in entry:
@@ -442,9 +441,10 @@ class AreaButton(OpenerButtonMixin, QPushButton):
         self.label = name
         self.badge: QIcon | None = None
         # Racks with nothing to open are greyed out; bays and areas always keep their color
-        self.color = QColor(inactive if (inactive and not openers) else color)
+        greyed = bool(inactive) and not openers
+        self.color = QColor(inactive if greyed else color)
         self.border = QColor(border)
-        self.text_color = QColor(90, 90, 90) if (inactive and not openers) else QColor(0, 0, 0)
+        self.text_color = QColor(90, 90, 90) if greyed else QColor(0, 0, 0)
         # label height as a fraction of the hall height, so text scales with the drawing
         self.label_size = label_size
         self.hall_height = 600
@@ -452,10 +452,6 @@ class AreaButton(OpenerButtonMixin, QPushButton):
         self.setToolTip(tooltip or name)
         self.setFocusPolicy(Qt.NoFocus)
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
-
-    @property
-    def inactive(self) -> bool:
-        return not self.openers
 
     def enterEvent(self, event):
         super().enterEvent(event)
@@ -504,6 +500,7 @@ class IconButton(OpenerButtonMixin, QToolButton):
         self.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         self.setCursor(Qt.PointingHandCursor)
         self.setFocusPolicy(Qt.NoFocus)
+        self._style_key: tuple[int, bool, int] | None = None
         self.set_scale(1.0)
         names = [leaf.title for leaf in self.all_leaves()]
         self.setToolTip(f"{label}\n" + "\n".join(names[:12]) + ("\n..." if len(names) > 12 else ""))
@@ -524,18 +521,24 @@ class IconButton(OpenerButtonMixin, QToolButton):
 
     def event(self, event):
         # The status dot is transparent to the mouse, so its alarm details are shown in the icon's tooltip
-        if event.type() == QEvent.ToolTip and self.status is not None and self.status.alarm_tooltip():
-            QToolTip.showText(event.globalPos(), f"{self.toolTip()}\n\n{self.status.alarm_tooltip()}", self)
-            return True
+        if event.type() == QEvent.ToolTip and self.status is not None:
+            alarms = self.status.alarm_tooltip()
+            if alarms:
+                QToolTip.showText(event.globalPos(), f"{self.toolTip()}\n\n{alarms}", self)
+                return True
         return super().event(event)
 
     def set_scale(self, scale: float):
         """Shrink with the floor plan so icons don't pile up on small windows."""
         size = max(12, min(28, round(self.icon_size * scale)))
-        self.setIconSize(QSize(size, size))
         show_label = scale >= self.label_min_scale
-        self.setToolButtonStyle(Qt.ToolButtonTextUnderIcon if show_label else Qt.ToolButtonIconOnly)
         font_pt = max(6, round(8 * min(scale, 1.2)))
+        # Restyling re-polishes the widget, so skip it when nothing visible changes (most resize events)
+        if self._style_key == (size, show_label, font_pt):
+            return
+        self._style_key = (size, show_label, font_pt)
+        self.setIconSize(QSize(size, size))
+        self.setToolButtonStyle(Qt.ToolButtonTextUnderIcon if show_label else Qt.ToolButtonIconOnly)
         self.setStyleSheet(
             "QToolButton { background: rgba(255, 255, 255, 215); border: 1px solid rgb(120, 120, 120);"
             f" border-radius: 4px; font-size: {font_pt}pt; padding: 1px; }}"
@@ -576,9 +579,8 @@ class Hall(QWidget):
     place its area(s) vertically, so everything is proportional and there are no coordinates.
     """
 
-    def __init__(self, floor: "FloorPlan", parent: QWidget | None = None):
+    def __init__(self, context: "FloorPlanContext", parent: QWidget | None = None):
         super().__init__(parent)
-        context = floor.context
         self.cfg = context.config["hall"]
         self.background = QColor(self.cfg.get("background", "#eeeeee"))
         self.border = QColor(self.cfg.get("border", "#595959"))
@@ -607,7 +609,7 @@ class Hall(QWidget):
                 logger.error("Unknown hall column %s", column)
 
     def make_area(self, name: str, openers: list[Opener], tooltip: str, color: str, **kwargs) -> AreaButton:
-        area = AreaButton(name, openers, tooltip, color=color, border=self.cfg.get("border", "#595959"), **kwargs)
+        area = AreaButton(name, openers, tooltip, color=color, border=self.border.name(), **kwargs)
         self.areas[name] = area
         return area
 
@@ -678,11 +680,10 @@ class FloorPlan(QWidget):
         self.context = context
         self.aspect = float(context.config["hall"].get("aspect", 2.0))
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.hall = Hall(self, parent=self)
-        # Racks are generated, so list areas in a stable order for callers: (button, kind)
+        self.hall = Hall(context, parent=self)
+        # Racks are generated, so list areas in a stable order for callers: (button, name)
         self.areas: list[tuple[AreaButton, str]] = [(area, name) for name, area in self.hall.areas.items()]
         self.icons: list[tuple[IconButton, tuple[str, float, float]]] = []
-        self._scale = 1.0
         self.build_icons()
 
     def build_icons(self):
@@ -724,7 +725,7 @@ class FloorPlan(QWidget):
         self.hall.setGeometry((self.width() - width) // 2, (self.height() - height) // 2, width, height)
         # Lay out the hall now so area geometry is final before placing icons
         self.hall.layout().activate()
-        self._scale = height / self.reference_height
+        scale = height / self.reference_height
         for area in self.hall.areas.values():
             area.hall_height = height
             area.update()
@@ -732,7 +733,7 @@ class FloorPlan(QWidget):
             area = self.hall.areas[area_name]
             origin = area.mapTo(self, QPoint(0, 0))
             center = QPoint(origin.x() + round(area.width() * x_frac), origin.y() + round(area.height() * y_frac))
-            button.set_scale(self._scale)
+            button.set_scale(scale)
             size = button.sizeHint()
             button.setGeometry(
                 center.x() - size.width() // 2, center.y() - size.height() // 2, size.width(), size.height()
