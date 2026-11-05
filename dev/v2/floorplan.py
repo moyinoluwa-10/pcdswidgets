@@ -26,10 +26,15 @@ from typing import Any
 
 import yaml
 from alarm import PVAlarmCircle
-from devices import DeviceInfo, DeviceScreenCache, find_device_type, load_device_types, load_devices
-from pydm.display import ScreenTarget, load_file
+from devices import (
+    DeviceInfo,
+    DeviceScreenCache,
+    find_device_type,
+    load_device_types,
+    load_devices,
+    load_screen,
+)
 from pydm.utilities import IconFont
-from pydm.utilities.stylesheet import merge_widget_stylesheet
 from qtpy.QtCore import QPoint, QRect, QSize, Qt
 from qtpy.QtGui import QBrush, QColor, QIcon, QMouseEvent, QPainter, QPen
 from qtpy.QtWidgets import QHBoxLayout, QMenu, QPushButton, QSizePolicy, QToolButton, QVBoxLayout, QWidget
@@ -217,11 +222,7 @@ class FloorPlanContext:
 
         def build() -> QWidget:
             if key not in self._screen_cache:
-                widget = load_file(str(path), macros=macros, target=ScreenTarget.DIALOG)
-                widget.hide()
-                merge_widget_stylesheet(widget=widget)
-                widget.setWindowTitle(title)
-                self._screen_cache[key] = widget
+                self._screen_cache[key] = load_screen(path, macros, title)
             return self._screen_cache[key]
 
         return Opener(title=title, icon=make_icon(entry.get("icon", icon)), build=build, tooltip=str(path))

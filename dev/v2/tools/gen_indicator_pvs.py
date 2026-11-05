@@ -18,12 +18,16 @@ Usage (with the shared pcds conda python, nothing is installed or modified)::
 
 import argparse
 import importlib
+import os
 import warnings
 from pathlib import Path
 
 import yaml
 
 TYPES_FILE = Path(__file__).resolve().parent.parent / "config" / "device_types.yaml"
+
+# Building the template devices creates channels for names like "{prefix}Acquire"; keep their searches local
+os.environ.update(EPICS_CA_AUTO_ADDR_LIST="NO", EPICS_CA_ADDR_LIST="127.0.0.1")
 
 # ophyd concatenates the prefix with each suffix, so building the device with a
 # literal "{prefix}" gives PV names that are templates for any instance.
@@ -47,7 +51,7 @@ def indicator_pvs_for_class(device_class: str) -> list[str]:
         sig = walk.item
         if sig.kind not in kinds or not isinstance(sig, EpicsSignalBase):
             continue
-        pvs.append(sig._read_pvname)
+        pvs.append(sig.pvname)
     return sorted(set(pvs))
 
 
@@ -69,7 +73,11 @@ def main():
         header += line + "\n"
 
     for device_class, cfg in types.items():
-        pvs = indicator_pvs_for_class(device_class)
+        try:
+            pvs = indicator_pvs_for_class(device_class)
+        except Exception as ex:
+            print(f"{device_class}: FAILED, keeping the old list ({type(ex).__name__}: {ex})")
+            continue
         print(f"{device_class}: {len(pvs)} indicator PVs")
         cfg["indicator_pvs"] = pvs
 

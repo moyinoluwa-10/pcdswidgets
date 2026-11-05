@@ -8,19 +8,20 @@ The per-class behavior (which screen to open, which macros to pass, which PVs su
 alarm state) lives in ``config/device_types.yaml``.
 """
 
+from __future__ import annotations
+
 import configparser
 import json
 import logging
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import yaml
-from pydm.display import ScreenTarget, load_file
-from pydm.utilities.stylesheet import merge_widget_stylesheet
-from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QLabel, QVBoxLayout, QWidget
+
+if TYPE_CHECKING:
+    from qtpy.QtWidgets import QWidget
 
 logger = logging.getLogger(__name__)
 
@@ -124,9 +125,11 @@ def default_database_path() -> str:
 
     Order: $LAS_DEVICE_DB, then the ``path`` in $HAPPI_CFG (or the shared default happi.cfg).
     """
-    env_db = os.environ.get("LAS_DEVICE_DB")
-    if env_db:
-        return env_db
+    return os.environ.get("LAS_DEVICE_DB") or happi_database_path()
+
+
+def happi_database_path() -> str:
+    """The happi JSON database from $HAPPI_CFG (or the shared default happi.cfg), ignoring $LAS_DEVICE_DB."""
     cfg_path = os.environ.get("HAPPI_CFG", DEFAULT_HAPPI_CFG)
     parser = configparser.ConfigParser()
     if not parser.read(cfg_path):
@@ -169,8 +172,23 @@ def load_devices(beamline: str, path: str | os.PathLike | None = None) -> list[D
     ]
 
 
+def load_screen(path: str | os.PathLike, macros: dict[str, str], title: str) -> QWidget:
+    """Build a pydm screen for the dock: in this process, hidden until shown, with pydm's stylesheet."""
+    from pydm.display import ScreenTarget, load_file
+    from pydm.utilities.stylesheet import merge_widget_stylesheet
+
+    display = load_file(str(path), macros=macros, target=ScreenTarget.DIALOG)
+    display.hide()
+    merge_widget_stylesheet(widget=display)
+    display.setWindowTitle(title)
+    return display
+
+
 def fallback_display(device: DeviceInfo, reason: str) -> QWidget:
     """A placeholder for devices that do not have a screen yet."""
+    from qtpy.QtCore import Qt
+    from qtpy.QtWidgets import QLabel, QVBoxLayout, QWidget
+
     widget = QWidget()
     widget.setWindowTitle(device.name)
     layout = QVBoxLayout()
@@ -197,10 +215,8 @@ class DeviceScreenCache:
         self._cache: dict[str, QWidget] = {}
 
     def display_for_device(self, device: DeviceInfo) -> QWidget:
-        try:
+        if device.name in self._cache:
             return self._cache[device.name]
-        except KeyError:
-            ...
         dtype = find_device_type(device, self.types)
         path = dtype.screen_path() if dtype is not None else ""
         if dtype is None:
@@ -211,9 +227,6 @@ class DeviceScreenCache:
             display = fallback_display(device, f"Screen file not found:<br>{path}")
         else:
             logger.debug("Creating display for %s from %s", device.name, path)
-            display = load_file(path, macros=dtype.macros_for(device), target=ScreenTarget.DIALOG)
-            display.hide()
-            merge_widget_stylesheet(widget=display)
-        display.setWindowTitle(device.name)
+            display = load_screen(path, dtype.macros_for(device), device.name)
         self._cache[device.name] = display
         return display
