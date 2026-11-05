@@ -11,14 +11,15 @@ It has **no runtime dependency on happi, ophyd, pcdsdevices, typhos or lucid**, 
 ## Run it
 
 ```bash
-pcdswidgets/dev/v2/las_home.sh
+pcdswidgets/dev/v2/las_home.sh &      # foreground without "&", like the production las_home.sh
+pcdswidgets/dev/v2/las_home.sh -m '{"TOOLBAR": "/cds/group/pcds/pyps/apps/hutch-python/lucid_config/LAS_toolbar.yaml"}' &   # live toolbar
 ```
 
 Environment: `ctrlenv-widgets/v1.2.1`, with this checkout's pcdswidgets and `dev/v2` first on `PYTHONPATH`. **It connects to the real IOCs.**
 
 ## What you can click
 
-![floor plan](bg-with%20exp.png)
+![floor plan](bg-with-exp.png)
 
 | Where | Click | Opens |
 |---|---|---|

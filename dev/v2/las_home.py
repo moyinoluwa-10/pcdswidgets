@@ -4,10 +4,10 @@ v2 LAS home screen: the lasdev style (floor plan + TabDock) driven by the LAS PV
 Floor plan on top, toolbar under it, dock on the right:
 
     +-----------------------------------+----------------+
-    |   bg.png with clickable bays,     |                |
-    |   racks, BTS, and control icons   |   TabDock      |
-    |                                   |                |
-    | LAS toolbar tabs                  |                |
+    |   hall drawing with clickable     |                |
+    |   bays, racks, BTS, and icons     |   TabDock      |
+    |-----------------------------------|                |
+    |   LAS toolbar tabs                |                |
     +-----------------------------------+----------------+
 
 The toolbar is the full LAS toolbar (config/las_toolbar.yaml).
@@ -56,12 +56,13 @@ class LasHomeV2(Display):
     def __init__(self, parent=None, args=None, macros=None):
         super().__init__(parent=parent, args=args, macros=macros)
         macros = macros or {}
+        toolbar_file = str(macros.get("TOOLBAR", TOOLBAR_FILE))
         self.context = FloorPlanContext(
             config_file=macros.get("FLOORPLAN", CONFIG_FILE),
-            toolbar_file=macros.get("TOOLBAR", TOOLBAR_FILE),
+            toolbar_file=toolbar_file,
             device_db=macros.get("DEVICE_DB") or None,
         )
-        self.setup_ui(toolbar_file=str(macros.get("TOOLBAR", TOOLBAR_FILE)))
+        self.setup_ui(toolbar_file=toolbar_file)
 
     def ui_filename(self):
         return None
@@ -72,21 +73,20 @@ class LasHomeV2(Display):
         self.floorplan = FloorPlan(self.context)
         self.toolbar = YamlToolbar()
         self.toolbar.filename = toolbar_file
-        # Tall enough that no toolbar tab needs to scroll; the floor plan has its own minimum,
-        # so the window minimum ends up fitting both.
+        # Tall enough that no toolbar tab needs to scroll
         self.toolbar.setMinimumHeight(toolbar_full_height(self.toolbar))
 
         # Floor plan takes the spare height, the toolbar sits under it at its natural size
-        self.left_vlayout = QVBoxLayout()
-        self.left_vlayout.setContentsMargins(0, 0, 0, 0)
-        self.left_vlayout.addWidget(self.floorplan, stretch=1)
-        self.left_vlayout.addWidget(self.toolbar)
+        left = QVBoxLayout()
+        left.setContentsMargins(0, 0, 0, 0)
+        left.addWidget(self.floorplan, stretch=1)
+        left.addWidget(self.toolbar)
 
         self.dock = TabDock()
         self.dock.set_fixed_tab_width(DOCK_WIDTH)
 
         layout = QHBoxLayout()
         layout.setContentsMargins(3, 3, 3, 3)
-        layout.addLayout(self.left_vlayout, stretch=1)
+        layout.addLayout(left, stretch=1)
         layout.addWidget(self.dock)
         self.setLayout(layout)
