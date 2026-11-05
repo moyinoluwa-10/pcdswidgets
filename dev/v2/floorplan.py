@@ -35,9 +35,9 @@ from devices import (
     load_screen,
 )
 from pydm.utilities import IconFont
-from qtpy.QtCore import QPoint, QRect, QSize, Qt
+from qtpy.QtCore import QEvent, QPoint, QRect, QSize, Qt
 from qtpy.QtGui import QBrush, QColor, QIcon, QMouseEvent, QPainter, QPen
-from qtpy.QtWidgets import QHBoxLayout, QMenu, QPushButton, QSizePolicy, QToolButton, QVBoxLayout, QWidget
+from qtpy.QtWidgets import QHBoxLayout, QMenu, QPushButton, QSizePolicy, QToolButton, QToolTip, QVBoxLayout, QWidget
 
 import pcdswidgets
 from pcdswidgets.common.dock.tab_dock import TabDock
@@ -510,7 +510,7 @@ class IconButton(OpenerButtonMixin, QToolButton):
         self.status = None
         channels = [ch for opener in openers for ch in opener.all_channels()]
         if status and channels:
-            self.status = PVAlarmCircle(parent=self, channels=channels, title=label)
+            self.status = PVAlarmCircle(parent=self, channels=channels)
             self.status.setFixedSize(10, 10)
             self.status.setAttribute(Qt.WA_TransparentForMouseEvents)
             # Black outline so the dot stays visible on the white icon background (e.g. when disconnected)
@@ -521,6 +521,13 @@ class IconButton(OpenerButtonMixin, QToolButton):
 
     def all_leaves(self) -> list[Opener]:
         return [leaf for opener in self.openers for leaf in opener.leaves()]
+
+    def event(self, event):
+        # The status dot is transparent to the mouse, so its alarm details are shown in the icon's tooltip
+        if event.type() == QEvent.ToolTip and self.status is not None and self.status.alarm_tooltip():
+            QToolTip.showText(event.globalPos(), f"{self.toolTip()}\n\n{self.status.alarm_tooltip()}", self)
+            return True
+        return super().event(event)
 
     def set_scale(self, scale: float):
         """Shrink with the floor plan so icons don't pile up on small windows."""

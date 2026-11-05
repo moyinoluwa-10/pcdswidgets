@@ -9,8 +9,8 @@ from floorplan import FloorPlan, FloorPlanContext
 from pydm.display import ScreenTarget, load_file
 from pydm.widgets import PyDMEmbeddedDisplay
 from pytestqt.qtbot import QtBot
-from qtpy.QtCore import QPoint, QRect, Qt
-from qtpy.QtGui import QColor
+from qtpy.QtCore import QEvent, QPoint, QRect, Qt
+from qtpy.QtGui import QColor, QHelpEvent
 from qtpy.QtWidgets import QWidget
 
 from pcdswidgets.common.dock.tab_dock import TabDock
@@ -204,6 +204,26 @@ def test_status_dots_watch_device_pvs(plan: FloorPlan):
         "ca://LAS:BTS:MCS2:01:m2.RBV",
         "ca://LAS:BTS:MCS2:01:m3.RBV",
     }
+
+
+def test_icon_tooltip_lists_bad_pvs(plan: FloorPlan, monkeypatch: pytest.MonkeyPatch):
+    icon = next(button for button, _ in plan.icons if button.text() == "SmarAct")
+    shown = []
+    monkeypatch.setattr(floorplan.QToolTip, "showText", lambda pos, text, widget: shown.append(text))
+    tooltip_event = QHelpEvent(QEvent.ToolTip, QPoint(5, 5), icon.mapToGlobal(QPoint(5, 5)))
+    # Nothing connects in the tests, so every PV is disconnected
+    assert icon.event(tooltip_event)
+    assert shown[-1].startswith(icon.toolTip())
+    assert "3 of 3 PVs not OK" in shown[-1]
+    assert "LAS:BTS:MCS2:01:m1.RBV: DISCONNECTED" in shown[-1]
+    # All fine: the icon's normal tooltip only
+    for address in icon.status._pv_channels:
+        icon.status.update_connection(True, addr=address)
+        icon.status.update_severity(0, addr=address)
+    assert icon.status.alarm_tooltip() == ""
+    count = len(shown)
+    icon.event(tooltip_event)
+    assert len(shown) == count
 
 
 def test_icons_shrink_with_the_image(plan: FloorPlan):

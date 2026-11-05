@@ -33,7 +33,7 @@ Environment: `ctrlenv-widgets/v1.2.1`, with this checkout's pcdswidgets and `dev
 
 "Direct" items follow the `TabDock` conventions: a click replaces the current tab, ctrl+click opens a new tab, shift+click opens a new window, and a right click shows the options menu. External tools always open in their own window, since EDM can't be docked.
 
-Each icon uses the same glyph pcdswidgets uses for the screen it opens: `CameraViewerStretch`'s camera, the SmarAct tip/tilt icon, pcdswidgets' fast-shutter symbol, a thermometer, a plug for PDUs, and a shield for BTPS. Each icon also has a small status dot. It shows the worst alarm (typhos colours) across the PVs of everything the icon opens.
+Each icon uses the same glyph pcdswidgets uses for the screen it opens: `CameraViewerStretch`'s camera, the SmarAct tip/tilt icon, pcdswidgets' fast-shutter symbol, a thermometer, a plug for PDUs, and a shield for BTPS. Each icon also has a small status dot. It shows the worst alarm (typhos colours) across the PVs of everything the icon opens; when it isn't green, hovering the icon also lists the PVs that aren't OK.
 
 The drawing keeps its proportions and scales with the window; text stays sharp at any size. Below 75 % scale the icons drop their labels.
 
@@ -58,7 +58,7 @@ Under the floor plan is the full LAS toolbar (`config/las_toolbar.yaml`, a copy 
 | `tools/gen_indicator_pvs.py` | **Dev-time only, uses ophyd** (run with the pcds conda python). Regenerates `indicator_pvs` in `config/device_types.yaml`. |
 | `tools/export_happi_devices.py` | Regenerates `tests/devices_snapshot.yaml` from happi (`$HAPPI_CFG`, never `$LAS_DEVICE_DB`), sorted by name. No happi import; runs with any python that has PyYAML. |
 | `screens/laser_shutter.ui` | **New.** One laser source: LSS opened/closed/permission/request, entry valve, BTPS safe-to-open, destination, override, latched error + Acknowledge, user Open/Close. |
-| `tests/` | pytest-qt tests (25). `tests/devices_snapshot.yaml` is a dated snapshot of the 44 active LAS happi entries that the tests use instead of the live database (the screen itself reads the live one). |
+| `tests/` | pytest-qt tests (26). `tests/devices_snapshot.yaml` is a dated snapshot of the 44 active LAS happi entries that the tests use instead of the live database (the screen itself reads the live one). |
 
 
 ## Config entry types (`opens:`)
@@ -102,7 +102,7 @@ The tests point channel access at `127.0.0.1` only, use the YAML device snapshot
 - all 20 racks are drawn, racks without a PDU are grey, and a new "(R05)" toolbar button lights up R05
 - the menus contain the expected entries
 - rack clicks run their PDU toolbar button, icon clicks open the right screen in the dock
-- status dots watch the right PVs
+- status dots watch the right PVs, and the icon tooltip lists the bad ones
 - icons shrink with the drawing
 - the new screens load with all macros filled, including embedded displays (forced to load)
 - the home screen imports nothing forbidden, and nothing from `dev/v1`

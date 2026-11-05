@@ -6,13 +6,11 @@ with the same levels, ordering, and colors.
 """
 
 import enum
-import os
 from functools import partial
 
-from pydm.utilities import is_qt_designer
 from pydm.widgets.channel import PyDMChannel
 from pydm.widgets.drawing import PyDMDrawingCircle
-from qtpy import QtCore, QtWidgets
+from qtpy import QtCore
 from qtpy.QtWidgets import QWidget
 
 
@@ -28,11 +26,11 @@ class AlarmLevel(enum.IntEnum):
 
 # Same colors as typhos.alarm.indicator_stylesheet
 ALARM_COLORS = {
-    AlarmLevel.NO_ALARM: "rgba(0,255,0,255)",
-    AlarmLevel.MINOR: "rgba(255,255,0,255)",
-    AlarmLevel.MAJOR: "rgba(255,0,0,255)",
-    AlarmLevel.INVALID: "rgba(255,0,255,255)",
-    AlarmLevel.DISCONNECTED: "rgba(255,255,255,255)",
+    AlarmLevel.NO_ALARM: "rgba(0,255,0,255)",  # green
+    AlarmLevel.MINOR: "rgba(255,255,0,255)",  # yellow
+    AlarmLevel.MAJOR: "rgba(255,0,0,255)",  # red
+    AlarmLevel.INVALID: "rgba(255,0,255,255)",  # magenta
+    AlarmLevel.DISCONNECTED: "rgba(255,255,255,255)",  # white
 }
 
 
@@ -45,9 +43,8 @@ class PVAlarmCircle(PyDMDrawingCircle):
 
     alarm_changed = QtCore.Signal(int)
 
-    def __init__(self, parent: QWidget | None = None, channels: list[str] | None = None, title: str = ""):
+    def __init__(self, parent: QWidget | None = None, channels: list[str] | None = None):
         super().__init__(parent)
-        self._title = title
         self._pv_channels: dict[str, PyDMChannel] = {}
         self._connected: dict[str, bool] = {}
         self._severity: dict[str, int] = {}
@@ -73,8 +70,7 @@ class PVAlarmCircle(PyDMDrawingCircle):
                 severity_slot=partial(self.update_severity, addr=address),
             )
             self._pv_channels[address] = channel
-            if not is_qt_designer():
-                channel.connect()
+            channel.connect()
         self.update_current_alarm()
 
     def channels(self):
@@ -109,21 +105,15 @@ class PVAlarmCircle(PyDMDrawingCircle):
             f"{type(self).__name__} {{border: none; background: transparent; qproperty-brush: {color};}}"
         )
 
-    def alarm_tooltip(self) -> str:
-        """Device name, then every PV that is not in NO_ALARM, like the typhos tooltip."""
-        lines = [f"Device {self._title}"] if self._title else []
-        bad = [
-            f"{addr.split('://', 1)[-1]}: {self.alarm_for(addr).name}"
-            for addr in self._pv_channels
-            if self.alarm_for(addr) != AlarmLevel.NO_ALARM
-        ]
-        if bad:
-            lines.append("-" * 2 * len(lines[-1]) if lines else "--")
-            lines.extend(bad)
-        return os.linesep.join(lines)
-
-    def event(self, event):
-        if event.type() == QtCore.QEvent.ToolTip:
-            QtWidgets.QToolTip.showText(event.globalPos(), self.alarm_tooltip(), self)
-            return True
-        return super().event(event)
+    def alarm_tooltip(self, max_lines: int = 12) -> str:
+        """Every PV not in NO_ALARM with its level, worst first (like the typhos tooltip); "" if all are fine."""
+        bad = sorted(
+            ((self.alarm_for(addr), addr) for addr in self._pv_channels if self.alarm_for(addr) != AlarmLevel.NO_ALARM),
+            key=lambda item: -item[0],
+        )
+        if not bad:
+            return ""
+        lines = [f"{addr.split('://', 1)[-1]}: {level.name}" for level, addr in bad[:max_lines]]
+        if len(bad) > max_lines:
+            lines.append(f"... and {len(bad) - max_lines} more")
+        return f"{len(bad)} of {len(self._pv_channels)} PVs not OK:\n" + "\n".join(lines)
