@@ -1,0 +1,285 @@
+# Layout and click behavior for the IP1 MODS (LM1K4) floor plan.
+#
+# The table is drawn by the screen itself, from the "hall" section below: a row of stations in
+# beam order (the numbered happi location groups 1_lm1k4_inj ... 6_lm1k4_ejx), with relative widths
+# and heights, laid out by Qt. Icons are placed inside their station by percentage, so they move and
+# scale with it. The proportions are rough; tune them here.
+#
+# What a click opens is a list of "opens" entries. One entry: a click opens it directly
+# (ctrl+click new tab, shift+click new window, right click for the menu). Several: a click shows a menu.
+#   device: <happi name>                  that device's screen (config/device_types.yaml)
+#   devices: {location: [...], function: [...]}   every matching happi device, as a sub-menu
+#   screen: <file in screens/>, macros: {...}, title: ...   any pydm screen
+#   toolbar: [<tab>, <button>]            run that button's command from the toolbar yaml (external window)
+#   toolbar: [<tab>, <button>, <title>]   one command of a button that has several (its "titles")
+#
+# icon names: camera, smaract, thermometer, shutter, spectrometer, elliptec, power-meter, wavefront,
+# or any FontAwesome 5 name.
+
+# The table, left to right in beam order. width = relative share of the drawing width (gaps included);
+# top / height = % of the drawing height.
+hall:
+  aspect: 1.9 # width / height of the whole drawing
+  reference_height: 520 # preferred height in px (icon scale 1.0); icons drop their labels below 75 % of it
+  background: "#eeeeee"
+  border: "#595959"
+  inactive: "#d7d7d7" # stations with nothing to open
+  columns:
+    - { gap: 2 }
+    - { station: INJ, width: 14, top: 8, height: 84, color: "#d9ead3" }
+    - { gap: 2.4 }
+    - { station: COM, width: 14, top: 8, height: 84, color: "#fce5cd" }
+    - { gap: 2.4 }
+    - { station: OPA, width: 14, top: 8, height: 84, color: "#d9d2e9" }
+    - { gap: 2.4 }
+    - { station: HRM, width: 14, top: 8, height: 84, color: "#ead1dc" }
+    - { gap: 2.4 }
+    - { station: ATM, width: 14, top: 8, height: 84, color: "#c9daf8" }
+    - { gap: 2.4 }
+    - { station: EJX, width: 14, top: 8, height: 84, color: "#fff2cc" }
+    - { gap: 2 }
+
+# happi functional_group -> menu title and icon, for auto-generated station menus
+functions:
+  cameras: { title: Cameras, icon: camera }
+  smaract: { title: SmarAct Motors, icon: smaract }
+  spectrometers: { title: Spectrometers, icon: spectrometer }
+  elliptecs: { title: Elliptecs, icon: elliptec }
+  power meters: { title: Power Meters, icon: power-meter }
+  wavefront sensors: { title: Wavefront Sensors, icon: wavefront }
+  env sensors: { title: Temperature / Humidity, icon: thermometer }
+
+# Each station: its happi location groups, and the toolbar tools that belong to it
+stations:
+  INJ:
+    title: 1 - Injection (1_lm1k4_inj)
+    locations: [1_lm1k4_inj]
+    tools:
+      - [Tools, WFS Expert Screen]
+  COM:
+    title: 2 - COM (2_lm1k4_com)
+    locations: [2_lm1k4_com]
+    tools:
+      - [Tools, nf-ff-alignment, COM_DP1]
+  OPA:
+    title: 3 - OPA (3_lm1k4_opa)
+    locations: [3_lm1k4_opa]
+    tools: []
+  HRM:
+    title: 4 - HRM (3/4_lm1k4_hrm, 4_lm1k4_int)
+    locations: [3_lm1k4_hrm, 4_lm1k4_hrm, 4_lm1k4_int]
+    tools: []
+  ATM:
+    title: 5 - ATM (5_lm1k4_atm)
+    locations: [5_lm1k4_atm]
+    tools:
+      - [Tools, nf-ff-alignment, ATM_DP1]
+      - [Tools, ATM non-LSS Shutter]
+  EJX:
+    title: 6 - EJX (6_lm1k4_ejx)
+    locations: [6_lm1k4_ejx]
+    tools:
+      - [Tools, EJX non-LSS Shutter]
+
+# Small icons inside each station: in = the station name, at = [x %, y %] of that station (icon center).
+# One row per function, at the same height in every station, so rows line up across the table.
+# Only functions a station has active devices for get an icon (an empty one would open nothing).
+#   cameras 20, smaract 33, spectrometers 46, elliptecs 59, power meters 72, shutter 72, T/H 87
+icons:
+  # INJ
+  - {
+      in: INJ,
+      at: [50, 20],
+      icon: camera,
+      label: Cameras,
+      opens: [{ devices: { location: [1_lm1k4_inj], function: [cameras] } }],
+    }
+  - {
+      in: INJ,
+      at: [50, 33],
+      icon: smaract,
+      label: SmarAct,
+      opens: [{ devices: { location: [1_lm1k4_inj], function: [smaract] } }],
+    }
+  - {
+      in: INJ,
+      at: [50, 46],
+      icon: spectrometer,
+      label: Spectrometer,
+      opens:
+        [{ devices: { location: [1_lm1k4_inj], function: [spectrometers] } }],
+    }
+  - {
+      in: INJ,
+      at: [50, 87],
+      icon: thermometer,
+      label: T/H,
+      opens: [{ device: lm1k4_inj_env_sens }],
+    }
+  # COM
+  - {
+      in: COM,
+      at: [50, 20],
+      icon: camera,
+      label: Cameras,
+      opens: [{ devices: { location: [2_lm1k4_com], function: [cameras] } }],
+    }
+  - {
+      in: COM,
+      at: [50, 33],
+      icon: smaract,
+      label: SmarAct,
+      opens: [{ devices: { location: [2_lm1k4_com], function: [smaract] } }],
+    }
+  - {
+      in: COM,
+      at: [50, 46],
+      icon: spectrometer,
+      label: Spectrometer,
+      opens:
+        [{ devices: { location: [2_lm1k4_com], function: [spectrometers] } }],
+    }
+  - {
+      in: COM,
+      at: [50, 87],
+      icon: thermometer,
+      label: T/H,
+      opens: [{ device: lm1k4_com_env_sens }],
+    }
+  # OPA
+  - {
+      in: OPA,
+      at: [50, 33],
+      icon: smaract,
+      label: SmarAct,
+      opens: [{ devices: { location: [3_lm1k4_opa], function: [smaract] } }],
+    }
+  # HRM
+  - {
+      in: HRM,
+      at: [50, 33],
+      icon: smaract,
+      label: SmarAct,
+      opens:
+        [
+          {
+            devices:
+              {
+                location: [3_lm1k4_hrm, 4_lm1k4_hrm, 4_lm1k4_int],
+                function: [smaract],
+              },
+          },
+        ],
+    }
+  - {
+      in: HRM,
+      at: [50, 46],
+      icon: spectrometer,
+      label: Spectrometer,
+      opens:
+        [
+          {
+            devices:
+              {
+                location: [3_lm1k4_hrm, 4_lm1k4_hrm],
+                function: [spectrometers],
+              },
+          },
+        ],
+    }
+  # ATM
+  - {
+      in: ATM,
+      at: [50, 20],
+      icon: camera,
+      label: Cameras,
+      opens: [{ devices: { location: [5_lm1k4_atm], function: [cameras] } }],
+    }
+  - {
+      in: ATM,
+      at: [50, 33],
+      icon: smaract,
+      label: SmarAct,
+      opens: [{ devices: { location: [5_lm1k4_atm], function: [smaract] } }],
+    }
+  - {
+      in: ATM,
+      at: [50, 46],
+      icon: spectrometer,
+      label: Spectrometer,
+      opens:
+        [{ devices: { location: [5_lm1k4_atm], function: [spectrometers] } }],
+    }
+  - {
+      in: ATM,
+      at: [50, 59],
+      icon: elliptec,
+      label: Elliptecs,
+      opens: [{ devices: { location: [5_lm1k4_atm], function: [elliptecs] } }],
+    }
+  - {
+      in: ATM,
+      at: [50, 72],
+      icon: shutter,
+      label: Shutter,
+      opens: [{ toolbar: [Tools, ATM non-LSS Shutter] }],
+    }
+  - {
+      in: ATM,
+      at: [50, 87],
+      icon: thermometer,
+      label: T/H,
+      opens: [{ device: lm1k4_atm_env_sens }],
+    }
+  # EJX
+  - {
+      in: EJX,
+      at: [50, 20],
+      icon: camera,
+      label: Cameras,
+      opens: [{ devices: { location: [6_lm1k4_ejx], function: [cameras] } }],
+    }
+  - {
+      in: EJX,
+      at: [50, 33],
+      icon: smaract,
+      label: SmarAct,
+      opens: [{ devices: { location: [6_lm1k4_ejx], function: [smaract] } }],
+    }
+  - {
+      in: EJX,
+      at: [50, 46],
+      icon: spectrometer,
+      label: Spectrometers,
+      opens:
+        [{ devices: { location: [6_lm1k4_ejx], function: [spectrometers] } }],
+    }
+  - {
+      in: EJX,
+      at: [50, 59],
+      icon: elliptec,
+      label: Elliptecs,
+      opens: [{ devices: { location: [6_lm1k4_ejx], function: [elliptecs] } }],
+    }
+  - {
+      in: EJX,
+      at: [25, 72],
+      icon: power-meter,
+      label: Power,
+      opens:
+        [{ devices: { location: [6_lm1k4_ejx], function: [power meters] } }],
+    }
+  - {
+      in: EJX,
+      at: [75, 72],
+      icon: shutter,
+      label: Shutter,
+      opens: [{ toolbar: [Tools, EJX non-LSS Shutter] }],
+    }
+  - {
+      in: EJX,
+      at: [50, 87],
+      icon: thermometer,
+      label: T/H,
+      opens: [{ device: lm1k4_ejx_env_sens }],
+    }
