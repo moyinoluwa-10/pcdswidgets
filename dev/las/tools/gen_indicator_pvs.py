@@ -34,16 +34,18 @@ os.environ.update(EPICS_CA_AUTO_ADDR_LIST="NO", EPICS_CA_ADDR_LIST="127.0.0.1")
 PREFIX_TEMPLATE = "{prefix}"
 
 
-def indicator_pvs_for_class(device_class: str) -> list[str]:
+def indicator_pvs_for_class(device_class: str, template_kwargs: list[str] | None = None) -> list[str]:
     from ophyd import Kind
     from ophyd.signal import EpicsSignalBase
 
     module_name, class_name = device_class.rsplit(".", 1)
     cls = getattr(importlib.import_module(module_name), class_name)
+    # Per-instance happi kwargs (e.g. tip_pv, channel) become "{tip_pv}" templates, filled in per device at runtime
+    kwargs = {key: "{" + key + "}" for key in template_kwargs or []}
     try:
-        device = cls(PREFIX_TEMPLATE, name="template")
+        device = cls(PREFIX_TEMPLATE, name="template", **kwargs)
     except TypeError:
-        device = cls(name="template")
+        device = cls(name="template", **kwargs)
     hints = device.hints.get("fields", [])
     kinds = (Kind.hinted,) if hints else (Kind.hinted, Kind.normal)
     pvs = []
@@ -74,7 +76,7 @@ def main():
 
     for device_class, cfg in types.items():
         try:
-            pvs = indicator_pvs_for_class(device_class)
+            pvs = indicator_pvs_for_class(device_class, cfg.get("template_kwargs"))
         except Exception as ex:
             print(f"{device_class}: FAILED, keeping the old list ({type(ex).__name__}: {ex})")
             continue

@@ -10,7 +10,9 @@
 #   devices: {location: [...], function: [...]}   every matching happi device, as a sub-menu
 #   shutter: <LSn>                        that laser source's shutter screen (screens/laser_shutter.ui)
 #   screen: <file in screens/>, macros: {...}, title: ...   any pydm screen
-#   toolbar: [<tab>, <button>]            run that button's command from the LAS toolbar yaml (external window)
+#   toolbar: [<tab>, <button>]            run that button's command from the LAS toolbar yaml (external window);
+#                                         a button with several titled commands becomes a sub-menu
+#   toolbar: [<tab>, <button>, <title>]   one command of a button that has several (its "titles")
 #
 # icon names: camera, smaract, thermometer, shutter, pdu, btps, or any FontAwesome 5 name.
 
@@ -18,6 +20,7 @@
 # top / height = % of the hall height. Colors match the original drawing (bg-with-exp.png).
 hall:
   aspect: 2.03 # width / height of the whole hall
+  reference_height: 659 # preferred height in px (icon scale 1.0); icons drop their labels below 75 % of it
   background: "#eeeeee"
   border: "#595959"
   inactive: "#d7d7d7" # racks with nothing to open

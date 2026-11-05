@@ -5,6 +5,7 @@ from pathlib import Path
 
 import floorplan
 import pytest
+from devices import DeviceType, _entry_to_info
 from floorplan import FloorPlan, FloorPlanContext
 from pydm.display import ScreenTarget, load_file
 from pydm.widgets import PyDMEmbeddedDisplay
@@ -195,6 +196,36 @@ def test_toolbar_entries_run_externally(plan: FloorPlan, no_external_commands):
     assert btms.command == ["/cds/group/pcds/epics-dev/screens/pydm/las/bts/run_btms.sh"]
     floorplan.run_command(btms.command)
     assert no_external_commands == btms.command
+
+
+def test_qpcs_button_is_a_submenu_not_five_windows(plan: FloorPlan, no_external_commands):
+    """ "BTS QPCs" has a command per title (las-pci-01..05): one menu entry each, not all at once."""
+    bts = next(button for button, _ in plan.areas if button.objectName() == "BTS")
+    qpcs = next(opener for opener in bts.openers if opener.title == "BTS QPCs")
+    assert [child.title for child in qpcs.children] == [f"las-pci-0{n}" for n in range(1, 6)]
+    assert all(len(child.command) == 1 for child in qpcs.children)
+    floorplan.run_command(qpcs.children[1].command)
+    assert len(no_external_commands) == 1 and "pci-02" in no_external_commands[0]
+
+
+def test_toolbar_entry_can_pick_one_title(context: FloorPlanContext):
+    one = context.toolbar_opener("NEH Beam Transport", "BTS QPCs", "las-pci-03")
+    assert one.title == "las-pci-03" and len(one.command) == 1 and "pci-03" in one.command[0]
+    assert "(missing)" in context.toolbar_opener("NEH Beam Transport", "BTS QPCs", "nope").title
+
+
+def test_happi_kwargs_are_filled_in_from_the_entry():
+    entry = {
+        "name": "tt",
+        "device_class": "pcdsdevices.epics_motor.SmarActTipTilt",
+        "prefix": "LAS:X",
+        "ioc_tip_suffix": "_TIP1",
+        "kwargs": {"name": "{{name}}", "tip_pv": "{{ioc_tip_suffix}}", "port": "15"},
+    }
+    info = _entry_to_info(entry)
+    assert info.kwargs == {"tip_pv": "_TIP1", "port": "15"}
+    dtype = DeviceType(device_class=entry["device_class"], indicator_pvs=["{prefix}{tip_pv}:STEP_COUNT"])
+    assert dtype.indicator_channels_for(info) == ["ca://LAS:X_TIP1:STEP_COUNT"]
 
 
 def test_status_dots_watch_device_pvs(plan: FloorPlan):

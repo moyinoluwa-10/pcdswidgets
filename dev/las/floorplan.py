@@ -226,13 +226,28 @@ class FloorPlanContext:
 
         return Opener(title=title, icon=make_icon(entry.get("icon", icon)), build=build, tooltip=str(path))
 
-    def toolbar_opener(self, tab: str, button: str) -> Opener:
+    def toolbar_opener(self, tab: str, button: str, title: str = "") -> Opener:
+        """
+        A LUCID-style toolbar button. A button with several ``commands`` and ``titles`` is a menu in the
+        toolbar: pass ``title`` to pick one of them, or get a group with one opener per command.
+        """
         try:
-            commands = list(self.toolbar[tab]["buttons"][button]["commands"])
-        except KeyError:
-            logger.error("No toolbar button %r in tab %r", button, tab)
-            return Opener(title=f"{button} (missing)", icon=make_icon("exclamation-triangle"))
-        return Opener(title=button, icon=make_icon("external"), command=commands, tooltip="Opens in its own window")
+            cfg = self.toolbar[tab]["buttons"][button]
+            commands = list(cfg["commands"])
+            titles = list(cfg.get("titles") or [])
+            if title:
+                commands = [commands[titles.index(title)]]
+        except (KeyError, ValueError):
+            logger.error("No toolbar button %r %r in tab %r", button, title, tab)
+            return Opener(title=f"{title or button} (missing)", icon=make_icon("exclamation-triangle"))
+        external = {"icon": make_icon("external"), "tooltip": "Opens in its own window"}
+        if not title and len(titles) == len(commands) > 1:
+            children = [
+                Opener(title=name, command=[command], **external)
+                for name, command in zip(titles, commands, strict=True)
+            ]
+            return Opener(title=button, icon=make_icon("external"), children=children)
+        return Opener(title=title or button, command=commands, **external)
 
     def rack_openers(self, rack: str, cfg: dict[str, Any]) -> list[Opener]:
         """
@@ -675,13 +690,12 @@ class FloorPlan(QWidget):
     Icons are positioned at a percentage of their area and resized with the hall.
     """
 
-    # Size of the original drawing; the hall is laid out at any size, this is only the preferred one
-    reference_height = 659
-
     def __init__(self, context: FloorPlanContext, parent: QWidget | None = None):
         super().__init__(parent)
         self.context = context
         self.aspect = float(context.config["hall"].get("aspect", 2.0))
+        # Preferred drawing height (scale 1.0); it is laid out at any size, with half of this as the minimum
+        self.reference_height = int(context.config["hall"].get("reference_height", 659))
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.hall = Hall(context, parent=self)
         # Racks are generated, so list areas in a stable order for callers: (button, name)

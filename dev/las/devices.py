@@ -14,6 +14,7 @@ import configparser
 import json
 import logging
 import os
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -33,6 +34,8 @@ DEFAULT_HAPPI_CFG = "/cds/group/pcds/pyps/apps/hutch-python/device_config/happi.
 
 LOCATION_KEY = "location_group"
 FUNCTION_KEY = "functional_group"
+# happi kwargs are templates on the entry's own fields, e.g. tip_pv: '{{ioc_tip_suffix}}'
+HAPPI_TEMPLATE = re.compile(r"{{\s*(\w+)\s*}}")
 
 
 @dataclass(frozen=True)
@@ -45,6 +48,8 @@ class DeviceInfo:
     location_group: str = ""
     functional_group: str = ""
     documentation: str = ""
+    # The entry's happi kwargs (filled in, without "name"), e.g. {"tip_pv": "_TIP1"} or {"channel": "1"}
+    kwargs: dict[str, str] = field(default_factory=dict, hash=False)
 
     @property
     def short_class(self) -> str:
@@ -52,8 +57,9 @@ class DeviceInfo:
         return self.device_class.rsplit(".", 1)[-1]
 
     def template_values(self) -> dict[str, str]:
-        """Values available to the ``{...}`` templates in device_types.yaml."""
+        """Values available to the ``{...}`` templates in device_types.yaml: the fields and the happi kwargs."""
         return {
+            **self.kwargs,
             "name": self.name,
             "prefix": self.prefix,
             "prefix_nocolon": self.prefix.rstrip(":"),
@@ -137,6 +143,15 @@ def happi_database_path() -> str:
     return parser["DEFAULT"]["path"]
 
 
+def _render_kwargs(entry: dict[str, Any]) -> dict[str, str]:
+    """happi kwargs with ``{{field}}`` filled in from the entry (a no-op for snapshot entries)."""
+    return {
+        key: HAPPI_TEMPLATE.sub(lambda match: str(entry.get(match.group(1)) or ""), str(value))
+        for key, value in (entry.get("kwargs") or {}).items()
+        if key != "name"
+    }
+
+
 def _entry_to_info(entry: dict[str, Any]) -> DeviceInfo:
     return DeviceInfo(
         name=entry["name"],
@@ -145,6 +160,7 @@ def _entry_to_info(entry: dict[str, Any]) -> DeviceInfo:
         location_group=entry.get(LOCATION_KEY) or "",
         functional_group=entry.get(FUNCTION_KEY) or "",
         documentation=entry.get("documentation") or "",
+        kwargs=_render_kwargs(entry),
     )
 
 
