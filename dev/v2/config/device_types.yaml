@@ -1,0 +1,15 @@
+# v2 overrides for v1's dev/v1/config/device_types.yaml. Only the classes listed here change, and only in v2.
+# Same format as v1. Relative screen paths are relative to dev/v2/screens.
+# Keys left out (e.g. indicator_pvs) are taken from the v1 entry.
+
+pcdsdevices.lasers.btps.BtpsState:
+  # Same screen as the LAS toolbar "BTPS Overview" button (run_btps.sh -> btms-ui v2.0.1 BtpsStackedScreen)
+  screen: btps_stacked.py
+  macros: {}
+
+pcdsdevices.epics_motor.SmarAct:
+  # The IOC release's own SmarAct widgets (common/smaract R4.0.0, which ioc-las-bts-mcs1 builds against)
+  screen: smaract_r4.py
+  macros:
+    MOTOR: '{prefix}'
+    NAME: '{name}'

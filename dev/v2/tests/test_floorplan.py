@@ -144,11 +144,75 @@ def test_icons_shrink_with_the_image(plan: FloorPlan):
     assert icon.toolButtonStyle() == Qt.ToolButtonTextUnderIcon
 
 
+def test_smaract_override_is_v2_only():
+    from las_devices import load_device_types
+
+    smaract = "pcdsdevices.epics_motor.SmarAct"
+    v2 = floorplan.load_v2_device_types()[smaract]
+    v1 = load_device_types()[smaract]
+    assert v2.screen_path() == str(V2_DIR / "screens" / "smaract_r4.py")
+    assert v1.screen_path().endswith("v1/screens/smaract_detailed.ui")
+    # indicator PVs come from v1 when the override leaves them out
+    assert v2.indicator_pvs == v1.indicator_pvs == ["{prefix}.RBV"]
+
+
+def test_btps_override_uses_btms_ui_screen():
+    btps = floorplan.load_v2_device_types()["pcdsdevices.lasers.btps.BtpsState"]
+    assert btps.screen_path() == str(V2_DIR / "screens" / "btps_stacked.py")
+    # 732 alarm-summary PVs, inherited from v1
+    assert len(btps.indicator_pvs) == 732
+
+
+def test_btps_screen_matches_btms_ui(qtbot: QtBot):
+    """Same ports and pages as btms-ui's BtpsStackedScreen, with no ophyd/pcdsdevices import."""
+    display = load_file(str(V2_DIR / "screens" / "btps_stacked.py"), target=ScreenTarget.DIALOG)
+    qtbot.addWidget(display)
+    display.show()
+    stacked = display.stacked
+    shown = sorted(
+        name for name in stacked.sources + stacked.destinations if getattr(stacked, f"{name}_button").isVisible()
+    )
+    assert shown == sorted(
+        ["LS1", "LS3", "LS4", "LS5", "LS6", "LS8"] + [f"LD{n}" for n in (1, 2, 4, 6, 8, 9, 10, 11, 12, 14)]
+    )
+    # 6 sources x 10 destinations, plus the landing page
+    assert stacked.stacked_widget.count() == 61
+    stacked.LS1_button.setChecked(True)
+    stacked.LD8_button.setChecked(True)
+    qtbot.wait(50)
+    page = stacked.stacked_widget.currentWidget()
+    assert page.objectName() == "LS1_LD8_widget"
+    assert "ca://LTLHN:LD8:LS1:BTPS:ChecksOK_RBV" in channel_addresses(page)
+    stacked.editor_button.setChecked(True)
+    assert stacked.editor_button.text() == "Edit Mode"
+    assert not [m for m in sys.modules if m.split(".")[0] in FORBIDDEN]
+
+
+def test_smaract_screen_has_expert_and_advanced_panels(qtbot: QtBot):
+    display = load_file(
+        str(V2_DIR / "screens" / "smaract_r4.py"),
+        macros={"MOTOR": "LAS:BTS:MCS2:01:m1", "NAME": "las_bts_mcs2_01_m1"},
+        target=ScreenTarget.DIALOG,
+    )
+    qtbot.addWidget(display)
+    tabs = display.advanced.tabWidget
+    assert [tabs.tabText(i) for i in range(tabs.count())] == [
+        "Open-loop",
+        "Closed-loop",
+        "Diagnostics",
+        "Configuration",
+    ]
+    addresses = channel_addresses(display)
+    assert "ca://LAS:BTS:MCS2:01:m1:STATE_RBV" in addresses
+    assert display.windowTitle() == "las_bts_mcs2_01_m1"
+
+
 @pytest.mark.parametrize(
     "screen,macros",
     [
         ("laser_shutter.ui", {"LS": "LS1", "TITLE": "LS1 (Bay 1)"}),
         ("pdu_tripplite.py", {"PRE": "LAS:LHN:PWR:07", "TITLE": "R07", "N_CHAN": "24"}),
+        ("smaract_r4.py", {"MOTOR": "LAS:BTS:MCS2:01:m1", "NAME": "m1"}),
     ],
 )
 def test_v2_screens_load(qtbot: QtBot, screen: str, macros: dict[str, str]):
@@ -157,6 +221,21 @@ def test_v2_screens_load(qtbot: QtBot, screen: str, macros: dict[str, str]):
     addresses = channel_addresses(display)
     assert addresses
     assert not [addr for addr in addresses if "${" in addr]
+
+
+def test_minimum_height_fits_toolbar_and_floor_plan(qtbot: QtBot):
+    """At the smallest window size, no toolbar tab scrolls and the floor plan keeps its minimum."""
+    home = load_file(str(V2_DIR / "las_home.py"), target=None)
+    qtbot.addWidget(home)
+    home.show()
+    home.resize(home.minimumSizeHint())
+    qtbot.wait(50)
+    tabs = home.toolbar.tab
+    for index in range(tabs.count()):
+        tabs.setCurrentIndex(index)
+        qtbot.wait(10)
+        assert tabs.widget(index).verticalScrollBar().maximum() == 0, tabs.tabText(index)
+    assert home.floorplan.height() >= home.floorplan.minimumSizeHint().height()
 
 
 def test_home_screen_imports_nothing_forbidden():
@@ -169,7 +248,7 @@ def test_home_screen_imports_nothing_forbidden():
         # target=None loads in this process; the default (NEW_PROCESS) would spawn a separate pydm.
         f"display = load_file({str(V2_DIR / 'las_home.py')!r}, target=None)\n"
         "assert len(display.floorplan.icons) == 22\n"
-        "assert display.tabs.count() == 2\n"
+        "assert display.toolbar.tab.count() == 10\n"
         f"bad = sorted(m for m in sys.modules if m.split('.')[0] in {FORBIDDEN!r})\n"
         "print('FORBIDDEN', bad)\n"
         "sys.stdout.flush()\n"

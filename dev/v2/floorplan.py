@@ -36,7 +36,7 @@ V1_DIR = V2_DIR.parent / "v1"
 if str(V1_DIR) not in sys.path:
     sys.path.insert(0, str(V1_DIR))
 
-from las_devices import DeviceInfo, find_device_type, load_device_types, load_devices  # noqa: E402
+from las_devices import DeviceInfo, DeviceType, find_device_type, load_device_types, load_devices  # noqa: E402
 from las_grid import DeviceScreenCache, PVAlarmCircle  # noqa: E402
 
 from pcdswidgets.common.dock.tab_dock import TabDock  # noqa: E402
@@ -44,6 +44,7 @@ from pcdswidgets.common.dock.tab_dock import TabDock  # noqa: E402
 logger = logging.getLogger(__name__)
 
 CONFIG_FILE = V2_DIR / "config" / "floorplan.yaml"
+DEVICE_TYPES_FILE = V2_DIR / "config" / "device_types.yaml"
 SCREENS_DIR = V2_DIR / "screens"
 TOOLBAR_FILE = V1_DIR / "config" / "las_toolbar.yaml"
 SMARACT_ICON = V2_DIR.parents[1] / "pcdswidgets" / "icons" / "smaract_tip_tilt_qt_icon.png"
@@ -130,6 +131,22 @@ def run_command(commands: list[str]):
             logger.exception("Failed to run %s", command)
 
 
+def load_v2_device_types(overrides_file: str | os.PathLike = DEVICE_TYPES_FILE) -> dict[str, DeviceType]:
+    """v1's device types, with the classes in v2's config/device_types.yaml replaced."""
+    types = load_device_types()
+    if not Path(overrides_file).is_file():
+        return types
+    for device_class, override in load_device_types(overrides_file).items():
+        screen = Path(override.screen)
+        if not screen.is_absolute():
+            override.screen = str(SCREENS_DIR / screen)
+        base = types.get(device_class)
+        if base is not None and not override.indicator_pvs:
+            override.indicator_pvs = base.indicator_pvs
+        types[device_class] = override
+    return types
+
+
 class FloorPlanContext:
     """Loads the configs once and turns ``opens`` entries into Openers."""
 
@@ -147,7 +164,7 @@ class FloorPlanContext:
             self.toolbar: dict[str, Any] = yaml.safe_load(fd) or {}
         self.devices = load_devices(beamline, device_db)
         self.devices_by_name = {dev.name: dev for dev in self.devices}
-        self.types = load_device_types()
+        self.types = load_v2_device_types()
         self.screens = DeviceScreenCache(self.types)
         self._screen_cache: dict[str, QWidget] = {}
         self.functions: dict[str, dict[str, str]] = self.config.get("functions", {})
