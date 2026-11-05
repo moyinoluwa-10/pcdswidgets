@@ -5,6 +5,7 @@
 # template_kwargs: happi kwargs the class needs to be built (e.g. tip_pv); they are also {...} templates.
 #
 # SmarAct and QminiSpectrometer use their IOC release's own screens (common/smaract R4.0.0, common/qmini R3.1.1).
+# Tip/tilt stages use pcdswidgets' MotorTipTiltDouble (screens/tip_tilt.py).
 # Classes without a screen open a placeholder (name, class, prefix) and still have status dots.
 pcdsdevices.areadetector.detectors.LasBasler:
   screen: las_basler.ui
@@ -40,6 +41,11 @@ pcdsdevices.device_types.EnvironmentalMonitor:
   - '{prefix}:2.VAL'
   - '{prefix}:3.VAL'
 pcdsdevices.epics_motor.SmarActTipTilt:
+  screen: tip_tilt.py
+  macros:
+    TIP: '{prefix}{tip_pv}'
+    TILT: '{prefix}{tilt_pv}'
+    NAME: '{name}'
   template_kwargs:
   - tip_pv
   - tilt_pv
@@ -57,6 +63,12 @@ pcdsdevices.epics_motor.SmarActTipTilt:
   - '{prefix}{tip_pv}:STEP_REVERSE'
   - '{prefix}{tip_pv}:TOTAL_STEP_COUNT'
 pcdsdevices.epics_motor.SmarActEncodedTipTilt:
+  screen: tip_tilt.py
+  macros:
+    TIP: '{prefix}{tip_pv}'
+    TILT: '{prefix}{tilt_pv}'
+    NAME: '{name}'
+    STYLE: MotorRecord
   template_kwargs:
   - tip_pv
   - tilt_pv

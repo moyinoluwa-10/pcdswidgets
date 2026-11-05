@@ -15,6 +15,7 @@ from qtpy.QtGui import QHelpEvent
 from qtpy.QtWidgets import QLabel, QScrollArea, QWidget
 
 from pcdswidgets.common.dock.tab_dock import TabDock
+from pcdswidgets.motion.common.motor_style import MotorStyle
 
 APP_DIR = Path(__file__).resolve().parent.parent
 FORBIDDEN = ("happi", "ophyd", "pcdsdevices", "typhos", "lucid")
@@ -194,12 +195,33 @@ def test_happi_kwargs_are_filled_in_from_the_entry():
 
 
 def test_devices_without_a_screen_open_a_placeholder(context: FloorPlanContext, qtbot: QtBot):
-    device = context.devices_by_name["lm1k4_opa_mp1_mr1"]
+    device = context.devices_by_name["lm1k4_atm_mp1_wp2_rm1"]
     display = context.screens.display_for_device(device)
     qtbot.addWidget(display)
     text = display.findChild(QLabel).text()
-    assert "SmarActTipTilt" in text and "no screen" in text
+    assert "EllRotation" in text and "no screen" in text
     assert isinstance(device, DeviceInfo)
+
+
+@pytest.mark.parametrize(
+    "name,tip,style",
+    [
+        ("lm1k4_opa_mp1_mr1", "LM1K4:OPA_MP1_MR1_TIP1", MotorStyle.Smaract),
+        ("lm1k4_ejx_mp1_oap1_mr3", "LM1K4:EJX_MP1_OAP1_MR3_TIP1", MotorStyle.MotorRecord),
+    ],
+)
+def test_tip_tilts_open_the_tip_tilt_screen(context: FloorPlanContext, qtbot: QtBot, name: str, tip: str, style):
+    """Tip (prefix + tip_pv) is left/right, tilt is up/down; encoded stages use motor-record fields."""
+    display = context.screens.display_for_device(context.devices_by_name[name])
+    qtbot.addWidget(display)
+    widget = display.tip_tilt
+    assert display.windowTitle() == name
+    assert widget.motor_style == style
+    forward = ":STEP_FORWARD.PROC" if style == MotorStyle.Smaract else ".TWF"
+    assert widget.step_right.channel == f"ca://{tip}{forward}"
+    assert widget.step_up.channel == f"ca://{tip.replace('_TIP1', '_TILT1')}{forward}"
+    expert = widget.horizontal_expert_screen_smaract.filenames[0]
+    assert Path(expert).is_file(), expert
 
 
 def test_spectrometers_open_the_qmini_screen(context: FloorPlanContext, qtbot: QtBot):
@@ -264,6 +286,7 @@ def test_every_active_class_has_a_device_type(context: FloorPlanContext):
         ("las_basler_settings.ui", {"CAM": "LM1K4:INJ_DP1_TF1_NF1"}),
         ("env_monitor.ui", {"PREFIX": "LM1K4:INJ_BHC_AI_01", "NAME": "lm1k4_inj_env_sens"}),
         ("qmini.py", {"prefix": "LM1K4:EJX_DP1_SP1", "NAME": "lm1k4_ejx_dp1_sp1"}),
+        ("tip_tilt.py", {"TIP": "LM1K4:OPA_MP1_MR1_TIP1", "TILT": "LM1K4:OPA_MP1_MR1_TILT1", "NAME": "mr1"}),
     ],
 )
 def test_screens_load(qtbot: QtBot, screen: str, macros: dict[str, str]):
