@@ -103,13 +103,32 @@ def test_bay_menu_lists_controls(plan: FloorPlan):
     assert titles == ["Bay 3", "Cameras", "SmarAct Motors", "Temperature / Humidity", "Shutters", "Tools"]
 
 
-def test_rack_click_opens_pdu_in_dock(plan: FloorPlan):
+def test_rack_click_runs_its_pdu_toolbar_button(plan: FloorPlan, no_external_commands):
+    """R07 runs the toolbar's "Zone 1 TiSaph PSU/Chiller PDU (R07)" EDM launcher."""
     rack = next(button for button, _ in plan.areas if button.objectName() == "R07")
+    target = rack.single()
+    assert target.title == "Zone 1 TiSaph PSU/Chiller PDU (R07)"
     rack.handle_click(Qt.LeftButton, QPoint(0, 0))
-    tabs = TabDock.get_instance().get_open_tab_widget()
-    assert tabs.tabText(tabs.currentIndex()) == "R07 PDU"
-    widget = tabs.currentWidget()
-    assert "ca://LAS:LHN:PWR:07:Outlet:24:setPduOutletCommand" in channel_addresses(widget)
+    assert no_external_commands == [
+        "/reg/g/pcds/epics-dev/rnazir/ioc/las/ioc-las-pdu_snmp/build/iocBoot/ioc-las-lhn-pwr-07/edm-ioc-las-lhn-pwr-07.cmd"
+    ]
+
+
+def test_racks_follow_toolbar_labels(context: FloorPlanContext):
+    """Every "(Rxx)" PDU button in the toolbar lands on its rack, and nothing else does."""
+    labelled = {}
+    for name in context.toolbar["PDUs"]["buttons"]:
+        match = floorplan.RACK_IN_NAME.search(name)
+        if match:
+            labelled.setdefault(match.group(1), []).append(name)
+    for rack, cfg in context.config["racks"].items():
+        titles = [opener.title for opener in context.rack_openers(rack, cfg)]
+        assert titles == labelled.get(rack, []), rack
+
+
+def test_rack_opens_override(context: FloorPlanContext):
+    openers = context.rack_openers("R02", {"rect": [0, 0, 1, 1], "opens": [{"device": "las_lhn_bay1_env_sens_1"}]})
+    assert [opener.device_name for opener in openers] == ["las_lhn_bay1_env_sens_1"]
 
 
 def test_icon_click_opens_device(plan: FloorPlan):
@@ -195,7 +214,6 @@ def test_smaract_screen_has_expert_and_advanced_panels(qtbot: QtBot):
     "screen,macros",
     [
         ("laser_shutter.ui", {"LS": "LS1", "TITLE": "LS1 (Bay 1)"}),
-        ("pdu_tripplite.py", {"PRE": "LAS:LHN:PWR:07", "TITLE": "R07", "N_CHAN": "24"}),
         ("smaract_r4.py", {"MOTOR": "LAS:BTS:MCS2:01:m1", "NAME": "m1"}),
     ],
 )

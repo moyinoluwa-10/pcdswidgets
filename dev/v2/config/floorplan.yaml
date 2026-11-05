@@ -18,21 +18,21 @@ image: bg.png
 
 # happi functional_group -> menu title and icon, for auto-generated bay menus
 functions:
-  cameras: {title: Cameras, icon: camera}
-  smaract: {title: SmarAct Motors, icon: smaract}
-  env sensors: {title: Temperature / Humidity, icon: thermometer}
+  cameras: { title: Cameras, icon: camera }
+  smaract: { title: SmarAct Motors, icon: smaract }
+  env sensors: { title: Temperature / Humidity, icon: thermometer }
 
 # happi lists the BTPS under "Bay 1"; it is shown on the BTS area instead of in the bay menu
 bay_menu_skip_functions: [BTPS]
 
 # Laser sources and the shutter screen for each (BTPS LS numbering)
 shutters:
-  LS1: {bay: Bay 1, title: LS1 (Bay 1)}
-  LS3: {bay: Bay 2, title: LS3 (Bay 2 1um)}
-  LS4: {bay: Bay 2, title: LS4 (Bay 2 800nm)}
-  LS5: {bay: Bay 3, title: LS5 (Bay 3 800nm)}
-  LS6: {bay: Bay 3, title: LS6 (Bay 3 1um)}
-  LS8: {bay: Bay 4, title: LS8 (Bay 4)}
+  LS1: { bay: Bay 1, title: LS1 (Bay 1) }
+  LS3: { bay: Bay 2, title: LS3 (Bay 2 1um) }
+  LS4: { bay: Bay 2, title: LS4 (Bay 2 800nm) }
+  LS5: { bay: Bay 3, title: LS5 (Bay 3 800nm) }
+  LS6: { bay: Bay 3, title: LS6 (Bay 3 1um) }
+  LS8: { bay: Bay 4, title: LS8 (Bay 4) }
 
 bays:
   Bay 1:
@@ -69,61 +69,187 @@ bays:
 # cameras above the label, SmarAct below it.
 icons:
   # Bay 1
-  - {pos: [77, 135], icon: thermometer, label: T/H, opens: [{device: las_lhn_bay1_env_sens_1}]}
-  - {pos: [179, 575], icon: thermometer, label: T/H, opens: [{device: las_lhn_bay1_env_sens_2}]}
-  - {pos: [174, 300], icon: shutter, label: Shutters, opens: [{shutter: LS1}]}
-  - {pos: [128, 225], icon: camera, label: Cameras, opens: [{devices: {location: [Bay 1], function: [cameras]}}]}
-  - {pos: [128, 470], icon: smaract, label: SmarAct, opens: [{devices: {location: [Bay 1], function: [smaract]}}]}
+  - {
+      pos: [77, 135],
+      icon: thermometer,
+      label: T/H,
+      opens: [{ device: las_lhn_bay1_env_sens_1 }],
+    }
+  - {
+      pos: [179, 575],
+      icon: thermometer,
+      label: T/H,
+      opens: [{ device: las_lhn_bay1_env_sens_2 }],
+    }
+  - {
+      pos: [174, 300],
+      icon: shutter,
+      label: Shutters,
+      opens: [{ shutter: LS1 }],
+    }
+  - {
+      pos: [128, 225],
+      icon: camera,
+      label: Cameras,
+      opens: [{ devices: { location: [Bay 1], function: [cameras] } }],
+    }
+  - {
+      pos: [128, 470],
+      icon: smaract,
+      label: SmarAct,
+      opens: [{ devices: { location: [Bay 1], function: [smaract] } }],
+    }
   # Bay 2
-  - {pos: [377, 135], icon: thermometer, label: T/H, opens: [{device: las_lhn_bay2_env_sens_1}]}
-  - {pos: [478, 575], icon: thermometer, label: T/H, opens: [{device: las_lhn_bay2_env_sens_2}]}
-  - {pos: [473, 300], icon: shutter, label: Shutters, opens: [{shutter: LS3}, {shutter: LS4}]}
-  - {pos: [427, 225], icon: camera, label: Cameras, opens: [{devices: {location: [Bay 2], function: [cameras]}}]}
-  - {pos: [427, 470], icon: smaract, label: SmarAct, opens: [{devices: {location: [Bay 2 - 1um, Bay 2 - 800nm], function: [smaract]}}]}
+  - {
+      pos: [377, 135],
+      icon: thermometer,
+      label: T/H,
+      opens: [{ device: las_lhn_bay2_env_sens_1 }],
+    }
+  - {
+      pos: [478, 575],
+      icon: thermometer,
+      label: T/H,
+      opens: [{ device: las_lhn_bay2_env_sens_2 }],
+    }
+  - {
+      pos: [473, 300],
+      icon: shutter,
+      label: Shutters,
+      opens: [{ shutter: LS3 }, { shutter: LS4 }],
+    }
+  - {
+      pos: [427, 225],
+      icon: camera,
+      label: Cameras,
+      opens: [{ devices: { location: [Bay 2], function: [cameras] } }],
+    }
+  - {
+      pos: [427, 470],
+      icon: smaract,
+      label: SmarAct,
+      opens:
+        [
+          {
+            devices:
+              { location: [Bay 2 - 1um, Bay 2 - 800nm], function: [smaract] },
+          },
+        ],
+    }
   # Bay 3
-  - {pos: [881, 135], icon: thermometer, label: T/H, opens: [{device: las_lhn_bay3_env_sens_1}]}
-  - {pos: [976, 575], icon: thermometer, label: T/H, opens: [{device: las_lhn_bay3_env_sens_2}]}
-  - {pos: [971, 300], icon: shutter, label: Shutters, opens: [{shutter: LS5}, {shutter: LS6}]}
-  - {pos: [928, 225], icon: camera, label: Cameras, opens: [{devices: {location: [Bay 3], function: [cameras]}}]}
-  - {pos: [928, 470], icon: smaract, label: SmarAct, opens: [{devices: {location: [Bay 3], function: [smaract]}}]}
+  - {
+      pos: [881, 135],
+      icon: thermometer,
+      label: T/H,
+      opens: [{ device: las_lhn_bay3_env_sens_1 }],
+    }
+  - {
+      pos: [976, 575],
+      icon: thermometer,
+      label: T/H,
+      opens: [{ device: las_lhn_bay3_env_sens_2 }],
+    }
+  - {
+      pos: [971, 300],
+      icon: shutter,
+      label: Shutters,
+      opens: [{ shutter: LS5 }, { shutter: LS6 }],
+    }
+  - {
+      pos: [928, 225],
+      icon: camera,
+      label: Cameras,
+      opens: [{ devices: { location: [Bay 3], function: [cameras] } }],
+    }
+  - {
+      pos: [928, 470],
+      icon: smaract,
+      label: SmarAct,
+      opens: [{ devices: { location: [Bay 3], function: [smaract] } }],
+    }
   # Bay 4
-  - {pos: [1185, 135], icon: thermometer, label: T/H, opens: [{device: las_lhn_bay4_env_sens_1}]}
-  - {pos: [1280, 575], icon: thermometer, label: T/H, opens: [{device: las_lhn_bay4_env_sens_2}]}
-  - {pos: [1275, 300], icon: shutter, label: Shutters, opens: [{shutter: LS8}]}
-  - {pos: [1232, 225], icon: camera, label: Cameras, opens: [{devices: {location: [Bay 4], function: [cameras]}}]}
-  - {pos: [1232, 470], icon: smaract, label: SmarAct, opens: [{devices: {location: [Bay 4], function: [smaract]}}]}
+  - {
+      pos: [1185, 135],
+      icon: thermometer,
+      label: T/H,
+      opens: [{ device: las_lhn_bay4_env_sens_1 }],
+    }
+  - {
+      pos: [1280, 575],
+      icon: thermometer,
+      label: T/H,
+      opens: [{ device: las_lhn_bay4_env_sens_2 }],
+    }
+  - {
+      pos: [1275, 300],
+      icon: shutter,
+      label: Shutters,
+      opens: [{ shutter: LS8 }],
+    }
+  - {
+      pos: [1232, 225],
+      icon: camera,
+      label: Cameras,
+      opens: [{ devices: { location: [Bay 4], function: [cameras] } }],
+    }
+  - {
+      pos: [1232, 470],
+      icon: smaract,
+      label: SmarAct,
+      opens: [{ devices: { location: [Bay 4], function: [smaract] } }],
+    }
   # BTS
-  - {pos: [615, 420], icon: btps, label: BTPS, opens: [{toolbar: ["NEH Beam Transport", "BTPS Overview"], status: las_btps}]}
-  - {pos: [745, 420], icon: camera, label: Cameras, opens: [{devices: {location: [Beam Transport], function: [cameras]}}]}
+  - {
+      pos: [615, 420],
+      icon: btps,
+      label: BTPS,
+      opens:
+        [
+          {
+            toolbar: ["NEH Beam Transport", "BTPS Overview"],
+            status: las_btps,
+          },
+        ],
+    }
+  - {
+      pos: [745, 420],
+      icon: camera,
+      label: Cameras,
+      opens: [{ devices: { location: [Beam Transport], function: [cameras] } }],
+    }
 
 # BTS area: opens the BTPS / BTMS and the other beam transport tools
 areas:
   BTS:
     rect: [550, 278, 261, 176]
     opens:
-      - {devices: {location: [Beam Transport], function: [cameras]}}
-      - {toolbar: ["NEH Beam Transport", "BTMS Overview"]}
-      - {toolbar: ["NEH Beam Transport", "BTPS Overview"], status: las_btps}
-      - {toolbar: ["NEH Beam Transport", "NEH Laser Hall Vacuum"]}
-      - {toolbar: ["NEH Beam Transport", "Shutters"]}
-      - {toolbar: ["NEH Beam Transport", "BTS All Motors"]}
-      - {toolbar: ["NEH Beam Transport", "BTS SRS RGA"]}
-      - {toolbar: ["NEH Beam Transport", "BTS QPCs"]}
+      - { devices: { location: [Beam Transport], function: [cameras] } }
+      - { toolbar: ["NEH Beam Transport", "BTMS Overview"] }
+      - { toolbar: ["NEH Beam Transport", "BTPS Overview"], status: las_btps }
+      - { toolbar: ["NEH Beam Transport", "NEH Laser Hall Vacuum"] }
+      - { toolbar: ["NEH Beam Transport", "Shutters"] }
+      - { toolbar: ["NEH Beam Transport", "BTS All Motors"] }
+      - { toolbar: ["NEH Beam Transport", "BTS SRS RGA"] }
+      - { toolbar: ["NEH Beam Transport", "BTS QPCs"] }
 
-# Racks: each opens its PDU. Rack -> PDU comes from the LAS toolbar "PDUs" tab.
-# Racks with no known PDU stay inert (tooltip only). The grey slots in the drawing are unlabeled.
+# Racks: each runs the LAS toolbar buttons in the "PDUs" tab whose names end with the rack in
+# parentheses, e.g. "Zone 1 TiSaph PSU/Chiller PDU (R07)" (those open the IOCs' EDM PDU screens).
+# Add a matching button to the toolbar and the rack lights up. To override for one rack, give it
+# its own "opens:" list (same entry types as icons). Racks with no match stay inert (tooltip only).
+# The grey slots in the drawing are unlabeled.
+rack_toolbar_tab: PDUs
 racks:
-  R01: {rect: [251, 37, 55, 55], pdu: LAS:LHN:PWR:05, title: Zone 2 OPCPA Timing PDU}
-  R02: {rect: [251, 94, 55, 55]}
-  R03: {rect: [251, 151, 55, 56], pdu: LAS:LHN:PWR:02, title: Zone 2 OPCPA Controls PDU}
-  R04: {rect: [251, 209, 55, 55]}
-  R06: {rect: [251, 349, 55, 55], pdu: LAS:LHN:PWR:06, title: Zone 1 BTS PDU}
-  R07: {rect: [251, 407, 55, 55], pdu: LAS:LHN:PWR:07, title: Zone 1 TiSaph PSU/Chiller PDU}
-  R08: {rect: [251, 464, 55, 55], pdu: LAS:LHN:PWR:01, title: Zone 1 TiSaph Timing PDU}
-  R11: {rect: [1054, 37, 55, 55]}
-  R12: {rect: [1054, 94, 55, 55]}
-  R13: {rect: [1054, 151, 55, 56], pdu: LAS:LHN:PWR:04, title: Zone 4 TiSaph Timing PDU}
-  R16: {rect: [1054, 349, 55, 55]}
-  R17: {rect: [1054, 407, 55, 55]}
-  R18: {rect: [1054, 464, 55, 55], pdu: LAS:LHN:PWR:03, title: Zone 3 OPCPA Timing PDU}
-  R19: {rect: [1054, 521, 55, 55]}
+  R01: { rect: [251, 37, 60, 60] }
+  R02: { rect: [251, 94, 60, 60] }
+  R03: { rect: [251, 151, 60, 60] }
+  R04: { rect: [251, 209, 60, 60] }
+  R06: { rect: [251, 349, 60, 60] }
+  R07: { rect: [251, 407, 60, 60] }
+  R08: { rect: [251, 464, 60, 60] }
+  R11: { rect: [1054, 37, 60, 60] }
+  R12: { rect: [1054, 94, 60, 60] }
+  R13: { rect: [1054, 151, 60, 60] }
+  R16: { rect: [1054, 349, 60, 60] }
+  R17: { rect: [1054, 407, 60, 60] }
+  R18: { rect: [1054, 464, 60, 60] }
+  R19: { rect: [1054, 521, 60, 60] }

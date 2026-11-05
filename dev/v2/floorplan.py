@@ -15,6 +15,7 @@ Every clickable thing resolves to a list of ``Opener`` objects:
 
 import logging
 import os
+import re
 import shlex
 import subprocess
 import sys
@@ -45,6 +46,8 @@ logger = logging.getLogger(__name__)
 
 CONFIG_FILE = V2_DIR / "config" / "floorplan.yaml"
 DEVICE_TYPES_FILE = V2_DIR / "config" / "device_types.yaml"
+# "Zone 1 TiSaph PSU/Chiller PDU (R07)" -> R07
+RACK_IN_NAME = re.compile(r"\((R\d+)\)")
 SCREENS_DIR = V2_DIR / "screens"
 TOOLBAR_FILE = V1_DIR / "config" / "las_toolbar.yaml"
 SMARACT_ICON = V2_DIR.parents[1] / "pcdswidgets" / "icons" / "smaract_tip_tilt_qt_icon.png"
@@ -265,20 +268,20 @@ class FloorPlanContext:
             opener.channels = dtype.indicator_channels_for(device)
         opener.device_name = device.name
 
-    def pdu_opener(self, rack: str, cfg: dict[str, Any]) -> Opener:
-        title = f"{rack} PDU"
-        return self.screen_opener(
-            {
-                "screen": "pdu_tripplite.py",
-                "macros": {
-                    "PRE": cfg["pdu"],
-                    "TITLE": f"{rack}: {cfg.get('title', '')}",
-                    "N_CHAN": cfg.get("n_chan", 24),
-                },
-                "title": title,
-            },
-            icon="pdu",
-        )
+    def rack_openers(self, rack: str, cfg: dict[str, Any]) -> list[Opener]:
+        """
+        What a rack opens: its own ``opens`` list if it has one, otherwise every button in the
+        toolbar's rack tab (the "PDUs" tab) whose name ends with the rack in parentheses, e.g. "... (R07)".
+        """
+        if "opens" in cfg:
+            return self.resolve(cfg["opens"])
+        tab = self.config.get("rack_toolbar_tab", "PDUs")
+        buttons = self.toolbar.get(tab, {}).get("buttons", {})
+        return [
+            self.toolbar_opener(tab, name)
+            for name in buttons
+            if (match := RACK_IN_NAME.search(name)) is not None and match.group(1) == rack
+        ]
 
     def resolve(self, entries: list[dict[str, Any]]) -> list[Opener]:
         """Turn an ``opens`` list from the config into Openers."""
@@ -574,12 +577,11 @@ class FloorPlan(QWidget):
         for name, cfg in config.get("areas", {}).items():
             self.add_area(name, cfg["rect"], self.context.resolve(cfg.get("opens", [])), f"{name}: click for options")
         for rack, cfg in config.get("racks", {}).items():
-            if cfg.get("pdu"):
-                openers = [self.context.pdu_opener(rack, cfg)]
-                tooltip = f"{rack}: {cfg.get('title', 'PDU')} ({cfg['pdu']})"
+            openers = self.context.rack_openers(rack, cfg)
+            if openers:
+                tooltip = f"{rack}:\n" + "\n".join(opener.title for opener in openers)
             else:
-                openers = []
-                tooltip = f"{rack}: no PDU configured (add one in config/floorplan.yaml)"
+                tooltip = f'{rack}: no toolbar button named "... ({rack})" (or add opens: in config/floorplan.yaml)'
             area = self.add_area(rack, cfg["rect"], openers, tooltip)
             if openers:
                 area.badge = make_icon("pdu")
