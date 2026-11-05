@@ -224,6 +224,15 @@ def test_tip_tilts_open_the_tip_tilt_screen(context: FloorPlanContext, qtbot: Qt
     assert Path(expert).is_file(), expert
 
 
+def test_power_meter_opens_its_screen_and_fits_the_dock(context: FloorPlanContext, qtbot: QtBot):
+    display = context.screens.display_for_device(context.devices_by_name["lm1k4_ejx_dp12_tf1_pm1"])
+    qtbot.addWidget(display)
+    assert display.windowTitle() == "lm1k4_ejx_dp12_tf1_pm1"
+    assert "ca://LM1K4:EJX_DP12_TF1_PM1.VAL" in channel_addresses(display)
+    # The dock is about 440 px tall at the home screen's minimum size
+    assert display.minimumSizeHint().height() <= 440
+
+
 def test_spectrometers_open_the_qmini_screen(context: FloorPlanContext, qtbot: QtBot):
     device = context.devices_by_name["lm1k4_ejx_dp1_sp1"]
     display = context.screens.display_for_device(device)
@@ -286,6 +295,7 @@ def test_every_active_class_has_a_device_type(context: FloorPlanContext):
         ("las_basler_settings.ui", {"CAM": "LM1K4:INJ_DP1_TF1_NF1"}),
         ("env_monitor.ui", {"PREFIX": "LM1K4:INJ_BHC_AI_01", "NAME": "lm1k4_inj_env_sens"}),
         ("qmini.py", {"prefix": "LM1K4:EJX_DP1_SP1", "NAME": "lm1k4_ejx_dp1_sp1"}),
+        ("power_meter.ui", {"PREFIX": "LM1K4:EJX_DP12_TF1_PM1", "NAME": "lm1k4_ejx_dp12_tf1_pm1"}),
         ("tip_tilt.py", {"TIP": "LM1K4:OPA_MP1_MR1_TIP1", "TILT": "LM1K4:OPA_MP1_MR1_TILT1", "NAME": "mr1"}),
     ],
 )

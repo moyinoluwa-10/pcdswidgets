@@ -110,5 +110,9 @@ pcdsdevices.device_types.Ell9:
   indicator_pvs:
   - '{prefix}:M{channel}:CURPOS'
 pcdsdevices.device_types.El3174AiCh:
+  screen: power_meter.ui
+  macros:
+    PREFIX: '{prefix}'
+    NAME: '{name}'
   indicator_pvs:
   - '{prefix}.VAL'
