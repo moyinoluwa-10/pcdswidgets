@@ -1,7 +1,7 @@
 """
 v2 LAS home screen: the lasdev style (floor plan + TabDock) driven by the LAS PVs.
 
-The floor plan replaces v1's grid; the rest is arranged like v1 (toolbar under it, dock on the right):
+Floor plan on top, toolbar under it, dock on the right:
 
     +-----------------------------------+----------------+
     |   bg.png with clickable bays,     |                |
@@ -10,7 +10,7 @@ The floor plan replaces v1's grid; the rest is arranged like v1 (toolbar under i
     | LAS toolbar tabs                  |                |
     +-----------------------------------+----------------+
 
-The toolbar is the full LAS toolbar (same yaml as v1).
+The toolbar is the full LAS toolbar (config/las_toolbar.yaml).
 
 Run it with ``dev/v2/las_home.sh``, or directly::
 
@@ -18,11 +18,10 @@ Run it with ``dev/v2/las_home.sh``, or directly::
 
 Macros (all optional):
     FLOORPLAN   layout yaml (default: dev/v2/config/floorplan.yaml)
-    TOOLBAR     toolbar yaml (default: dev/v1/config/las_toolbar.yaml)
+    TOOLBAR     toolbar yaml (default: dev/v2/config/las_toolbar.yaml)
     DEVICE_DB   happi JSON database or YAML snapshot (default: from $LAS_DEVICE_DB / $HAPPI_CFG)
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -30,7 +29,7 @@ V2_DIR = Path(__file__).resolve().parent
 if str(V2_DIR) not in sys.path:
     sys.path.insert(0, str(V2_DIR))
 
-from floorplan import CONFIG_FILE, TOOLBAR_FILE, V1_DIR, FloorPlan, FloorPlanContext  # noqa: E402
+from floorplan import CONFIG_FILE, TOOLBAR_FILE, FloorPlan, FloorPlanContext  # noqa: E402
 from pydm import Display  # noqa: E402
 from qtpy.QtWidgets import QHBoxLayout, QStyle, QVBoxLayout  # noqa: E402
 
@@ -38,10 +37,6 @@ from pcdswidgets.common.dock.tab_dock import TabDock  # noqa: E402
 from pcdswidgets.common.toolbar.yaml_toolbar import YamlToolbar  # noqa: E402
 
 DOCK_WIDTH = 850
-
-# Let the BTPS screens' "open device" buttons find v1's las-open-device with the same python.
-os.environ["PATH"] = f"{V1_DIR / 'bin'}{os.pathsep}{os.environ.get('PATH', '')}"
-os.environ.setdefault("LAS_DEV_PYTHON", sys.executable)
 
 
 def toolbar_full_height(toolbar: YamlToolbar) -> int:

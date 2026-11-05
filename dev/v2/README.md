@@ -2,9 +2,11 @@
 
 A proof of concept of the **lasdev** home-screen style applied to the **LAS** PVs: a drawing of the laser hall in which you click a bay, rack or icon to open the matching screen in a `TabDock`. The hall is drawn by Qt from `config/floorplan.yaml`, not from a background image.
 
-How `lasdev` works today is in [lasdev_launch_internals.md](lasdev_launch_internals.md). v1 (the LUCID-style grid) is in [../v1](../v1).
+How `lasdev` works today is in [lasdev_launch_internals.md](lasdev_launch_internals.md).
 
-Like v1, it has **no runtime dependency on happi, ophyd, pcdsdevices, typhos or lucid**, and nothing outside `dev/` was changed.
+**v2 is standalone**: everything it needs is in this directory, so it can be copied as a template for other migrations. It only needs a pcdswidgets (from `PYTHONPATH` or the environment) and PyDM. (v1, the LUCID-style grid, lives in [../v1](../v1) and is not used.)
+
+It has **no runtime dependency on happi, ophyd, pcdsdevices, typhos or lucid**, and nothing outside `dev/` was changed.
 
 ## Run it
 
@@ -12,7 +14,7 @@ Like v1, it has **no runtime dependency on happi, ophyd, pcdsdevices, typhos or 
 pcdswidgets/dev/v2/las_home.sh
 ```
 
-The environment is the same as v1: `ctrlenv-widgets/v1.2.1`, this checkout's pcdswidgets first, plus `dev/v2` and `dev/v1` on `PYTHONPATH`. **It connects to the real IOCs.**
+Environment: `ctrlenv-widgets/v1.2.1`, with this checkout's pcdswidgets and `dev/v2` first on `PYTHONPATH`. **It connects to the real IOCs.**
 
 ## What you can click
 
@@ -24,18 +26,18 @@ The environment is the same as v1: `ctrlenv-widgets/v1.2.1`, this checkout's pcd
 | **BTS** | menu | BTS cameras, plus the external tools BTPS Overview, BTMS Overview, Laser Hall Vacuum, Shutters, BTS motors, RGA and QPCs (marked ↗). |
 | **Racks** with a plug badge (R01, R03, R06, R07, R08, R13, R18) | direct | Runs the LAS toolbar "PDUs" button whose name ends with that rack, e.g. "Zone 1 TiSaph PSU/Chiller PDU (R07)", which opens the IOC's EDM PDU screen in its own window. Matching is automatic: add a toolbar button named "... (R12)" and R12 lights up. |
 | Other racks (grey) | — | Tooltip only. No toolbar PDU button names them yet. All 20 racks (R01–R20) are always drawn, so a new "(R05)" button lights up R05 with no other change. |
-| **T/H** icons | direct | That environmental sensor (v1 screen). |
-| **Cameras** / **SmarAct** icons | menu | That bay's cameras or motors (v1 screens). |
+| **T/H** icons | direct | That environmental sensor (`screens/env_monitor.ui`). |
+| **Cameras** / **SmarAct** icons | menu | That bay's cameras or motors (`screens/las_basler.ui`, `screens/smaract_r4.py`). |
 | **Shutters** icons | direct or menu | The laser-source shutter screen (new): LS1 in Bay 1, LS3/LS4 in Bay 2, LS5/LS6 in Bay 3, LS8 in Bay 4. |
 | **BTPS** icon | direct | Runs the toolbar's "BTPS Overview" (`run_btps.sh`), which opens the btms-ui BTPS screen in its own window. The status dot still watches the BTPS PVs. |
 
 "Direct" items follow the `TabDock` conventions: a click replaces the current tab, ctrl+click opens a new tab, shift+click opens a new window, and a right click shows the options menu. External tools always open in their own window, since EDM can't be docked.
 
-Each icon uses the same glyph pcdswidgets uses for the screen it opens: `CameraViewerStretch`'s camera, the SmarAct tip/tilt icon, pcdswidgets' fast-shutter symbol, a thermometer, a plug for PDUs, and a shield for BTPS. Each icon also has a small status dot. It works like v1's grid circle (typhos colours), summarising the PVs of everything the icon opens.
+Each icon uses the same glyph pcdswidgets uses for the screen it opens: `CameraViewerStretch`'s camera, the SmarAct tip/tilt icon, pcdswidgets' fast-shutter symbol, a thermometer, a plug for PDUs, and a shield for BTPS. Each icon also has a small status dot. It shows the worst alarm (typhos colours) across the PVs of everything the icon opens.
 
 The drawing keeps its proportions and scales with the window; text stays sharp at any size. Below 75 % scale the icons drop their labels.
 
-Under the floor plan is the full LAS toolbar (v1's copy of `LAS_toolbar.yaml`), placed as in v1.
+Under the floor plan is the full LAS toolbar (`config/las_toolbar.yaml`, a copy of `lucid_config/LAS_toolbar.yaml`).
 
 ## Files
 
@@ -44,19 +46,25 @@ Under the floor plan is the full LAS toolbar (v1's copy of `LAS_toolbar.yaml`), 
 | `bg-with exp.png` | The annotated sketch of what each area should do. Documentation only. |
 | `config/floorplan.yaml` | **All layout and behaviour**: the hall drawing (columns left to right, with relative widths, heights and colours; racks generated as R01–R20 in coloured groups of five), icon positions (percent of their area), what each opens, laser source → bay, bay tools, and which toolbar tab racks are matched against. A rack can override the automatic match with its own `opens:` list. Edit this to move or add things; no code changes needed. |
 | `floorplan.py` | `FloorPlan` widget, `AreaButton` / `IconButton`, and `FloorPlanContext`, which turns config entries into things to open. |
-| `las_home.py` | Home screen: floor plan with the LAS toolbar under it, `TabDock` on the right (v1's arrangement, with the floor plan in place of the grid). |
-| `las_home.sh` | Launcher. |
+| `las_home.py` | Home screen: floor plan with the LAS toolbar under it, `TabDock` on the right. |
+| `las_home.sh` | Launcher. Puts the pcdswidgets checkout (`PCDSWIDGETS_DIR`, default `../..`) and this directory on `PYTHONPATH`. |
+| `devices.py` | Device list from happi's `db.json` read as plain JSON (path from `$LAS_DEVICE_DB` or `$HAPPI_CFG`) or a YAML snapshot; device types (`config/device_types.yaml`); the per-device screen cache. |
+| `alarm.py` | `PVAlarmCircle`, the status dot: worst alarm across a list of PVs, in typhos's colours. |
 | `screens/smaract_r4.py` | SmarAct screen from the IOC release's own widgets (`common/smaract/R4.0.0/motorScreens`, the release `ioc-las-bts-mcs1` builds against): the expert panel with the advanced-controls tabs (Open-loop, Closed-loop, Diagnostics, Configuration) always shown under it. This is `smaract_expert_screen.py` without the collapsible section and without the PicoScale tab. It uses the release's generated widget classes, because loading `smaract_advanced_controls.ui` directly hits a circular import in that package. |
-| `config/device_types.yaml` | v2-only overrides of v1's device types (currently: SmarAct → `smaract_r4.py`). Keys left out, such as `indicator_pvs`, come from v1. v1 is unchanged. |
+| `config/device_types.yaml` | Device class → screen, macros, and status PVs: LasBasler → `las_basler.ui`, SmarAct → `smaract_r4.py`, EnvironmentalMonitor → `env_monitor.ui`, and BtpsState (status PVs only; the BTPS opens via the toolbar). |
+| `config/las_toolbar.yaml` | The LAS toolbar (copy of `lucid_config/LAS_toolbar.yaml`). Rack → PDU matching and the bay tools come from here. |
+| `config/las_devices.yaml` | Snapshot of the 44 active LAS happi entries, used by the tests. Regenerate with `tools/export_happi_devices.py`. |
+| `screens/las_basler.ui`, `screens/env_monitor.ui` | LasBasler camera and environmental monitor screens (built for v1, copied here). |
+| `tools/gen_indicator_pvs.py` | **Dev-time only, uses ophyd** (run with the pcds conda python). Regenerates `indicator_pvs` in `config/device_types.yaml`. |
+| `tools/export_happi_devices.py` | Regenerates `config/las_devices.yaml`. No happi import. |
 | `screens/laser_shutter.ui` | **New.** One laser source: LSS opened/closed/permission/request, entry valve, BTPS safe-to-open, destination, override, latched error + Acknowledge, user Open/Close. |
 | `tests/` | pytest-qt tests (23). |
 
-From v1 (used as-is, not copied, except for the overrides above): `las_devices.py`, `las_grid.py` (`DeviceScreenCache`, `PVAlarmCircle`), the device screens and `device_types.yaml`, the toolbar YAML, and `bin/las-open-device`. (v1's copied BTPS screens are no longer used by v2.)
 
 ## Config entry types (`opens:`)
 
 ```yaml
-- device: las_lhn_bay1_env_sens_1                        # a happi device, via v1's device_types.yaml
+- device: las_lhn_bay1_env_sens_1                        # a happi device, via config/device_types.yaml
 - devices: {location: [Bay 3], function: [cameras]}      # all matching happi devices, as a sub-menu
 - shutter: LS5                                           # the laser_shutter.ui screen for that source
 - screen: laser_shutter.ui                               # any pydm screen in screens/ (or an absolute path)
@@ -72,7 +80,7 @@ One entry means a click opens it directly; several mean a click shows a menu.
 
 | What | Source |
 |---|---|
-| Bay devices | happi `db.json` (as in v1), grouped by `location_group` and `functional_group`. "Bay 2 - 1um" and "Bay 2 - 800nm" count as Bay 2. "Beam Transport" goes to the BTS area. |
+| Bay devices | happi `db.json`, grouped by `location_group` and `functional_group`. "Bay 2 - 1um" and "Bay 2 - 800nm" count as Bay 2. "Beam Transport" goes to the BTS area. |
 | Rack → PDU | the LAS toolbar "PDUs" tab: each button whose name ends in "(Rxx)" belongs to rack Rxx. |
 | Laser source → bay | BTPS screen tab names ("LS3 (Bay 2 1um)", ...) |
 | Shutter PVs | `pcdsdevices.lasers.btps` (`LTLHN:LSn:LST:*`, `LTLHN:LSn:BTPS:*`) |
@@ -82,11 +90,11 @@ One entry means a click opens it directly; several mean a click shows a menu.
 
 ```bash
 cd pcdswidgets/dev/v2
-QT_QPA_PLATFORM=offscreen PYTHONPATH=../..:.:../v1 \
+QT_QPA_PLATFORM=offscreen PYTHONPATH=../..:. \
   /reg/g/pcds/pyps/pixi/ctrlenv-widgets/v1.2.1/src/rhel9-x86_64/.pixi/envs/default/bin/python -m pytest tests -q
 ```
 
-The tests point channel access at `127.0.0.1` only, use v1's YAML device snapshot, and replace `run_command` so no EDM window is ever launched. They check that:
+The tests point channel access at `127.0.0.1` only, use the YAML device snapshot in `config/`, and replace `run_command` so no EDM window is ever launched. They check that:
 
 - every config reference resolves
 - every active LAS device appears in exactly one bay or area menu
@@ -98,7 +106,7 @@ The tests point channel access at `127.0.0.1` only, use v1's YAML device snapsho
 - status dots watch the right PVs
 - icons shrink with the drawing
 - the new screens load with all macros filled
-- the home screen imports nothing forbidden
+- the home screen imports nothing forbidden, and nothing from `dev/v1`
 
 ## Known gaps / next steps
 

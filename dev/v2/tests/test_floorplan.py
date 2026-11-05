@@ -213,16 +213,17 @@ def test_icons_shrink_with_the_image(plan: FloorPlan):
     assert icon.toolButtonStyle() == Qt.ToolButtonTextUnderIcon
 
 
-def test_smaract_override_is_v2_only():
-    from las_devices import load_device_types
-
-    smaract = "pcdsdevices.epics_motor.SmarAct"
-    v2 = floorplan.load_v2_device_types()[smaract]
-    v1 = load_device_types()[smaract]
-    assert v2.screen_path() == str(V2_DIR / "screens" / "smaract_r4.py")
-    assert v1.screen_path().endswith("v1/screens/smaract_detailed.ui")
-    # indicator PVs come from v1 when the override leaves them out
-    assert v2.indicator_pvs == v1.indicator_pvs == ["{prefix}.RBV"]
+def test_device_types_point_at_v2_screens():
+    """Every configured screen is in dev/v2 and exists; BtpsState has none (it opens via the toolbar)."""
+    types = floorplan.load_device_types(floorplan.DEVICE_TYPES_FILE)
+    assert types["pcdsdevices.epics_motor.SmarAct"].screen_path() == str(V2_DIR / "screens" / "smaract_r4.py")
+    assert types["pcdsdevices.epics_motor.SmarAct"].indicator_pvs == ["{prefix}.RBV"]
+    assert types["pcdsdevices.lasers.btps.BtpsState"].screen_path() == ""
+    assert len(types["pcdsdevices.lasers.btps.BtpsState"].indicator_pvs) == 732
+    for dtype in types.values():
+        if dtype.screen_path():
+            assert Path(dtype.screen_path()).is_file(), dtype.device_class
+            assert Path(dtype.screen_path()).is_relative_to(V2_DIR), dtype.device_class
 
 
 def test_btps_runs_toolbar_command_and_keeps_status(plan: FloorPlan, no_external_commands):
@@ -238,7 +239,8 @@ def test_btps_runs_toolbar_command_and_keeps_status(plan: FloorPlan, no_external
     bts = next(button for button, _ in plan.areas if button.objectName() == "BTS")
     btps_entries = [opener for opener in bts.openers if "BTPS" in opener.title]
     assert [opener.command for opener in btps_entries] == [target.command]
-    assert "pcdsdevices.lasers.btps.BtpsState" not in floorplan.load_device_types(floorplan.DEVICE_TYPES_FILE)
+    # BtpsState is only there for its status PVs: no docked screen
+    assert floorplan.load_device_types(floorplan.DEVICE_TYPES_FILE)["pcdsdevices.lasers.btps.BtpsState"].screen == ""
 
 
 def test_smaract_screen_has_expert_and_advanced_panels(qtbot: QtBot):
@@ -303,13 +305,16 @@ def test_home_screen_imports_nothing_forbidden():
         "assert display.toolbar.tab.count() == 10\n"
         f"bad = sorted(m for m in sys.modules if m.split('.')[0] in {FORBIDDEN!r})\n"
         "print('FORBIDDEN', bad)\n"
+        f"v1 = sorted(m for m, mod in sys.modules.items() if '/dev/v1/' in (getattr(mod, '__file__', '') or ''))\n"
+        "print('FROM_V1', v1)\n"
         "sys.stdout.flush()\n"
         "os._exit(0)\n"
     )
     env = {
         **os.environ,
-        "PYTHONPATH": f"{V2_DIR.parents[1]}:{V2_DIR}:{V2_DIR.parent / 'v1'}",
+        "PYTHONPATH": os.pathsep.join(filter(None, [str(V2_DIR), os.environ.get("PYTHONPATH", "")])),
         "QT_QPA_PLATFORM": "offscreen",
     }
     result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, env=env, timeout=120)
     assert "FORBIDDEN []" in result.stdout, result.stdout + result.stderr[-2000:]
+    assert "FROM_V1 []" in result.stdout, result.stdout

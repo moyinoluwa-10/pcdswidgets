@@ -1,0 +1,266 @@
+# Snapshot of active LAS devices from /reg/g/pcds/pyps/apps/hutch-python/device_config/db.json
+# Regenerate with dev/tools/export_happi_devices.py
+- name: las_btps
+  device_class: pcdsdevices.lasers.btps.BtpsState
+  prefix: ''
+  location_group: Bay 1
+  functional_group: BTPS
+  documentation: Laser Beam Transport Protection System (BTPS) State
+- name: las_bts_mcs2_01_m1
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LAS:BTS:MCS2:01:m1
+  location_group: Bay 1
+  functional_group: smaract
+  documentation: ''
+- name: las_bts_mcs2_01_m10
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LAS:BTS:MCS2:01:m10
+  location_group: Bay 2 - 800nm
+  functional_group: smaract
+  documentation: ''
+- name: las_bts_mcs2_01_m11
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LAS:BTS:MCS2:01:m11
+  location_group: Bay 2 - 800nm
+  functional_group: smaract
+  documentation: ''
+- name: las_bts_mcs2_01_m12
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LAS:BTS:MCS2:01:m12
+  location_group: Bay 2 - 800nm
+  functional_group: smaract
+  documentation: ''
+- name: las_bts_mcs2_01_m13
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LAS:BTS:MCS2:01:m13
+  location_group: Bay 2 - 1um
+  functional_group: smaract
+  documentation: ''
+- name: las_bts_mcs2_01_m14
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LAS:BTS:MCS2:01:m14
+  location_group: Bay 2 - 1um
+  functional_group: smaract
+  documentation: ''
+- name: las_bts_mcs2_01_m15
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LAS:BTS:MCS2:01:m15
+  location_group: Bay 2 - 1um
+  functional_group: smaract
+  documentation: ''
+- name: las_bts_mcs2_01_m2
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LAS:BTS:MCS2:01:m2
+  location_group: Bay 1
+  functional_group: smaract
+  documentation: ''
+- name: las_bts_mcs2_01_m3
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LAS:BTS:MCS2:01:m3
+  location_group: Bay 1
+  functional_group: smaract
+  documentation: ''
+- name: las_bts_mcs2_01_m4
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LAS:BTS:MCS2:01:m4
+  location_group: Bay 3
+  functional_group: smaract
+  documentation: ''
+- name: las_bts_mcs2_01_m5
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LAS:BTS:MCS2:01:m5
+  location_group: Bay 3
+  functional_group: smaract
+  documentation: ''
+- name: las_bts_mcs2_01_m6
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LAS:BTS:MCS2:01:m6
+  location_group: Bay 3
+  functional_group: smaract
+  documentation: ''
+- name: las_bts_mcs2_01_m7
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LAS:BTS:MCS2:01:m7
+  location_group: Bay 4
+  functional_group: smaract
+  documentation: ''
+- name: las_bts_mcs2_01_m8
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LAS:BTS:MCS2:01:m8
+  location_group: Bay 4
+  functional_group: smaract
+  documentation: ''
+- name: las_bts_mcs2_01_m9
+  device_class: pcdsdevices.epics_motor.SmarAct
+  prefix: LAS:BTS:MCS2:01:m9
+  location_group: Bay 4
+  functional_group: smaract
+  documentation: ''
+- name: las_lhn_bay1_cam_ff
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LAS:LHN:BAY1:CAM:02:'
+  location_group: Bay 1
+  functional_group: cameras
+  documentation: ''
+- name: las_lhn_bay1_cam_nf
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LAS:LHN:BAY1:CAM:01:'
+  location_group: Bay 1
+  functional_group: cameras
+  documentation: ''
+- name: las_lhn_bay1_env_sens_1
+  device_class: pcdsdevices.device_types.EnvironmentalMonitor
+  prefix: LAS:LHN:ADC:01:BHC:AI2
+  location_group: Bay 1
+  functional_group: env sensors
+  documentation: ''
+- name: las_lhn_bay1_env_sens_2
+  device_class: pcdsdevices.device_types.EnvironmentalMonitor
+  prefix: LAS:LHN:ADC:01:BHC:AI4
+  location_group: Bay 1
+  functional_group: env sensors
+  documentation: ''
+- name: las_lhn_bay2_amphos_ff
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LAS:LHN:BAY2:CAM:02:'
+  location_group: Bay 2
+  functional_group: cameras
+  documentation: Laser Hall Zone 2 AMPHOS FF
+- name: las_lhn_bay2_amphos_nf
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LAS:LHN:BAY2:CAM:01:'
+  location_group: Bay 2
+  functional_group: cameras
+  documentation: Laser Hall Zone 2 AMPHOS NF
+- name: las_lhn_bay2_env_sens_1
+  device_class: pcdsdevices.device_types.EnvironmentalMonitor
+  prefix: LAS:LHN:ADC:02:BHC:AI1
+  location_group: Bay 2
+  functional_group: env sensors
+  documentation: ''
+- name: las_lhn_bay2_env_sens_2
+  device_class: pcdsdevices.device_types.EnvironmentalMonitor
+  prefix: LAS:LHN:ADC:02:BHC:AI3
+  location_group: Bay 2
+  functional_group: env sensors
+  documentation: ''
+- name: las_lhn_bay2_ls3_ff
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LAS:LHN:BAY2:CAM:06:'
+  location_group: Bay 2
+  functional_group: cameras
+  documentation: Laser Hall Near Zone 2 LS3 BTS FF
+- name: las_lhn_bay2_ls3_nf
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LAS:LHN:BAY2:CAM:05:'
+  location_group: Bay 2
+  functional_group: cameras
+  documentation: Laser Hall Zone 2 LS3 BTS NF
+- name: las_lhn_bay2_ls4_bts_ff
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LAS:LHN:BAY2:CAM:07:'
+  location_group: Bay 2
+  functional_group: cameras
+  documentation: Laser Hall Near Zone 2 LS4 BTS FF
+- name: las_lhn_bay2_ls4_bts_nf
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LAS:LHN:BAY2:CAM:08:'
+  location_group: Bay 2
+  functional_group: cameras
+  documentation: Laser Hall Zone 2 LS4 BTS NF
+- name: las_lhn_bay3_amphos_ff
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LAS:LHN:BAY3:CAM:02:'
+  location_group: Bay 3
+  functional_group: cameras
+  documentation: ''
+- name: las_lhn_bay3_amphos_nf
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LAS:LHN:BAY3:CAM:01:'
+  location_group: Bay 3
+  functional_group: cameras
+  documentation: ''
+- name: las_lhn_bay3_env_sens_1
+  device_class: pcdsdevices.device_types.EnvironmentalMonitor
+  prefix: LAS:LHN:ADC:03:BHC:AI1
+  location_group: Bay 3
+  functional_group: env sensors
+  documentation: ''
+- name: las_lhn_bay3_env_sens_2
+  device_class: pcdsdevices.device_types.EnvironmentalMonitor
+  prefix: LAS:LHN:ADC:03:BHC:AI3
+  location_group: Bay 3
+  functional_group: env sensors
+  documentation: ''
+- name: las_lhn_bay3_ls5_ff
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LAS:LHN:BAY3:CAM:08:'
+  location_group: Bay 3
+  functional_group: cameras
+  documentation: Laser Hall Zone 3 LS5 BTS FF
+- name: las_lhn_bay3_ls5_nf
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LAS:LHN:BAY3:CAM:07:'
+  location_group: Bay 3
+  functional_group: cameras
+  documentation: Laser Hall Zone 3 LS5 BTS NF
+- name: las_lhn_bay3_ls6_bts_ff
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LAS:LHN:BAY3:CAM:06:'
+  location_group: Bay 3
+  functional_group: cameras
+  documentation: Laser Hall Zone 3 LS6 BTS FF
+- name: las_lhn_bay3_ls6_bts_nf
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LAS:LHN:BAY3:CAM:05:'
+  location_group: Bay 3
+  functional_group: cameras
+  documentation: Laser Hall Zone 3 LS6 BTS NF
+- name: las_lhn_bay3_spare_ff
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LAS:LHN:BAY3:CAM:04:'
+  location_group: Bay 3
+  functional_group: cameras
+  documentation: Laser Hall Near Zone 3 Spare 2
+- name: las_lhn_bay3_spare_nf
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LAS:LHN:BAY3:CAM:03:'
+  location_group: Bay 3
+  functional_group: cameras
+  documentation: Laser Hall Near Zone 3 Spare 4
+- name: las_lhn_bay4_cam_ff
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LAS:LHN:BAY4:CAM:02:'
+  location_group: Bay 4
+  functional_group: cameras
+  documentation: ''
+- name: las_lhn_bay4_cam_nf
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LAS:LHN:BAY4:CAM:01:'
+  location_group: Bay 4
+  functional_group: cameras
+  documentation: ''
+- name: las_lhn_bay4_env_sens_1
+  device_class: pcdsdevices.device_types.EnvironmentalMonitor
+  prefix: LAS:LHN:ADC:04:BHC:AI2
+  location_group: Bay 4
+  functional_group: env sensors
+  documentation: ''
+- name: las_lhn_bay4_env_sens_2
+  device_class: pcdsdevices.device_types.EnvironmentalMonitor
+  prefix: LAS:LHN:ADC:04:BHC:AI4
+  location_group: Bay 4
+  functional_group: env sensors
+  documentation: ''
+- name: las_lhn_bts_cam_ff
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LAS:LHN:BTS:CAM:FF1:'
+  location_group: Beam Transport
+  functional_group: cameras
+  documentation: ''
+- name: las_lhn_bts_cam_nf
+  device_class: pcdsdevices.areadetector.detectors.LasBasler
+  prefix: 'LAS:LHN:BTS:CAM:NF1:'
+  location_group: Beam Transport
+  functional_group: cameras
+  documentation: ''

@@ -3,8 +3,8 @@ Floor-plan home screen pieces for v2: a drawing of the laser hall with clickable
 
 This follows the lasdev style (a floor plan with buttons that open screens in a TabDock), but the hall
 is drawn by Qt from ``config/floorplan.yaml`` (bays, racks R01-R20, BTS as laid-out colored areas)
-instead of being a background image with hand-placed buttons, and the devices and screens come from v1
-(happi JSON + pcdswidgets screens, no happi/ophyd/typhos).
+instead of being a background image with hand-placed buttons. Devices come from the happi JSON database
+read as plain JSON (devices.py), and screens are pydm/pcdswidgets screens (no happi/ophyd/typhos).
 
 Every clickable thing resolves to a list of ``Opener`` objects:
 
@@ -19,13 +19,14 @@ import os
 import re
 import shlex
 import subprocess
-import sys
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 import yaml
+from alarm import PVAlarmCircle
+from devices import DeviceInfo, DeviceScreenCache, find_device_type, load_device_types, load_devices
 from pydm.display import ScreenTarget, load_file
 from pydm.utilities import IconFont
 from pydm.utilities.stylesheet import merge_widget_stylesheet
@@ -33,15 +34,10 @@ from qtpy.QtCore import QPoint, QRect, QSize, Qt
 from qtpy.QtGui import QBrush, QColor, QIcon, QMouseEvent, QPainter, QPen
 from qtpy.QtWidgets import QHBoxLayout, QMenu, QPushButton, QSizePolicy, QToolButton, QVBoxLayout, QWidget
 
+import pcdswidgets
+from pcdswidgets.common.dock.tab_dock import TabDock
+
 V2_DIR = Path(__file__).resolve().parent
-V1_DIR = V2_DIR.parent / "v1"
-if str(V1_DIR) not in sys.path:
-    sys.path.insert(0, str(V1_DIR))
-
-from las_devices import DeviceInfo, DeviceType, find_device_type, load_device_types, load_devices  # noqa: E402
-from las_grid import DeviceScreenCache, PVAlarmCircle  # noqa: E402
-
-from pcdswidgets.common.dock.tab_dock import TabDock  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +46,9 @@ DEVICE_TYPES_FILE = V2_DIR / "config" / "device_types.yaml"
 # "Zone 1 TiSaph PSU/Chiller PDU (R07)" -> R07
 RACK_IN_NAME = re.compile(r"\((R\d+)\)")
 SCREENS_DIR = V2_DIR / "screens"
-TOOLBAR_FILE = V1_DIR / "config" / "las_toolbar.yaml"
-SMARACT_ICON = V2_DIR.parents[1] / "pcdswidgets" / "icons" / "smaract_tip_tilt_qt_icon.png"
+TOOLBAR_FILE = V2_DIR / "config" / "las_toolbar.yaml"
+# Found through the pcdswidgets package on PYTHONPATH, wherever this directory is copied to
+SMARACT_ICON = Path(pcdswidgets.__file__).resolve().parent / "icons" / "smaract_tip_tilt_qt_icon.png"
 
 ifont = IconFont()
 
@@ -135,22 +132,6 @@ def run_command(commands: list[str]):
             logger.exception("Failed to run %s", command)
 
 
-def load_v2_device_types(overrides_file: str | os.PathLike = DEVICE_TYPES_FILE) -> dict[str, DeviceType]:
-    """v1's device types, with the classes in v2's config/device_types.yaml replaced."""
-    types = load_device_types()
-    if not Path(overrides_file).is_file():
-        return types
-    for device_class, override in load_device_types(overrides_file).items():
-        screen = Path(override.screen)
-        if not screen.is_absolute():
-            override.screen = str(SCREENS_DIR / screen)
-        base = types.get(device_class)
-        if base is not None and not override.indicator_pvs:
-            override.indicator_pvs = base.indicator_pvs
-        types[device_class] = override
-    return types
-
-
 class FloorPlanContext:
     """Loads the configs once and turns ``opens`` entries into Openers."""
 
@@ -168,7 +149,7 @@ class FloorPlanContext:
             self.toolbar: dict[str, Any] = yaml.safe_load(fd) or {}
         self.devices = load_devices(beamline, device_db)
         self.devices_by_name = {dev.name: dev for dev in self.devices}
-        self.types = load_v2_device_types()
+        self.types = load_device_types(DEVICE_TYPES_FILE)
         self.screens = DeviceScreenCache(self.types)
         self._screen_cache: dict[str, QWidget] = {}
         self.functions: dict[str, dict[str, str]] = self.config.get("functions", {})
