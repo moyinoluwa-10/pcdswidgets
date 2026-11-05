@@ -26,11 +26,11 @@ import os
 import sys
 from pathlib import Path
 
-DEV_DIR = Path(__file__).resolve().parent
-if str(DEV_DIR) not in sys.path:
-    sys.path.insert(0, str(DEV_DIR))
+APP_DIR = Path(__file__).resolve().parent
+if str(APP_DIR) not in sys.path:
+    sys.path.insert(0, str(APP_DIR))
 
-from las_grid import LasIndicatorGrid  # noqa: E402
+from grid import LasIndicatorGrid  # noqa: E402
 from pydm import Display  # noqa: E402
 from qtpy.QtCore import QSize, Qt, QTimer  # noqa: E402
 from qtpy.QtGui import QGuiApplication, QResizeEvent  # noqa: E402
@@ -48,11 +48,11 @@ from pcdswidgets.common.toolbar.yaml_toolbar import YamlToolbar  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_TOOLBAR = DEV_DIR / "config" / "las_toolbar.yaml"
+DEFAULT_TOOLBAR = APP_DIR / "config" / "las_toolbar.yaml"
 DOCK_WIDTH = 850
 
 # Let toolbar/BTPS shell buttons find dev/v1/bin/las-open-device with the same python we run in.
-os.environ["PATH"] = f"{DEV_DIR / 'bin'}{os.pathsep}{os.environ.get('PATH', '')}"
+os.environ["PATH"] = f"{APP_DIR / 'bin'}{os.pathsep}{os.environ.get('PATH', '')}"
 os.environ.setdefault("LAS_DEV_PYTHON", sys.executable)
 
 

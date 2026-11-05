@@ -9,13 +9,12 @@ import pytest
 os.environ["EPICS_CA_AUTO_ADDR_LIST"] = "NO"
 os.environ["EPICS_CA_ADDR_LIST"] = "127.0.0.1"
 
-DEV_DIR = Path(__file__).resolve().parent.parent
-REPO_DIR = DEV_DIR.parents[1]
-for path in (str(REPO_DIR), str(DEV_DIR)):
-    if path not in sys.path:
-        sys.path.insert(0, path)
+# Only this directory is added here; pcdswidgets comes from PYTHONPATH (a checkout) or the environment.
+APP_DIR = Path(__file__).resolve().parent.parent
+if str(APP_DIR) not in sys.path:
+    sys.path.insert(0, str(APP_DIR))
 
-SNAPSHOT = DEV_DIR / "config" / "las_devices.yaml"
+SNAPSHOT = APP_DIR / "tests" / "devices_snapshot.yaml"
 
 
 @pytest.fixture(autouse=True)

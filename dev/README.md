@@ -9,9 +9,9 @@ Home screens rebuilt from pcdswidgets and PyDM, with no runtime dependency on ha
 | [mods_ip2](mods_ip2/README.md) | `mods_ip2` (LUCID, `IP2_MODS`, LM2K4) | Same as mods_ip1, IP2 table (INJ → COM → HRM → ATM → EJX) | `dev/mods_ip2/mods_ip2_home.sh` |
 | [mods_qrix](mods_qrix/README.md) | `mods_qrix` (LUCID, `QRIX_MODS`, LM1K2) | Same as mods_ip1, QRIX table (INJ → COM → ATM → OPA → EJX) | `dev/mods_qrix/mods_qrix_home.sh` |
 | [mods_crix](mods_crix/README.md) | `mods_crix` (LUCID, `CRIX_MODS`, LM2K2) | Same as mods_ip1, CRIX table (INJ → COM → ATM → HRM → EJX) | `dev/mods_crix/mods_crix_home.sh` |
-| [v1](v1/README.md) | `las` (LUCID) | Earlier experiment: auto-generated device grid (location × function) + toolbar + TabDock | `dev/v1/las_home.sh` |
+| [v1](v1/README.md) | `las` (LUCID), in LUCID's own style | LUCID look-alike: auto-generated device grid (location × function) + toolbar + TabDock. Same config format, device screens and tools as `las` | `dev/v1/las_home.sh` |
 
-`las` and each `mods_*` directory have a `floorplan.png` screenshot of their floor plan.
+`las` and each `mods_*` directory have a `floorplan.png` screenshot of their floor plan; `v1` has `grid.png`, its device grid.
 
 The four `mods_*` directories share the same code and device screens (SmarAct, tip/tilt, camera, Qmini spectrometer, Elliptec, power meter, T/H). Only their config differs: `config/floorplan.yaml`, the toolbar copy, the happi snapshot, and the tests. The shared code and screens are copies, so a fix in one directory has to be copied to the others. mods_ip1 has been tested against live IOCs; mods_ip2, mods_qrix and mods_crix have so far only been checked offline.
 

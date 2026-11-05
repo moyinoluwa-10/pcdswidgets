@@ -13,7 +13,7 @@ import os
 import shutil
 import sys
 
-from las_devices import find_device, find_device_type, load_device_types
+from devices import find_device, find_device_type, load_device_types
 
 
 def main(argv: list[str] | None = None) -> int:

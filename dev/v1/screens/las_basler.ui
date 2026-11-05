@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>840</width>
+    <width>854</width>
     <height>720</height>
    </rect>
   </property>
@@ -47,6 +47,12 @@
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
       </spacer>
      </item>
      <item>
@@ -54,29 +60,29 @@
        <property name="toolTip">
         <string>Camera model</string>
        </property>
-       <property name="channel" stdset="0">
+       <property name="channel">
         <string>ca://${CAM}:Model_RBV</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="PyDMByteIndicator" name="state_indicator">
-       <property name="toolTip">
-        <string>Detector state (DetectorState_RBV)</string>
-       </property>
        <property name="maximumSize">
         <size>
          <width>20</width>
          <height>20</height>
         </size>
        </property>
-       <property name="channel" stdset="0">
+       <property name="toolTip">
+        <string>Detector state (DetectorState_RBV)</string>
+       </property>
+       <property name="channel">
         <string>ca://${CAM}:DetectorState_RBV</string>
        </property>
-       <property name="showLabels" stdset="0">
+       <property name="showLabels">
         <bool>false</bool>
        </property>
-       <property name="circles" stdset="0">
+       <property name="circles">
         <bool>true</bool>
        </property>
       </widget>
@@ -96,8 +102,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>300</width>
-        <height>10</height>
+        <width>390</width>
+        <height>100</height>
        </rect>
       </property>
       <property name="_sidebar_widget" stdset="0">
@@ -112,8 +118,8 @@
        <rect>
         <x>0</x>
         <y>10</y>
-        <width>300</width>
-        <height>10</height>
+        <width>390</width>
+        <height>60</height>
        </rect>
       </property>
       <property name="_sidebar_widget" stdset="0">
@@ -128,8 +134,8 @@
        <rect>
         <x>0</x>
         <y>20</y>
-        <width>300</width>
-        <height>10</height>
+        <width>370</width>
+        <height>120</height>
        </rect>
       </property>
       <property name="_sidebar_widget" stdset="0">
@@ -141,8 +147,8 @@
        <rect>
         <x>0</x>
         <y>30</y>
-        <width>300</width>
-        <height>10</height>
+        <width>390</width>
+        <height>70</height>
        </rect>
       </property>
       <property name="_sidebar_widget" stdset="0">
@@ -154,8 +160,8 @@
        <rect>
         <x>0</x>
         <y>40</y>
-        <width>300</width>
-        <height>10</height>
+        <width>390</width>
+        <height>115</height>
        </rect>
       </property>
       <property name="_sidebar_widget" stdset="0">
@@ -167,8 +173,8 @@
        <rect>
         <x>0</x>
         <y>50</y>
-        <width>300</width>
-        <height>10</height>
+        <width>390</width>
+        <height>200</height>
        </rect>
       </property>
       <property name="_sidebar_widget" stdset="0">
@@ -178,14 +184,23 @@
        <string>Colormap / Intensity</string>
       </property>
      </widget>
-     <widget class="QWidget" name="las_settings">
+     <widget class="PyDMEmbeddedDisplay" name="las_settings">
       <property name="geometry">
        <rect>
-        <x>0</x>
-        <y>60</y>
-        <width>300</width>
-        <height>10</height>
+        <x>430</x>
+        <y>70</y>
+        <width>450</width>
+        <height>340</height>
        </rect>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>450</width>
+        <height>340</height>
+       </size>
+      </property>
+      <property name="filename">
+       <string>las_basler_settings.ui</string>
       </property>
       <property name="_sidebar_widget" stdset="0">
        <bool>true</bool>
@@ -193,327 +208,6 @@
       <property name="nickname" stdset="0">
        <string>LAS Basler Settings</string>
       </property>
-      <layout class="QFormLayout" name="las_settings_layout">
-       <item row="0" column="0">
-        <widget class="QLabel" name="manufacturer_title">
-         <property name="text">
-          <string>Manufacturer</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="PyDMLabel" name="manufacturer">
-         <property name="channel" stdset="0">
-          <string>ca://${CAM}:Manufacturer_RBV</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="sensor_title">
-         <property name="text">
-          <string>Sensor Size (X, Y)</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <layout class="QHBoxLayout" name="sensor_layout">
-         <item>
-          <widget class="PyDMLabel" name="sensor_x">
-           <property name="channel" stdset="0">
-            <string>ca://${CAM}:MaxSizeX_RBV</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="PyDMLabel" name="sensor_y">
-           <property name="channel" stdset="0">
-            <string>ca://${CAM}:MaxSizeY_RBV</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="data_type_title">
-         <property name="text">
-          <string>Data Type</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <layout class="QHBoxLayout" name="data_type_layout">
-         <item>
-          <widget class="PyDMEnumComboBox" name="data_type">
-           <property name="channel" stdset="0">
-            <string>ca://${CAM}:DataType</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="PyDMLabel" name="data_type_rbv">
-           <property name="channel" stdset="0">
-            <string>ca://${CAM}:DataType_RBV</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="trigger_title">
-         <property name="text">
-          <string>Trigger Mode</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <layout class="QHBoxLayout" name="trigger_layout">
-         <item>
-          <widget class="PyDMEnumComboBox" name="trigger_mode">
-           <property name="channel" stdset="0">
-            <string>ca://${CAM}:TriggerMode</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="PyDMLabel" name="trigger_mode_rbv">
-           <property name="channel" stdset="0">
-            <string>ca://${CAM}:TriggerMode_RBV</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="4" column="0">
-        <widget class="QLabel" name="event_title">
-         <property name="text">
-          <string>Event Code / Rate</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1">
-        <layout class="QHBoxLayout" name="event_layout">
-         <item>
-          <widget class="PyDMLineEdit" name="event_code">
-           <property name="channel" stdset="0">
-            <string>ca://${CAM}:CamEventCode</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="PyDMLabel" name="event_code_rbv">
-           <property name="channel" stdset="0">
-            <string>ca://${CAM}:CamEventCode_RBV</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="PyDMLabel" name="event_rate">
-           <property name="channel" stdset="0">
-            <string>ca://${CAM}:CamRepRate_RBV</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="5" column="0">
-        <widget class="QLabel" name="bin_title">
-         <property name="text">
-          <string>Binning (X, Y)</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="1">
-        <layout class="QHBoxLayout" name="bin_layout">
-         <item>
-          <widget class="PyDMLineEdit" name="bin_x">
-           <property name="channel" stdset="0">
-            <string>ca://${CAM}:BinX</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="PyDMLabel" name="bin_x_rbv">
-           <property name="channel" stdset="0">
-            <string>ca://${CAM}:BinX_RBV</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="PyDMLineEdit" name="bin_y">
-           <property name="channel" stdset="0">
-            <string>ca://${CAM}:BinY</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="PyDMLabel" name="bin_y_rbv">
-           <property name="channel" stdset="0">
-            <string>ca://${CAM}:BinY_RBV</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="6" column="0">
-        <widget class="QLabel" name="target_title">
-         <property name="toolTip">
-          <string>Crosshair target (Cross4 plugin MinX / MinY)</string>
-         </property>
-         <property name="text">
-          <string>Target (X, Y)</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="1">
-        <layout class="QHBoxLayout" name="target_layout">
-         <item>
-          <widget class="PyDMLineEdit" name="target_x">
-           <property name="channel" stdset="0">
-            <string>ca://${CAM}:Cross4:MinX</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="PyDMLabel" name="target_x_rbv">
-           <property name="channel" stdset="0">
-            <string>ca://${CAM}:Cross4:MinX_RBV</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="PyDMLineEdit" name="target_y">
-           <property name="channel" stdset="0">
-            <string>ca://${CAM}:Cross4:MinY</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="PyDMLabel" name="target_y_rbv">
-           <property name="channel" stdset="0">
-            <string>ca://${CAM}:Cross4:MinY_RBV</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="7" column="0">
-        <widget class="QLabel" name="user_set_title">
-         <property name="toolTip">
-          <string>Current User Set to save/load</string>
-         </property>
-         <property name="text">
-          <string>User Set</string>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="1">
-        <layout class="QHBoxLayout" name="user_set_layout">
-         <item>
-          <widget class="PyDMEnumComboBox" name="user_set">
-           <property name="channel" stdset="0">
-            <string>ca://${CAM}:UserSetSelector</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="PyDMPushButton" name="user_set_load">
-           <property name="toolTip">
-            <string>Load current settings from the selected User Set</string>
-           </property>
-           <property name="text">
-            <string>Load</string>
-           </property>
-           <property name="channel" stdset="0">
-            <string>ca://${CAM}:UserSetLoad.PROC</string>
-           </property>
-           <property name="pressValue" stdset="0">
-            <string>1</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="PyDMPushButton" name="user_set_save">
-           <property name="toolTip">
-            <string>Save current settings into the selected User Set</string>
-           </property>
-           <property name="text">
-            <string>Save</string>
-           </property>
-           <property name="channel" stdset="0">
-            <string>ca://${CAM}:UserSetSave.PROC</string>
-           </property>
-           <property name="pressValue" stdset="0">
-            <string>1</string>
-           </property>
-           <property name="showConfirmDialog" stdset="0">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="8" column="0">
-        <widget class="QLabel" name="default_set_title">
-         <property name="toolTip">
-          <string>Default User Set to use on startup</string>
-         </property>
-         <property name="text">
-          <string>Default User Set</string>
-         </property>
-        </widget>
-       </item>
-       <item row="8" column="1">
-        <widget class="PyDMEnumComboBox" name="default_set">
-         <property name="channel" stdset="0">
-          <string>ca://${CAM}:UserSetDefaultSe</string>
-         </property>
-        </widget>
-       </item>
-       <item row="9" column="0">
-        <widget class="QLabel" name="packet_title">
-         <property name="text">
-          <string>Packet Size / eNet BW</string>
-         </property>
-        </widget>
-       </item>
-       <item row="9" column="1">
-        <layout class="QHBoxLayout" name="packet_layout">
-         <item>
-          <widget class="PyDMLineEdit" name="packet_size">
-           <property name="channel" stdset="0">
-            <string>ca://${CAM}:GevSCPSPacketSiz</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="PyDMLabel" name="enet_bw">
-           <property name="channel" stdset="0">
-            <string>ca://${CAM}:GevSCDCT_RBV</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="10" column="1">
-        <widget class="PyDMPushButton" name="reset">
-         <property name="toolTip">
-          <string>Reset the camera (RESET.PROC)</string>
-         </property>
-         <property name="text">
-          <string>Reset Camera</string>
-         </property>
-         <property name="channel" stdset="0">
-          <string>ca://${CAM}:RESET.PROC</string>
-         </property>
-         <property name="pressValue" stdset="0">
-          <string>1</string>
-         </property>
-         <property name="showConfirmDialog" stdset="0">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-      </layout>
      </widget>
     </widget>
    </item>
@@ -521,9 +215,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>PyDMLabel</class>
-   <extends>QLabel</extends>
-   <header>pydm.widgets.label</header>
+   <class>PyDMEmbeddedDisplay</class>
+   <extends>QFrame</extends>
+   <header>pydm.widgets.embedded_display</header>
   </customwidget>
   <customwidget>
    <class>PyDMByteIndicator</class>
@@ -531,19 +225,14 @@
    <header>pydm.widgets.byte</header>
   </customwidget>
   <customwidget>
-   <class>PyDMEnumComboBox</class>
-   <extends>QComboBox</extends>
-   <header>pydm.widgets.enum_combo_box</header>
+   <class>PyDMLabel</class>
+   <extends>QLabel</extends>
+   <header>pydm.widgets.label</header>
   </customwidget>
   <customwidget>
-   <class>PyDMLineEdit</class>
-   <extends>QLineEdit</extends>
-   <header>pydm.widgets.line_edit</header>
-  </customwidget>
-  <customwidget>
-   <class>PyDMPushButton</class>
-   <extends>QPushButton</extends>
-   <header>pydm.widgets.pushbutton</header>
+   <class>AcquisitionControlFull</class>
+   <extends>QWidget</extends>
+   <header>pcdswidgets.imaging.common.acquisition_control_full</header>
   </customwidget>
   <customwidget>
    <class>CameraViewerStretch</class>
@@ -552,19 +241,14 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>AcquisitionControlFull</class>
-   <extends>QWidget</extends>
-   <header>pcdswidgets.imaging.common.acquisition_control_full</header>
-  </customwidget>
-  <customwidget>
-   <class>ExposureTimingControlFull</class>
-   <extends>QWidget</extends>
-   <header>pcdswidgets.imaging.common.exposure_timing_control_full</header>
-  </customwidget>
-  <customwidget>
    <class>CentroidTrackerFull</class>
    <extends>QWidget</extends>
    <header>pcdswidgets.imaging.common.centroid_tracker_full</header>
+  </customwidget>
+  <customwidget>
+   <class>ColormapIntesityControlFull</class>
+   <extends>QWidget</extends>
+   <header>pcdswidgets.imaging.common.colormap_intesity_control_full</header>
   </customwidget>
   <customwidget>
    <class>EpicsRoiFull</class>
@@ -572,14 +256,14 @@
    <header>pcdswidgets.imaging.common.epics_roi_full</header>
   </customwidget>
   <customwidget>
+   <class>ExposureTimingControlFull</class>
+   <extends>QWidget</extends>
+   <header>pcdswidgets.imaging.common.exposure_timing_control_full</header>
+  </customwidget>
+  <customwidget>
    <class>MarkerSelectionFull</class>
    <extends>QWidget</extends>
    <header>pcdswidgets.imaging.common.marker_selection_full</header>
-  </customwidget>
-  <customwidget>
-   <class>ColormapIntesityControlFull</class>
-   <extends>QWidget</extends>
-   <header>pcdswidgets.imaging.common.colormap_intesity_control_full</header>
   </customwidget>
  </customwidgets>
  <resources/>
