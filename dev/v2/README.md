@@ -53,12 +53,11 @@ Under the floor plan is the full LAS toolbar (`config/las_toolbar.yaml`, a copy 
 | `screens/smaract_r4.py` | SmarAct screen from the IOC release's own widgets (`common/smaract/R4.0.0/motorScreens`, the release `ioc-las-bts-mcs1` builds against): the expert panel with the advanced-controls tabs (Open-loop, Closed-loop, Diagnostics, Configuration) always shown under it. This is `smaract_expert_screen.py` without the collapsible section and without the PicoScale tab. It uses the release's generated widget classes, because loading `smaract_advanced_controls.ui` directly hits a circular import in that package. |
 | `config/device_types.yaml` | Device class → screen, macros, and status PVs: LasBasler → `las_basler.ui`, SmarAct → `smaract_r4.py`, and EnvironmentalMonitor → `env_monitor.ui`. The BTPS isn't listed: it opens through the toolbar and has no status dot. |
 | `config/las_toolbar.yaml` | The LAS toolbar (copy of `lucid_config/LAS_toolbar.yaml`). Rack → PDU matching and the bay tools come from here. |
-| `config/las_devices.yaml` | Snapshot of the 44 active LAS happi entries, used by the tests. Regenerate with `tools/export_happi_devices.py`. |
 | `screens/las_basler.ui`, `screens/env_monitor.ui` | LasBasler camera and environmental monitor screens (built for v1, copied here). |
 | `tools/gen_indicator_pvs.py` | **Dev-time only, uses ophyd** (run with the pcds conda python). Regenerates `indicator_pvs` in `config/device_types.yaml`. |
-| `tools/export_happi_devices.py` | Regenerates `config/las_devices.yaml`. No happi import. |
+| `tools/export_happi_devices.py` | Regenerates `tests/devices_snapshot.yaml`. No happi import. |
 | `screens/laser_shutter.ui` | **New.** One laser source: LSS opened/closed/permission/request, entry valve, BTPS safe-to-open, destination, override, latched error + Acknowledge, user Open/Close. |
-| `tests/` | pytest-qt tests (23). |
+| `tests/` | pytest-qt tests (23). `tests/devices_snapshot.yaml` is a dated snapshot of the 44 active LAS happi entries that the tests use instead of the live database (the screen itself reads the live one). |
 
 
 ## Config entry types (`opens:`)

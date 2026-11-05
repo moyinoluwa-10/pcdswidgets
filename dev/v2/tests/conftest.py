@@ -14,7 +14,7 @@ V2_DIR = Path(__file__).resolve().parent.parent
 if str(V2_DIR) not in sys.path:
     sys.path.insert(0, str(V2_DIR))
 
-SNAPSHOT = V2_DIR / "config" / "las_devices.yaml"
+SNAPSHOT = V2_DIR / "tests" / "devices_snapshot.yaml"
 
 
 @pytest.fixture(autouse=True)

@@ -1,5 +1,5 @@
-# Snapshot of active LAS devices from /reg/g/pcds/pyps/apps/hutch-python/device_config/db.json
-# Regenerate with dev/tools/export_happi_devices.py
+# Snapshot of active LAS devices from /reg/g/pcds/pyps/apps/hutch-python/device_config/db.json, taken 2026-11-04
+# Regenerate with: python dev/v2/tools/export_happi_devices.py LAS <this file>
 - name: las_btps
   device_class: pcdsdevices.lasers.btps.BtpsState
   prefix: ''

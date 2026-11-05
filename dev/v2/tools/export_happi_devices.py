@@ -6,13 +6,14 @@ useful for testing offline, or for pinning the grid while the database changes.
 
 Usage::
 
-    python dev/v2/tools/export_happi_devices.py LAS dev/v2/config/las_devices.yaml
-    LAS_DEVICE_DB=dev/v2/config/las_devices.yaml dev/v2/las_home.sh
+    python dev/v2/tools/export_happi_devices.py LAS dev/v2/tests/devices_snapshot.yaml
+    LAS_DEVICE_DB=dev/v2/tests/devices_snapshot.yaml dev/v2/las_home.sh
 """
 
 import argparse
 import sys
 from dataclasses import asdict
+from datetime import date
 from pathlib import Path
 
 import yaml
@@ -32,8 +33,8 @@ def main():
     database = args.database or default_database_path()
     devices = load_devices(args.beamline, database)
     with open(args.output, "w") as fd:
-        fd.write(f"# Snapshot of active {args.beamline} devices from {database}\n")
-        fd.write("# Regenerate with dev/v2/tools/export_happi_devices.py\n")
+        fd.write(f"# Snapshot of active {args.beamline} devices from {database}, taken {date.today().isoformat()}\n")
+        fd.write(f"# Regenerate with: python dev/v2/tools/export_happi_devices.py {args.beamline} <this file>\n")
         yaml.safe_dump([asdict(dev) for dev in devices], fd, sort_keys=False)
     print(f"Wrote {len(devices)} devices to {args.output}")
 
