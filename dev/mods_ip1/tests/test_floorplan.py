@@ -12,7 +12,7 @@ from pydm.widgets import PyDMEmbeddedDisplay
 from pytestqt.qtbot import QtBot
 from qtpy.QtCore import QEvent, QPoint, QRect, Qt
 from qtpy.QtGui import QHelpEvent
-from qtpy.QtWidgets import QLabel, QWidget
+from qtpy.QtWidgets import QLabel, QScrollArea, QWidget
 
 from pcdswidgets.common.dock.tab_dock import TabDock
 
@@ -202,6 +202,21 @@ def test_devices_without_a_screen_open_a_placeholder(context: FloorPlanContext, 
     assert isinstance(device, DeviceInfo)
 
 
+def test_spectrometers_open_the_qmini_screen(context: FloorPlanContext, qtbot: QtBot):
+    device = context.devices_by_name["lm1k4_ejx_dp1_sp1"]
+    display = context.screens.display_for_device(device)
+    qtbot.addWidget(display)
+    assert type(display).__name__ == "QminiScreen"
+    assert display.windowTitle() == "lm1k4_ejx_dp1_sp1"
+    assert "ca://LM1K4:EJX_DP1_SP1:SPECTRUM" in [curve.y_address for curve in display.qmini.ui.plot._curves]
+    # In a dock shorter than the screen's minimum it scrolls instead of squashing
+    display.show()
+    display.resize(600, 300)
+    qtbot.wait(10)
+    assert display.qmini.height() >= display.qmini.minimumSizeHint().height()
+    assert display.findChild(QScrollArea).verticalScrollBar().maximum() > 0
+
+
 def test_icon_tooltip_lists_bad_pvs(plan: FloorPlan, monkeypatch: pytest.MonkeyPatch):
     icon = icon_in(plan, "INJ", "Cameras")
     shown = []
@@ -248,6 +263,7 @@ def test_every_active_class_has_a_device_type(context: FloorPlanContext):
         ("las_basler.ui", {"CAM": "LM1K4:INJ_DP1_TF1_NF1", "NAME": "cam", "DESC": "INJ NF"}),
         ("las_basler_settings.ui", {"CAM": "LM1K4:INJ_DP1_TF1_NF1"}),
         ("env_monitor.ui", {"PREFIX": "LM1K4:INJ_BHC_AI_01", "NAME": "lm1k4_inj_env_sens"}),
+        ("qmini.py", {"prefix": "LM1K4:EJX_DP1_SP1", "NAME": "lm1k4_ejx_dp1_sp1"}),
     ],
 )
 def test_screens_load(qtbot: QtBot, screen: str, macros: dict[str, str]):
