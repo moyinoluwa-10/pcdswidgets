@@ -58,6 +58,9 @@ class LasHome(Display):
         self.beamline = macros.get("BEAMLINE", "LAS")
         self.toolbar_file = macros.get("TOOLBAR", str(DEFAULT_TOOLBAR))
         self.setup_ui(device_db=macros.get("DEVICE_DB", ""), device_types=macros.get("DEVICE_TYPES", ""))
+        # pydm sizes its window to this display's size as loaded, just after finalize_window_settings runs;
+        # start at the full size (grid + dock) so the window opens with the dock showing
+        self.resize(self.sizeHint())
         QTimer.singleShot(0, self.finalize_window_settings)
 
     def ui_filename(self):
@@ -111,13 +114,17 @@ class LasHome(Display):
         self.outer_hlayout.addWidget(self.dock)
         self.setLayout(self.outer_hlayout)
 
-        self.width_threshold = 2200
+        # Real values come from finalize_window_settings; until then never hide the dock
+        self.width_threshold = 0
         self.min_placeholder_space = 300
         self.original_min_width = 100
 
     def resizeEvent(self, event: QResizeEvent) -> None:  # type: ignore
+        self.update_dock_visibility(event.size().width())
+        return super().resizeEvent(event)
+
+    def update_dock_visibility(self, new_width: int) -> None:
         """Show the dock when there is room for it, otherwise show the placeholder, like LUCID."""
-        new_width = event.size().width()
         if new_width < self.width_threshold:
             self.dock.hide()
             if new_width > self.min_placeholder_space:
@@ -130,7 +137,6 @@ class LasHome(Display):
         else:
             self.dock.show()
             self.dummy_tabs.hide()
-        return super().resizeEvent(event)
 
     def finalize_window_settings(self):
         """Size the window from the loaded grid and toolbar, like LucidMainWindow.finalize_window_settings."""
@@ -152,8 +158,17 @@ class LasHome(Display):
             total_width = self.get_best_width()
         window = self.window()
         size = window.sizeHint()
-        width = min(total_width, self.get_best_width() + (window.width() - self.width()))
-        window.resize(max(width, minw), max(size.height(), minh))
+        # The window's extra width around this display. Right after loading, this display isn't laid out in the
+        # window yet and can be wider than it, so don't let that make the target width smaller
+        frame = max(0, window.width() - self.width())
+        # Open with the dock showing: at least wide enough for it, even on a screen narrower than that
+        width = max(min(total_width, self.get_best_width() + frame), self.width_threshold + frame, minw)
+        # Show the dock first: while it's hidden nothing in the layout stretches, which caps the window at the
+        # grid's width and would make the resize below a no-op
+        self.update_dock_visibility(width - frame)
+        window.resize(width, max(size.height(), minh))
+        # The resize sends no resizeEvent when the size doesn't change, so re-check against the real width
+        self.update_dock_visibility(self.width())
 
     def get_best_width(self) -> int:
         return self.grid.sizeHint().width() + DOCK_WIDTH + 8

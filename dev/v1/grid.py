@@ -35,7 +35,7 @@ from pydm.utilities.iconfont import IconFont
 from qtpy import QtCore, QtWidgets
 from qtpy.QtCore import QEvent, Qt
 from qtpy.QtGui import QColor
-from qtpy.QtWidgets import QLabel, QWidget
+from qtpy.QtWidgets import QFrame, QLabel, QScrollArea, QWidget
 
 from pcdswidgets.common.dock.indicator_grid import IndicatorCell, IndicatorGrid, IndicatorGroup
 from pcdswidgets.common.dock.tab_dock import TabDock
@@ -115,6 +115,37 @@ class GridAlarmCircle(PVAlarmCircle):
             QtWidgets.QToolTip.showText(event.globalPos(), self.cell_tooltip(), self)
             return True
         return super().event(event)
+
+
+class DockScreen(QScrollArea):
+    """
+    A device screen as it goes in the dock: in a scroll area, so a screen taller (or wider) than the dock
+    scrolls instead of being cut off, and still fills the dock when there's room.
+    """
+
+    def __init__(self, display: QWidget, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.display = display
+        self.setFrameShape(QFrame.NoFrame)
+        self.setWidgetResizable(True)
+        self.setWidget(display)
+        # load_screen leaves the display hidden; as our child it now shows with us
+        display.show()
+        self.setWindowTitle(display.windowTitle())
+        self.hide()
+
+
+class DockScreenCache(DeviceScreenCache):
+    """DeviceScreenCache whose screens come wrapped in a DockScreen (one per device, shared by cells and menus)."""
+
+    def __init__(self, types):
+        super().__init__(types)
+        self._dock_screens: dict[str, DockScreen] = {}
+
+    def display_for_device(self, device: DeviceInfo) -> QWidget:
+        if device.name not in self._dock_screens:
+            self._dock_screens[device.name] = DockScreen(super().display_for_device(device))
+        return self._dock_screens[device.name]
 
 
 class _PVDeviceButtonMixin:
@@ -217,7 +248,7 @@ class LasIndicatorGrid(IndicatorGrid):
         self._toolbar_file = str(TOOLBAR_FILE)
         self.devices: list[DeviceInfo] = []
         super().__init__(parent=parent)
-        self.screens = DeviceScreenCache(load_device_types())
+        self.screens = DockScreenCache(load_device_types())
         self.tools = load_toolbar_tools(self._toolbar_file)
 
     def get_database(self) -> str:
@@ -234,7 +265,7 @@ class LasIndicatorGrid(IndicatorGrid):
     def set_types_file(self, path: str):
         self._types_file = path
         if path:
-            self.screens = DeviceScreenCache(load_device_types(path))
+            self.screens = DockScreenCache(load_device_types(path))
 
     deviceTypes = Property("QString", get_types_file, set_types_file)
 

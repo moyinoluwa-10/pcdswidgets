@@ -15,7 +15,7 @@ from devices import (
     load_device_types,
     load_devices,
 )
-from grid import GridAlarmCircle, LasIndicatorGrid, PVIndicatorCell, PVIndicatorGroup, load_toolbar_tools
+from grid import DockScreen, GridAlarmCircle, LasIndicatorGrid, PVIndicatorCell, PVIndicatorGroup, load_toolbar_tools
 from pydm.display import ScreenTarget, load_file
 from pydm.widgets import PyDMEmbeddedDisplay
 from pyqtgraph import GraphicsView
@@ -215,7 +215,9 @@ def test_grid_builds_from_snapshot(grid: LasIndicatorGrid):
     # Every device but the BTPS has a status dot, with a thin black outline as in dev/las
     dots = grid.findChildren(GridAlarmCircle)
     assert len(dots) == 43
-    assert all(dot.penStyle == Qt.SolidLine and dot.penColor.name() == "#000000" and dot.penWidth == 1 for dot in dots)
+    assert all(
+        dot.penStyle == Qt.SolidLine and dot.penColor.name() == "#000000" and dot.penWidth == 1.5 for dot in dots
+    )
 
 
 def test_grid_opens_pydm_screen(qtbot: QtBot, grid: LasIndicatorGrid):
@@ -228,6 +230,8 @@ def test_grid_opens_pydm_screen(qtbot: QtBot, grid: LasIndicatorGrid):
     widget = cell.show_device(device)
     add_widget(qtbot, widget)
     assert widget.windowTitle() == device.name
+    # Docked in a scroll area holding the pydm screen; the same one every time (cells and menus share it)
+    assert isinstance(widget, DockScreen) and widget.widget() is widget.display
     assert cell.show_device(device) is widget
 
 
@@ -330,3 +334,59 @@ def test_home_screen_imports_nothing_forbidden():
     result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, env=env, timeout=120)
     assert "FORBIDDEN []" in result.stdout, result.stdout + result.stderr[-2000:]
     assert "OUTSIDE []" in result.stdout, result.stdout
+
+
+def test_dock_is_visible_at_launch():
+    """Launched the way las_home.sh does (pydm main window), the window opens wide enough to show the dock."""
+    script = (
+        "import os, sys\n"
+        "from pydm import PyDMApplication\n"
+        f"app = PyDMApplication(ui_file={str(APP_DIR / 'las_home.py')!r}, hide_nav_bar=True, hide_menu_bar=True,"
+        " hide_status_bar=True)\n"
+        "for _ in range(50):\n"
+        "    app.processEvents()\n"
+        "home = app.main_window.display_widget()\n"
+        "print('DOCK', home.dock.isVisible(), home.dummy_tabs.isVisible(), home.width() >= home.width_threshold)\n"
+        "sys.stdout.flush()\n"
+        "os._exit(0)\n"
+    )
+    env = {
+        **os.environ,
+        "PYTHONPATH": os.pathsep.join(filter(None, [str(APP_DIR), os.environ.get("PYTHONPATH", "")])),
+        "QT_QPA_PLATFORM": "offscreen",
+    }
+    result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, env=env, timeout=120)
+    assert "DOCK True False True" in result.stdout, result.stdout + result.stderr[-2000:]
+
+
+def test_tall_screens_scroll_in_the_dock():
+    """SmarAct and camera screens are taller than the dock at launch: they scroll at full height, not squashed."""
+    script = (
+        "import os, sys\n"
+        "from pydm import PyDMApplication\n"
+        "from pcdswidgets.common.dock.tab_dock import TabDock\n"
+        f"app = PyDMApplication(ui_file={str(APP_DIR / 'las_home.py')!r}, hide_nav_bar=True, hide_menu_bar=True,"
+        " hide_status_bar=True)\n"
+        "for _ in range(50):\n"
+        "    app.processEvents()\n"
+        "home = app.main_window.display_widget()\n"
+        "devices = {d.name: d for d in home.grid.devices}\n"
+        "for name in ('las_bts_mcs2_01_m1', 'las_lhn_bay1_cam_nf'):\n"
+        "    screen = home.grid.screens.display_for_device(devices[name])\n"
+        "    TabDock.add_to_dock(widget=screen, title=name, new_tab=True)\n"
+        "    for _ in range(20):\n"
+        "        app.processEvents()\n"
+        "    full = screen.display.height() >= screen.display.minimumSizeHint().height()\n"
+        "    scrolls = screen.verticalScrollBar().maximum() > 0\n"
+        "    print('SCREEN', name, full, scrolls, screen.height() < screen.display.height())\n"
+        "sys.stdout.flush()\n"
+        "os._exit(0)\n"
+    )
+    env = {
+        **os.environ,
+        "PYTHONPATH": os.pathsep.join(filter(None, [str(APP_DIR), os.environ.get("PYTHONPATH", "")])),
+        "QT_QPA_PLATFORM": "offscreen",
+    }
+    result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, env=env, timeout=120)
+    for name in ("las_bts_mcs2_01_m1", "las_lhn_bay1_cam_nf"):
+        assert f"SCREEN {name} True True True" in result.stdout, result.stdout + result.stderr[-2000:]

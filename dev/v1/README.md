@@ -22,7 +22,7 @@ Environment: `ctrlenv-widgets/v1.2.1`, with this checkout's pcdswidgets and `dev
 
 ![device grid](grid.png)
 
-The grid, toolbar and dock behave like LUCID's (`LucidMainWindow`): grid top-left, toolbar bottom-left, an 850 px `TabDock` on the right, and a "small window mode" placeholder in place of the dock when the window is narrow. Menus, keybindings and docking are pcdswidgets' `IndicatorGrid` unchanged.
+The grid, toolbar and dock behave like LUCID's (`LucidMainWindow`): grid top-left, toolbar bottom-left, an 850 px `TabDock` on the right, and a "small window mode" placeholder in place of the dock when the window is made narrower. It always opens wide enough to show the dock. Docked screens taller than the dock scroll. Menus, keybindings and docking are pcdswidgets' `IndicatorGrid` unchanged.
 
 | Where | Click | Opens |
 |---|---|---|
@@ -66,7 +66,7 @@ A class without an entry in `config/device_types.yaml` still appears in the grid
 | `grid.png` | Screenshot of the device grid (documentation only). |
 | `las_home.py` | Home screen (PyDM `Display`): grid, toolbar and dock, with `LucidMainWindow`'s layout and resize behaviour. |
 | `las_home.sh` | Launcher. Puts the pcdswidgets checkout (`PCDSWIDGETS_DIR`, default `../..`) and this directory on `PYTHONPATH`; runs `subnet_check las las`. Dev version of "Option 4: pydm home with pixi" in the org `las_home.sh`. |
-| `grid.py` | `LasIndicatorGrid`: subclasses pcdswidgets' `IndicatorGrid` / `IndicatorCell` / `IndicatorGroup`, so menus, keybindings and docking are unchanged. Swaps happi → `devices.py`, `TyphosAlarmCircle` → `GridAlarmCircle` (a black-outlined `PVAlarmCircle` whose tooltip names the device), typhos screens → pydm screens; devices in `config/grid.yaml` run their toolbar button instead. |
+| `grid.py` | `LasIndicatorGrid`: subclasses pcdswidgets' `IndicatorGrid` / `IndicatorCell` / `IndicatorGroup`, so menus, keybindings and docking are unchanged. Swaps happi → `devices.py`, `TyphosAlarmCircle` → `GridAlarmCircle` (a black-outlined `PVAlarmCircle` whose tooltip names the device), typhos screens → pydm screens, each in a scroll area (`DockScreen`) so a screen taller than the dock scrolls instead of being cut off; devices in `config/grid.yaml` run their toolbar button instead. |
 | `devices.py` | Same as `dev/las`, plus `group_devices` (the grid's `location|function` groups): device list from happi's `db.json` read as plain JSON (path from `$LAS_DEVICE_DB` or `$HAPPI_CFG`) or a YAML snapshot, with each entry's happi kwargs; device types (`config/device_types.yaml`); the per-device screen cache. |
 | `alarm.py` | `PVAlarmCircle`, the status dot: worst alarm across a list of PVs, in typhos's colours. Same as `dev/las`. |
 | `config/device_types.yaml` | Device class → screen, macros and status PVs. Same as `dev/las`. |
@@ -75,7 +75,7 @@ A class without an entry in `config/device_types.yaml` still appears in the grid
 | `screens/` | `smaract.py`, `las_basler.ui`, `las_basler_settings.ui`, `env_monitor.ui` (copies of `dev/las`'s). |
 | `tools/gen_indicator_pvs.py` | **Dev-time only, uses ophyd** (run with the pcds conda python). Regenerates `indicator_pvs` in `config/device_types.yaml`. Same as `dev/las`. |
 | `tools/export_happi_devices.py` | Regenerates `tests/devices_snapshot.yaml` from happi (`$HAPPI_CFG`, never `$LAS_DEVICE_DB`), sorted by name. No happi import; runs with any python that has PyYAML. Same as `dev/las`. |
-| `tests/` | pytest-qt tests (23). `tests/devices_snapshot.yaml` is a dated snapshot of the 44 active LAS happi entries that the tests use instead of the live database. |
+| `tests/` | pytest-qt tests (25). `tests/devices_snapshot.yaml` is a dated snapshot of the 44 active LAS happi entries that the tests use instead of the live database. |
 
 ## Adding a device class
 
@@ -104,6 +104,8 @@ The tests point channel access at `127.0.0.1` only and use the YAML device snaps
 - the grid builds from the snapshot (44 devices, 43 black-outlined dots), opens pydm screens, and opens a placeholder for an unknown class
 - the BTPS cell and its row header run "BTPS Overview", menus list it as an external entry, and "Open All" leaves it out
 - the alarm logic is correct, and a cell's tooltip names the device and lists the bad PVs
+- the home screen opens with the dock showing (launched like `las_home.sh` does)
+- the SmarAct and camera screens, taller than the dock at launch, scroll in it at full height instead of being cut off
 - the home screen imports nothing forbidden, and nothing from the rest of `dev/`
 
 ## Known gaps / next steps
