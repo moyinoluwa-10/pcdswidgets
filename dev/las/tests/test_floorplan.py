@@ -380,3 +380,35 @@ def test_home_screen_imports_nothing_forbidden():
     result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, env=env, timeout=120)
     assert "FORBIDDEN []" in result.stdout, result.stdout + result.stderr[-2000:]
     assert "OUTSIDE []" in result.stdout, result.stdout
+
+
+def test_tall_screens_never_grow_the_window():
+    """Docking a tall screen (SmarAct, camera) keeps the window's height; the screen keeps its full height."""
+    script = (
+        "import os, sys\n"
+        "from pydm import PyDMApplication\n"
+        "from pcdswidgets.common.dock.tab_dock import TabDock\n"
+        f"app = PyDMApplication(ui_file={str(LAS_DIR / 'las_home.py')!r}, hide_nav_bar=True, hide_menu_bar=True,"
+        " hide_status_bar=True)\n"
+        "for _ in range(50):\n"
+        "    app.processEvents()\n"
+        "window, home = app.main_window, app.main_window.display_widget()\n"
+        "height = window.height()\n"
+        "for name in ('las_bts_mcs2_01_m1', 'las_lhn_bay1_cam_ff'):\n"
+        "    screen = home.context.device_opener(home.context.devices_by_name[name]).build()\n"
+        "    TabDock.add_to_dock(widget=screen, title=name)\n"
+        "    for _ in range(20):\n"
+        "        app.processEvents()\n"
+        "    full = screen.display.height() >= screen.display.minimumSizeHint().height()\n"
+        "    print('SCREEN', name, window.height() == height, full)\n"
+        "sys.stdout.flush()\n"
+        "os._exit(0)\n"
+    )
+    env = {
+        **os.environ,
+        "PYTHONPATH": os.pathsep.join(filter(None, [str(LAS_DIR), os.environ.get("PYTHONPATH", "")])),
+        "QT_QPA_PLATFORM": "offscreen",
+    }
+    result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, env=env, timeout=120)
+    for name in ("las_bts_mcs2_01_m1", "las_lhn_bay1_cam_ff"):
+        assert f"SCREEN {name} True True" in result.stdout, result.stdout + result.stderr[-2000:]

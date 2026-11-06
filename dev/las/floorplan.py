@@ -37,7 +37,18 @@ from devices import (
 from pydm.utilities import IconFont
 from qtpy.QtCore import QEvent, QPoint, QRect, QRectF, QSize, Qt
 from qtpy.QtGui import QBrush, QColor, QIcon, QMouseEvent, QPainter, QPen
-from qtpy.QtWidgets import QHBoxLayout, QMenu, QPushButton, QSizePolicy, QToolButton, QToolTip, QVBoxLayout, QWidget
+from qtpy.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QMenu,
+    QPushButton,
+    QScrollArea,
+    QSizePolicy,
+    QToolButton,
+    QToolTip,
+    QVBoxLayout,
+    QWidget,
+)
 
 import pcdswidgets
 from pcdswidgets.common.dock.tab_dock import TabDock
@@ -135,6 +146,25 @@ def run_command(commands: list[str]):
             logger.exception("Failed to run %s", command)
 
 
+class DockScreen(QScrollArea):
+    """
+    A screen as it goes in the dock: in a scroll area, so a screen taller (or wider) than the dock scrolls
+    and still fills the dock when there's room. Without it, the screen's minimum height reaches the window
+    through the dock's layout and the whole window grows to fit (past the bottom of a short monitor).
+    """
+
+    def __init__(self, display: QWidget, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.display = display
+        self.setFrameShape(QFrame.NoFrame)
+        self.setWidgetResizable(True)
+        self.setWidget(display)
+        # load_screen leaves the display hidden; as our child it now shows with us
+        display.show()
+        self.setWindowTitle(display.windowTitle())
+        self.hide()
+
+
 class FloorPlanContext:
     """Loads the configs once and turns ``opens`` entries into Openers."""
 
@@ -155,8 +185,15 @@ class FloorPlanContext:
         self.types = load_device_types()
         self.screens = DeviceScreenCache(self.types)
         self._screen_cache: dict[str, QWidget] = {}
+        self._dock_screens: dict[str, DockScreen] = {}
         self.functions: dict[str, dict[str, str]] = self.config.get("functions", {})
         self.shutters: dict[str, dict[str, str]] = self.config.get("shutters", {})
+
+    def dock_screen(self, key: str, make: Callable[[], QWidget]) -> DockScreen:
+        """The screen for ``key`` in its DockScreen, built once and shared by every opener of it."""
+        if key not in self._dock_screens:
+            self._dock_screens[key] = DockScreen(make())
+        return self._dock_screens[key]
 
     # Openers for each kind of entry
 
@@ -166,7 +203,7 @@ class FloorPlanContext:
         return Opener(
             title=title or device.name,
             icon=make_icon(function.get("icon", "cube")),
-            build=lambda: self.screens.display_for_device(device),
+            build=lambda: self.dock_screen(f"device|{device.name}", lambda: self.screens.display_for_device(device)),
             channels=dtype.indicator_channels_for(device) if dtype is not None else [],
             tooltip=f"{device.name}\n{device.device_class}\n{device.prefix}",
             device_name=device.name,
@@ -222,7 +259,7 @@ class FloorPlanContext:
         def build() -> QWidget:
             if key not in self._screen_cache:
                 self._screen_cache[key] = load_screen(path, macros, title)
-            return self._screen_cache[key]
+            return self.dock_screen(f"screen|{key}", lambda: self._screen_cache[key])
 
         return Opener(title=title, icon=make_icon(entry.get("icon", icon)), build=build, tooltip=str(path))
 

@@ -57,7 +57,7 @@ Under the floor plan is the full IP2_MODS toolbar (`config/ip2_mods_toolbar.yaml
 | `SmarActEncodedTipTilt` (7), `SmarActTipTilt` (1) | 8 | `screens/tip_tilt.py`, pcdswidgets' `MotorTipTiltDouble`: d-pad, step size and position per axis, invert, per-axis expert buttons. Tip (`{prefix}{tip_pv}`) is left/right, tilt is up/down. The encoded stages (`STYLE: MotorRecord`) use their motor records; the open-loop one (COM MR4) the SmarAct step fields |
 | `EllLinear` (4), `Ell9` (2), `EllRotation` (1) | 7 | `screens/elliptec.py` + `elliptec.ui`, one screen for every Thorlabs Elliptec (thorlabs-ell IOC, PVs `{prefix}:M{channel}:...`). The `STAGE` macro (`continuous`, `ell6`, `ell9`) drops the sections whose records that stage type doesn't load. Scrolls in a short dock |
 | `EnvironmentalMonitor` | 3 | `screens/env_monitor.ui` |
-| `QminiSpectrometer` | 2 | `screens/qmini.py`, the IOC release's own embedded screen (`common/qmini/R3.1.1/qminiScreens/QminiSpectrometer.embedded.py`), in a scroll area |
+| `QminiSpectrometer` | 2 | `screens/qmini.py`, the IOC release's own embedded screen (`common/qmini/R3.1.1/qminiScreens/QminiSpectrometer.embedded.py`). Scrolls in a short dock |
 
 `config/device_types.yaml` is mods_ip1's, without the power meter (`El3174AiCh`, none in IP2_MODS). It keeps `Ell6`, which `elliptec.py` supports, so an Ell6 added to happi just works.
 
@@ -72,7 +72,7 @@ Tip/tilt stages and Elliptecs can't be described by `{prefix}` alone: their PVs 
 | Path | What it is |
 |---|---|
 | `config/floorplan.yaml` | **All layout and behaviour**: the drawing (stations left to right, relative widths/heights, colours, preferred height), station → location groups and tools, icon positions (percent of their station) and what each opens. Edit this to move or add things; no code changes needed. |
-| `floorplan.py` | `FloorPlan` widget, `AreaButton` / `IconButton`, and `FloorPlanContext`, which turns config entries into things to open. |
+| `floorplan.py` | `FloorPlan` widget, `AreaButton` / `IconButton`, and `FloorPlanContext`, which turns config entries into things to open. Docked screens go in a `DockScreen` scroll area, so one taller than the dock scrolls instead of growing the whole window. |
 | `mods_ip2_home.py` | Home screen: floor plan with the toolbar under it, `TabDock` on the right. |
 | `mods_ip2_home.sh` | Launcher. Puts the pcdswidgets checkout (`PCDSWIDGETS_DIR`, default `../..`) and this directory on `PYTHONPATH`, runs `subnet_check ip2 las tmo`. |
 | `devices.py` | Device list from happi's `db.json` read as plain JSON (path from `$MODS_IP2_DEVICE_DB` or `$HAPPI_CFG`) or a YAML snapshot, with each entry's happi kwargs; device types (`config/device_types.yaml`); the per-device screen cache. |
@@ -83,7 +83,7 @@ Tip/tilt stages and Elliptecs can't be described by `{prefix}` alone: their PVs 
 | `tools/gen_indicator_pvs.py` | **Dev-time only, uses ophyd** (run with the pcds conda python). Regenerates `indicator_pvs` in `config/device_types.yaml`. |
 | `tools/export_happi_devices.py` | Regenerates `tests/devices_snapshot.yaml` from happi (`$HAPPI_CFG`, never `$MODS_IP2_DEVICE_DB`), sorted by name. No happi import; runs with any python that has PyYAML. |
 | `floorplan.png` | Screenshot of the floor plan (documentation only). |
-| `tests/` | pytest-qt tests (35). `tests/devices_snapshot.yaml` is a dated snapshot of the 45 active IP2_MODS happi entries that the tests use instead of the live database. |
+| `tests/` | pytest-qt tests (36). `tests/devices_snapshot.yaml` is a dated snapshot of the 45 active IP2_MODS happi entries that the tests use instead of the live database. |
 
 ## Config entry types (`opens:`)
 
@@ -118,6 +118,7 @@ The tests point channel access at `127.0.0.1` only, use the YAML device snapshot
 - status dots fill in per-device happi kwargs (tip/tilt suffixes, Elliptec channels), and the icon tooltip lists bad PVs
 - spectrometers open the Qmini screen, which scrolls in a short dock; tip/tilts open the tip/tilt screen with the right axes; each Elliptec type gets exactly its sections; classes without a screen open the placeholder
 - icons shrink with the drawing; at the minimum window size no toolbar tab scrolls
+- screens taller than the dock (SmarAct, camera) scroll in it, and the window keeps its height
 - the screens load with all macros filled
 - the home screen imports nothing forbidden, and nothing from the rest of `dev/`
 

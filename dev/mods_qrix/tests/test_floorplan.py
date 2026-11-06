@@ -288,8 +288,8 @@ def test_elliptecs_share_one_screen(
     for widget in absent:
         assert display.findChild(QWidget, widget) is None, widget
     assert f"ca://{motor}:CURPOS" in channel_addresses(display)
-    # Scrolls in a short dock instead of squashing; never needs to scroll sideways at the dock's width
-    assert display.findChild(QWidget, "content").minimumSizeHint().width() <= 420
+    # The dock scrolls it when short (DockScreen); it never needs to scroll sideways at the dock's width
+    assert display.minimumSizeHint().width() <= 420
 
 
 def test_spectrometers_open_the_qmini_screen(context: FloorPlanContext, qtbot: QtBot):
@@ -299,12 +299,15 @@ def test_spectrometers_open_the_qmini_screen(context: FloorPlanContext, qtbot: Q
     assert type(display).__name__ == "QminiScreen"
     assert display.windowTitle() == "lm1k2_ejx_dp1_sp1"
     assert "ca://LM1K2:EJX_DP1_SP1:SPECTRUM" in [curve.y_address for curve in display.qmini.ui.plot._curves]
-    # In a dock shorter than the screen's minimum it scrolls instead of squashing
-    display.show()
-    display.resize(600, 300)
+    # No scroll area of its own: in a short dock, the dock's DockScreen scrolls it at full height
+    assert not display.findChildren(QScrollArea)
+    docked = context.device_opener(device).build()
+    assert isinstance(docked, floorplan.DockScreen) and docked.display is display
+    docked.show()
+    docked.resize(600, 300)
     qtbot.wait(10)
-    assert display.qmini.height() >= display.qmini.minimumSizeHint().height()
-    assert display.findChild(QScrollArea).verticalScrollBar().maximum() > 0
+    assert display.height() >= display.minimumSizeHint().height()
+    assert docked.verticalScrollBar().maximum() > 0
 
 
 def test_icon_tooltip_lists_bad_pvs(plan: FloorPlan, monkeypatch: pytest.MonkeyPatch):
@@ -413,3 +416,36 @@ def test_home_screen_imports_nothing_forbidden():
     result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, env=env, timeout=120)
     assert "FORBIDDEN []" in result.stdout, result.stdout + result.stderr[-2000:]
     assert "OUTSIDE []" in result.stdout, result.stdout
+
+
+def test_tall_screens_scroll_instead_of_growing_the_window():
+    """A screen taller than the dock (SmarAct, camera) scrolls in it; the window keeps its height."""
+    script = (
+        "import os, sys\n"
+        "from pydm import PyDMApplication\n"
+        "from pcdswidgets.common.dock.tab_dock import TabDock\n"
+        f"app = PyDMApplication(ui_file={str(APP_DIR / 'mods_qrix_home.py')!r}, hide_nav_bar=True, hide_menu_bar=True,"
+        " hide_status_bar=True)\n"
+        "for _ in range(50):\n"
+        "    app.processEvents()\n"
+        "window, home = app.main_window, app.main_window.display_widget()\n"
+        "height = window.height()\n"
+        "for name in ('lm1k2_com_mp2_dly1', 'lm1k2_com_dp2_nf1'):\n"
+        "    screen = home.context.device_opener(home.context.devices_by_name[name]).build()\n"
+        "    TabDock.add_to_dock(widget=screen, title=name)\n"
+        "    for _ in range(20):\n"
+        "        app.processEvents()\n"
+        "    full = screen.display.height() >= screen.display.minimumSizeHint().height()\n"
+        "    scrolls = screen.verticalScrollBar().maximum() > 0\n"
+        "    print('SCREEN', name, window.height() == height, full, scrolls)\n"
+        "sys.stdout.flush()\n"
+        "os._exit(0)\n"
+    )
+    env = {
+        **os.environ,
+        "PYTHONPATH": os.pathsep.join(filter(None, [str(APP_DIR), os.environ.get("PYTHONPATH", "")])),
+        "QT_QPA_PLATFORM": "offscreen",
+    }
+    result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, env=env, timeout=120)
+    for name in ("lm1k2_com_mp2_dly1", "lm1k2_com_dp2_nf1"):
+        assert f"SCREEN {name} True True True" in result.stdout, result.stdout + result.stderr[-2000:]

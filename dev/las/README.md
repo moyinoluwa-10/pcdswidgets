@@ -47,7 +47,7 @@ Under the floor plan is the full LAS toolbar (`config/las_toolbar.yaml`, a copy 
 | `bg-with-exp.png` | The annotated sketch of what each area should do. Documentation only. |
 | `floorplan.png` | Screenshot of the floor plan as built (documentation only). |
 | `config/floorplan.yaml` | **All layout and behaviour**: the hall drawing (columns left to right, with relative widths, heights and colours; racks generated as R01–R20 in coloured groups of five), icon positions (percent of their area), what each opens, laser source → bay, bay tools, which toolbar tab racks are matched against, and `reference_height` (the drawing height at icon scale 1.0, the old `bg.png`'s 659 px). A rack can override the automatic match with its own `opens:` list. Edit this to move or add things; no code changes needed. |
-| `floorplan.py` | `FloorPlan` widget, `AreaButton` / `IconButton`, and `FloorPlanContext`, which turns config entries into things to open. |
+| `floorplan.py` | `FloorPlan` widget, `AreaButton` / `IconButton`, and `FloorPlanContext`, which turns config entries into things to open. Docked screens go in a `DockScreen` scroll area, so one taller than the dock scrolls instead of growing the whole window. |
 | `las_home.py` | Home screen: floor plan with the LAS toolbar under it, `TabDock` on the right. |
 | `las_home.sh` | Launcher. Puts the pcdswidgets checkout (`PCDSWIDGETS_DIR`, default `../..`) and this directory on `PYTHONPATH`. |
 | `devices.py` | Device list from happi's `db.json` read as plain JSON (path from `$LAS_DEVICE_DB` or `$HAPPI_CFG`) or a YAML snapshot, with each entry's happi kwargs (`{{field}}` templates filled in from the entry) so `device_types.yaml` can use them as `{tip_pv}`, `{channel}`, …; device types (`config/device_types.yaml`); the per-device screen cache. |
@@ -60,7 +60,7 @@ Under the floor plan is the full LAS toolbar (`config/las_toolbar.yaml`, a copy 
 | `tools/gen_indicator_pvs.py` | **Dev-time only, uses ophyd** (run with the pcds conda python). Regenerates `indicator_pvs` in `config/device_types.yaml`. |
 | `tools/export_happi_devices.py` | Regenerates `tests/devices_snapshot.yaml` from happi (`$HAPPI_CFG`, never `$LAS_DEVICE_DB`), sorted by name. No happi import; runs with any python that has PyYAML. |
 | `screens/laser_shutter.ui` | **New.** One laser source: LSS opened/closed/permission/request, entry valve, BTPS safe-to-open, destination, override, latched error + Acknowledge, user Open/Close. |
-| `tests/` | pytest-qt tests (29). `tests/devices_snapshot.yaml` is a dated snapshot of the 44 active LAS happi entries that the tests use instead of the live database (the screen itself reads the live one). |
+| `tests/` | pytest-qt tests (30). `tests/devices_snapshot.yaml` is a dated snapshot of the 44 active LAS happi entries that the tests use instead of the live database (the screen itself reads the live one). |
 
 
 ## Config entry types (`opens:`)
@@ -110,6 +110,7 @@ The tests point channel access at `127.0.0.1` only, use the YAML device snapshot
 - status dots watch the right PVs, and the icon tooltip lists the bad ones
 - happi kwargs are filled in from the entry and usable in PV templates
 - icons shrink with the drawing
+- docking a tall screen (SmarAct, camera) doesn't grow the window
 - the new screens load with all macros filled, including embedded displays (forced to load)
 - the home screen imports nothing forbidden, and nothing from the rest of `dev/`
 

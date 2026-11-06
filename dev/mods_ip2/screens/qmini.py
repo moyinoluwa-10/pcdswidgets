@@ -4,8 +4,7 @@ Qmini spectrometer screen from the IOC's own widgets (common/qmini R3.1.1 qminiS
 This is ``QminiSpectrometer.embedded.py`` from that release (the screen LUCID opens), loaded from
 there: the spectrum + fit plot with auto-ranging, recolour, show/hide fit, single exposure and
 save spectrum, plus "Parameters" / "Fit Settings" buttons that open the release's qmini_subwindows
-as floating windows. It sits in a scroll area, so a dock shorter than its minimum height scrolls
-instead of squashing it.
+as floating windows.
 
 Macros:
     prefix  spectrometer PV prefix, e.g. LM2K4:EJX_DP1_SP1 (lower case, as the release's .ui uses)
@@ -16,7 +15,7 @@ import importlib.util
 import sys
 
 from pydm import Display
-from qtpy.QtWidgets import QFrame, QScrollArea, QVBoxLayout
+from qtpy.QtWidgets import QVBoxLayout
 
 QMINI_SCREENS = "/cds/group/pcds/epics/ioc/common/qmini/R3.1.1/qminiScreens"
 MODULE = "qmini_spectrometer_embedded"
@@ -40,14 +39,9 @@ class QminiScreen(Display):
         self.setWindowTitle(macros.get("NAME") or macros.get("prefix", "Qmini"))
 
         self.qmini = embedded_class()(parent=self, macros=macros)
-        scroll = QScrollArea()
-        scroll.setFrameShape(QFrame.NoFrame)
-        # Resizable: fills a tall dock, scrolls once the dock is shorter than the screen's minimum
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(self.qmini)
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(scroll)
+        layout.addWidget(self.qmini)
         self.setLayout(layout)
 
     def ui_filename(self):
