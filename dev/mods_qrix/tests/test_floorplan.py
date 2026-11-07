@@ -21,6 +21,10 @@ from pcdswidgets.common.dock.tab_dock import TabDock
 from pcdswidgets.motion.common.motor_style import MotorStyle
 
 APP_DIR = Path(__file__).resolve().parent.parent
+# The shared screen package: code, screens and device types (this location is only its config)
+PACKAGE_DIR = APP_DIR.parent / "home_screen"
+SCREENS_DIR = PACKAGE_DIR / "screens"
+HOME = PACKAGE_DIR / "home.py"
 FORBIDDEN = ("happi", "ophyd", "pcdsdevices", "typhos", "lucid")
 STATIONS = ["INJ", "COM", "ATM", "OPA", "EJX"]
 
@@ -336,12 +340,12 @@ def test_icons_shrink_with_the_drawing(plan: FloorPlan):
 def test_device_types_point_at_local_screens():
     """Every configured screen is in this directory and exists."""
     types = floorplan.load_device_types()
-    assert types["pcdsdevices.epics_motor.SmarAct"].screen_path() == str(APP_DIR / "screens" / "smaract.py")
+    assert types["pcdsdevices.epics_motor.SmarAct"].screen_path() == str(SCREENS_DIR / "smaract.py")
     for dtype in types.values():
         assert dtype.indicator_pvs, dtype.device_class
         if dtype.screen_path():
             assert Path(dtype.screen_path()).is_file(), dtype.device_class
-            assert Path(dtype.screen_path()).is_relative_to(APP_DIR), dtype.device_class
+            assert Path(dtype.screen_path()).is_relative_to(PACKAGE_DIR), dtype.device_class
 
 
 def test_every_active_class_has_a_device_type(context: FloorPlanContext):
@@ -362,7 +366,7 @@ def test_every_active_class_has_a_device_type(context: FloorPlanContext):
     ],
 )
 def test_screens_load(qtbot: QtBot, screen: str, macros: dict[str, str]):
-    display = load_file(str(APP_DIR / "screens" / screen), macros=macros, target=ScreenTarget.DIALOG)
+    display = load_file(str(SCREENS_DIR / screen), macros=macros, target=ScreenTarget.DIALOG)
     add_widget(qtbot, display)
     # Embedded displays load lazily; force them so their macros are checked too
     for child in display.findChildren(PyDMEmbeddedDisplay):
@@ -375,7 +379,7 @@ def test_screens_load(qtbot: QtBot, screen: str, macros: dict[str, str]):
 
 def test_minimum_height_fits_toolbar_and_floor_plan(qtbot: QtBot):
     """At the smallest window size, no toolbar tab scrolls and the floor plan keeps its minimum."""
-    home = load_file(str(APP_DIR / "mods_qrix_home.py"), target=None)
+    home = load_file(str(HOME), target=None)
     qtbot.addWidget(home)
     home.show()
     home.resize(home.minimumSizeHint())
@@ -396,12 +400,12 @@ def test_home_screen_imports_nothing_forbidden():
         "from pydm.display import load_file\n"
         "app = PyDMApplication(hide_nav_bar=True, hide_menu_bar=True, hide_status_bar=True)\n"
         # target=None loads in this process; the default (NEW_PROCESS) would spawn a separate pydm.
-        f"display = load_file({str(APP_DIR / 'mods_qrix_home.py')!r}, target=None)\n"
+        f"display = load_file({str(HOME)!r}, target=None)\n"
         "assert len(display.floorplan.icons) == 15\n"
         "assert display.toolbar.tab.count() == 3\n"
         f"bad = sorted(m for m in sys.modules if m.split('.')[0] in {FORBIDDEN!r})\n"
         "print('FORBIDDEN', bad)\n"
-        f"dev_dir, app_dir = {str(APP_DIR.parent) + os.sep!r}, {str(APP_DIR) + os.sep!r}\n"
+        f"dev_dir, app_dir = {str(APP_DIR.parent) + os.sep!r}, {str(PACKAGE_DIR) + os.sep!r}\n"
         "files = [getattr(mod, '__file__', '') or '' for mod in list(sys.modules.values())]\n"
         "outside = sorted(f for f in files if f.startswith(dev_dir) and not f.startswith(app_dir))\n"
         "print('OUTSIDE', outside)\n"
@@ -410,7 +414,7 @@ def test_home_screen_imports_nothing_forbidden():
     )
     env = {
         **os.environ,
-        "PYTHONPATH": os.pathsep.join(filter(None, [str(APP_DIR), os.environ.get("PYTHONPATH", "")])),
+        "PYTHONPATH": os.pathsep.join(filter(None, [str(PACKAGE_DIR), os.environ.get("PYTHONPATH", "")])),
         "QT_QPA_PLATFORM": "offscreen",
     }
     result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, env=env, timeout=120)
@@ -424,7 +428,7 @@ def test_tall_screens_scroll_instead_of_growing_the_window():
         "import os, sys\n"
         "from pydm import PyDMApplication\n"
         "from pcdswidgets.common.dock.tab_dock import TabDock\n"
-        f"app = PyDMApplication(ui_file={str(APP_DIR / 'mods_qrix_home.py')!r}, hide_nav_bar=True, hide_menu_bar=True,"
+        f"app = PyDMApplication(ui_file={str(HOME)!r}, hide_nav_bar=True, hide_menu_bar=True,"
         " hide_status_bar=True)\n"
         "for _ in range(50):\n"
         "    app.processEvents()\n"
@@ -443,7 +447,7 @@ def test_tall_screens_scroll_instead_of_growing_the_window():
     )
     env = {
         **os.environ,
-        "PYTHONPATH": os.pathsep.join(filter(None, [str(APP_DIR), os.environ.get("PYTHONPATH", "")])),
+        "PYTHONPATH": os.pathsep.join(filter(None, [str(PACKAGE_DIR), os.environ.get("PYTHONPATH", "")])),
         "QT_QPA_PLATFORM": "offscreen",
     }
     result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, env=env, timeout=120)

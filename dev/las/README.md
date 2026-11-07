@@ -4,7 +4,7 @@ A proof of concept of the **lasdev** home-screen style applied to the **LAS** PV
 
 How `lasdev` works today is in [lasdev_launch_internals.md](lasdev_launch_internals.md).
 
-**It is standalone**: everything it needs is in this directory, so it can be copied as a template for other migrations. It only needs a pcdswidgets (from `PYTHONPATH` or the environment) and PyDM.
+**This directory is only the location's config**: `config/floorplan.yaml` (the drawing, what each click opens, and its happi `beamline`, window `title` and `toolbar`), the toolbar copy, the launcher and its tests. The screen itself (code, device screens, `device_types.yaml`, tools) is the shared [home_screen](../home_screen/README.md) package, the same for every location.
 
 It has **no runtime dependency on happi, ophyd, pcdsdevices, typhos or lucid**, and nothing outside `dev/` was changed.
 
@@ -15,7 +15,7 @@ pcdswidgets/dev/las/las_home.sh &      # foreground without "&", like the produc
 pcdswidgets/dev/las/las_home.sh -m '{"TOOLBAR": "/cds/group/pcds/pyps/apps/hutch-python/lucid_config/LAS_toolbar.yaml"}' &   # live toolbar
 ```
 
-Environment: `ctrlenv-widgets/v1.2.1`, with this checkout's pcdswidgets and `dev/las` first on `PYTHONPATH`. **It connects to the real IOCs.**
+Environment: `ctrlenv-widgets/v1.2.1`, with this checkout's pcdswidgets and `dev/home_screen` first on `PYTHONPATH`. **It connects to the real IOCs.**
 
 ## What you can click
 
@@ -25,10 +25,10 @@ Environment: `ctrlenv-widgets/v1.2.1`, with this checkout's pcdswidgets and `dev
 |---|---|---|
 | **Bay 1–4** (the coloured area) | menu | Every control in the bay, as drop-downs: Cameras, SmarAct Motors, Temperature / Humidity (from happi `location_group`), then Shutters, then Tools (that bay's buttons from the LAS toolbar). Each device entry has the dock options; clicking the entry opens it in the dock. Groups have "Open All". |
 | **BTS** | menu | BTS cameras, plus the external tools BTPS Overview, BTMS Overview, Laser Hall Vacuum, Shutters, BTS motors, RGA and QPCs (marked ↗). QPCs is a sub-menu with one entry per IOC (las-pci-01 … 05), as in the toolbar. |
-| **Racks** with a plug badge (R01, R03, R06, R07, R08, R13, R18) | direct | The PDU of the LAS toolbar "PDUs" button whose name ends with that rack, e.g. "Zone 1 TiSaph PSU/Chiller PDU (R07)", in `screens/pdu_tripplite.py` in the dock. Its PV prefix and outlet count are the ones that button's EDM launch uses (`-m PRE=...`, `TrippLite_24.edl`), read from the command or the `edm-ioc-*.cmd` script it runs. A button that isn't a TrippLite PDU runs its command instead. The EDM screen stays in the toolbar's PDUs tab. Matching is automatic: add a toolbar button named "... (R12)" and R12 lights up. |
+| **Racks** with a plug badge (R01, R03, R06, R07, R08, R13, R18) | direct | The PDU of the LAS toolbar "PDUs" button whose name ends with that rack, e.g. "Zone 1 TiSaph PSU/Chiller PDU (R07)", in `home_screen/screens/pdu_tripplite.py` in the dock. Its PV prefix and outlet count are the ones that button's EDM launch uses (`-m PRE=...`, `TrippLite_24.edl`), read from the command or the `edm-ioc-*.cmd` script it runs. A button that isn't a TrippLite PDU runs its command instead. The EDM screen stays in the toolbar's PDUs tab. Matching is automatic: add a toolbar button named "... (R12)" and R12 lights up. |
 | Other racks (grey) | — | Tooltip only. No toolbar PDU button names them yet. All 20 racks (R01–R20) are always drawn, so a new "(R05)" button lights up R05 with no other change. |
-| **T/H** icons | direct | That environmental sensor (`screens/env_monitor.ui`). |
-| **Cameras** / **SmarAct** icons | menu | That bay's cameras or motors (`screens/las_basler.ui`, `screens/smaract.py`). |
+| **T/H** icons | direct | That environmental sensor (`home_screen/screens/env_monitor.ui`). |
+| **Cameras** / **SmarAct** icons | menu | That bay's cameras or motors (`home_screen/screens/las_basler.ui`, `home_screen/screens/smaract.py`). |
 | **Shutters** icons | direct or menu | The laser-source shutter screen (new): LS1 in Bay 1, LS3/LS4 in Bay 2, LS5/LS6 in Bay 3, LS8 in Bay 4. |
 | **BTPS** icon | direct | Runs the toolbar's "BTPS Overview" (`run_btps.sh`), which opens the btms-ui BTPS screen in its own window. No status dot. |
 
@@ -44,23 +44,12 @@ Under the floor plan is the full LAS toolbar (`config/las_toolbar.yaml`, a copy 
 
 | Path | What it is |
 |---|---|
+| [`../home_screen/`](../home_screen/README.md) | The shared package: home screen, floor-plan code, every device screen, `home_screen/config/device_types.yaml` (device class → screen, macros, status PVs) and the tools (`gen_indicator_pvs.py`, `export_happi_devices.py`). |
 | `bg-with-exp.png` | The annotated sketch of what each area should do. Documentation only. |
 | `floorplan.png` | Screenshot of the floor plan as built (documentation only). |
 | `config/floorplan.yaml` | **All layout and behaviour**: the hall drawing (columns left to right, with relative widths, heights and colours; racks generated as R01–R20 in coloured groups of five), icon positions (percent of their area), what each opens, laser source → bay, bay tools, which toolbar tab racks are matched against, and `reference_height` (the drawing height at icon scale 1.0, the old `bg.png`'s 659 px). A rack can override the automatic match with its own `opens:` list. Edit this to move or add things; no code changes needed. |
-| `floorplan.py` | `FloorPlan` widget, `AreaButton` / `IconButton`, and `FloorPlanContext`, which turns config entries into things to open. Docked screens go in a `DockScreen` scroll area, so one taller than the dock scrolls instead of growing the whole window. |
-| `las_home.py` | Home screen: floor plan with the LAS toolbar under it, `TabDock` on the right. |
-| `las_home.sh` | Launcher. Puts the pcdswidgets checkout (`PCDSWIDGETS_DIR`, default `../..`) and this directory on `PYTHONPATH`. |
-| `devices.py` | Device list from happi's `db.json` read as plain JSON (path from `$LAS_DEVICE_DB` or `$HAPPI_CFG`) or a YAML snapshot, with each entry's happi kwargs (`{{field}}` templates filled in from the entry) so `device_types.yaml` can use them as `{tip_pv}`, `{channel}`, …; device types (`config/device_types.yaml`); the per-device screen cache. |
-| `alarm.py` | `PVAlarmCircle`, the status dot: worst alarm across a list of PVs, in typhos's colours. |
-| `screens/smaract.py` | SmarAct screen from the IOC release's own widgets (`common/smaract/R4.0.0/motorScreens`, the release `ioc-las-bts-mcs1` builds against): the expert panel with the advanced-controls tabs (Open-loop, Closed-loop, Diagnostics, Configuration) always shown under it. This is `smaract_expert_screen.py` without the collapsible section and without the PicoScale tab. It uses the release's generated widget classes, because loading `smaract_advanced_controls.ui` directly hits a circular import in that package. |
-| `config/device_types.yaml` | Device class → screen, macros, and status PVs: LasBasler → `las_basler.ui`, SmarAct → `smaract.py`, and EnvironmentalMonitor → `env_monitor.ui`. The BTPS isn't listed: it opens through the toolbar and has no status dot. Classes whose PVs depend on happi kwargs (e.g. tip/tilt stages) list them under `template_kwargs:` for `tools/gen_indicator_pvs.py`. |
-| `config/las_toolbar.yaml` | The LAS toolbar (copy of `lucid_config/LAS_toolbar.yaml`, refreshed 2026-11-04). Rack → PDU matching, the bay tools and the BTS tools come from here, by tab and button name. **When deploying, switch to the live file** (`/cds/group/pcds/pyps/apps/hutch-python/lucid_config/LAS_toolbar.yaml`, e.g. via the `TOOLBAR` macro or the default in `floorplan.py`); a renamed button the floor plan refers to then shows as "(missing)". |
-| `screens/las_basler.ui`, `screens/env_monitor.ui` | LasBasler camera and environmental monitor screens. |
-| `screens/las_basler_settings.ui` | The "LAS Basler Settings" sidebar panel of `las_basler.ui` (manufacturer, sensor, data type, trigger, binning, user sets, reset), embedded there as a `PyDMEmbeddedDisplay` so it can be edited on its own. It inherits the parent's macros (`CAM`); open it alone with `pydm -m CAM=... las_basler_settings.ui`. The embedded display has `minimumSize` width 1 so the sidebar can squeeze it like the other panels (otherwise the PV labels' text width pushes the sidebar wider than its scroll area). |
-| `tools/gen_indicator_pvs.py` | **Dev-time only, uses ophyd** (run with the pcds conda python). Regenerates `indicator_pvs` in `config/device_types.yaml`. |
-| `tools/export_happi_devices.py` | Regenerates `tests/devices_snapshot.yaml` from happi (`$HAPPI_CFG`, never `$LAS_DEVICE_DB`), sorted by name. No happi import; runs with any python that has PyYAML. |
-| `screens/pdu_tripplite.py` | TrippLite PDU (pdu_snmp IOC): the PyDM version of `pduScreens/TrippLite_24.edl` (common/pdu_snmp R3.3.6), with everything that screen has: PDU info (name and location editable), PDU details (inputs, outputs, outlets, groups, phases, circuits, breakers, heatsinks), input and output details (frequency, voltage, power, current with min/max), Global Control (All On / All Off / Reboot), and per outlet its ID, name (editable), status, control state, command and ramp option. Every power command asks for confirmation; the per-outlet command is On / Off / Cycle buttons next to the current command. Power buttons are coloured by what they do: green On / All On, red Off / All Off, yellow Cycle / Reboot. The header has the IOC heartbeat and an IOC button (EDM's `ioc_soft.edl`). Fits the dock's width. |
-| `screens/laser_shutter.ui` | **New.** One laser source: LSS opened/closed/permission/request, entry valve, BTPS safe-to-open, destination, override, latched error + Acknowledge, user Open/Close. |
+| `las_home.sh` | Launcher: sets this location's `subnet_check` arguments and runs `../home_screen/launch_home.sh` with `config/floorplan.yaml` (ctrlenv-widgets, this checkout's pcdswidgets and the package on `PYTHONPATH`; `HOME_SCREEN_DIR` to use another copy of the package). |
+| `config/las_toolbar.yaml` | The LAS toolbar (copy of `lucid_config/LAS_toolbar.yaml`, refreshed 2026-11-04). Rack → PDU matching, the bay tools and the BTS tools come from here, by tab and button name. **When deploying, switch to the live file** (`/cds/group/pcds/pyps/apps/hutch-python/lucid_config/LAS_toolbar.yaml`, e.g. via the `TOOLBAR` macro or the `toolbar:` entry in `config/floorplan.yaml`); a renamed button the floor plan refers to then shows as "(missing)". |
 | `tests/` | pytest-qt tests (39). `tests/devices_snapshot.yaml` is a dated snapshot of the 44 active LAS happi entries that the tests use instead of the live database (the screen itself reads the live one). |
 
 
@@ -95,7 +84,7 @@ One entry means a click opens it directly; several mean a click shows a menu.
 
 ```bash
 cd pcdswidgets/dev/las
-QT_QPA_PLATFORM=offscreen PYTHONPATH=../..:. \
+QT_QPA_PLATFORM=offscreen PYTHONPATH=../.. \
   /reg/g/pcds/pyps/pixi/ctrlenv-widgets/v1.2.1/src/rhel9-x86_64/.pixi/envs/default/bin/python -m pytest tests -q
 ```
 
@@ -113,7 +102,7 @@ The tests point channel access at `127.0.0.1` only, use the YAML device snapshot
 - icons shrink with the drawing
 - docking a tall screen (SmarAct, camera) doesn't grow the window
 - the new screens load with all macros filled, including embedded displays (forced to load)
-- the home screen imports nothing forbidden, and nothing from the rest of `dev/`
+- the home screen imports nothing forbidden, and nothing from `dev/` but the `home_screen` package
 
 ## Known gaps / next steps
 
@@ -121,5 +110,5 @@ The tests point channel access at `127.0.0.1` only, use the YAML device snapshot
 - **7 labelled racks have no PDU yet**: R02, R04, R11, R12, R16, R17 and R19. They, and the other unused rack numbers, are drawn grey and light up automatically once the toolbar has a "... (Rxx)" PDU button for them.
 - **Racks open only the PDU** (`pdu_tripplite.py`, not live-tested). The sketch mentions "maybe some monitoring, or all of the controls in it". Rack entries already accept a list of `opens`, so adding more is a config change.
 - **Icon positions are rough**, as the sketch says. Fine-tune them in `floorplan.yaml` (`at: [x %, y %]` within their area).
-- **SmarAct screens are pinned to R4.0.0.** When `ioc-las-bts-mcs1` moves to a new release, update `SMARACT_SCREENS` in `screens/smaract.py`, or pass it as a macro.
+- **SmarAct screens are pinned to R4.0.0.** When `ioc-las-bts-mcs1` moves to a new release, update `SMARACT_SCREENS` in `home_screen/screens/smaract.py`, or pass it as a macro.
 - **Mixed data sources.** Rack → PDU comes from the toolbar labels, while `ioc-las-lhn-pwr-02.cfg` says "LHN Timing PDU Bay 2" for the PDU the toolbar calls "Zone 2 OPCPA Controls PDU (R03)". Confirm with the LAS team.

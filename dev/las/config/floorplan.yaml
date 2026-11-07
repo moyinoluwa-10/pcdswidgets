@@ -6,15 +6,21 @@
 #
 # What a click opens is a list of "opens" entries. One entry: a click opens it directly
 # (ctrl+click new tab, shift+click new window, right click for the menu). Several: a click shows a menu.
-#   device: <happi name>                  that device's screen (config/device_types.yaml)
+#   device: <happi name>                  that device's screen (dev/home_screen/config/device_types.yaml)
 #   devices: {location: [...], function: [...]}   every matching happi device, as a sub-menu
-#   shutter: <LSn>                        that laser source's shutter screen (screens/laser_shutter.ui)
-#   screen: <file in screens/>, macros: {...}, title: ...   any pydm screen
+#   shutter: <LSn>                        that laser source's shutter screen (home_screen/screens/laser_shutter.ui)
+#   screen: <file>, macros: {...}, title: ...   any pydm screen (home_screen/screens/, this location's screens/, or absolute)
 #   toolbar: [<tab>, <button>]            run that button's command from the LAS toolbar yaml (external window);
 #                                         a button with several titled commands becomes a sub-menu
 #   toolbar: [<tab>, <button>, <title>]   one command of a button that has several (its "titles")
 #
 # icon names: camera, smaract, thermometer, shutter, pdu, btps, or any FontAwesome 5 name.
+
+# What this location is: its happi beamline (every active device on it), the window title, and its toolbar
+# (a copy of lucid_config's, relative to this file). dev/home_screen builds the screen from this file.
+beamline: LAS
+title: LAS Home
+toolbar: las_toolbar.yaml
 
 # The hall, left to right. width = relative share of the hall width (gaps included);
 # top / height = % of the hall height. Colors match the original drawing (bg-with-exp.png).

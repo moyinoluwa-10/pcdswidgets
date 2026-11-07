@@ -1,0 +1,90 @@
+# home_screen: the floor-plan home screen package
+
+One home screen for every location in the lasdev style (a drawing you click, the location's LUCID toolbar under it, a `TabDock` on the right): the laser hall ([las](../las/README.md)) and the MODS tables ([mods_ip1](../mods_ip1/README.md), [mods_ip2](../mods_ip2/README.md), [mods_qrix](../mods_qrix/README.md), [mods_crix](../mods_crix/README.md)).
+
+Everything they share lives here: the code, every device screen, and `config/device_types.yaml`, **the one source of truth for what each device class opens and which PVs its status dot watches**. A location is just its config:
+
+```
+dev/<location>/
+  <location>_home.sh           launcher: its subnet_check arguments, then home_screen/launch_home.sh with its floorplan.yaml
+  config/floorplan.yaml        the drawing and what each click opens, plus beamline:, title: and toolbar:
+  config/<hutch>_toolbar.yaml  copy of lucid_config/<HUTCH>_toolbar.yaml
+  tests/                       its own tests (its config, devices and toolbar) and its happi snapshot
+  README.md, floorplan.png
+```
+
+It has **no runtime dependency on happi, ophyd, pcdsdevices, typhos or lucid**. It needs PyDM and a pcdswidgets (this checkout's, via `PYTHONPATH`, or the environment's).
+
+## Run a location
+
+```bash
+pcdswidgets/dev/las/las_home.sh &                                                        # a location's launcher, which runs:
+pcdswidgets/dev/home_screen/launch_home.sh pcdswidgets/dev/las/config/floorplan.yaml &   # (after its subnet_check)
+# or directly, in an environment that has pydm and pcdswidgets:
+pydm --hide-nav-bar --hide-menu-bar --hide-status-bar -m '{"FLOORPLAN": "dev/las/config/floorplan.yaml"}' dev/home_screen/home.py
+```
+
+`home.py` macros: `FLOORPLAN` (the location's floorplan.yaml, default `$HOME_FLOORPLAN`), `TOOLBAR` (default: the floorplan.yaml's `toolbar`, relative to it; e.g. pass the live `lucid_config` file), `DEVICE_DB` (happi JSON or YAML snapshot, default `$HOME_DEVICE_DB`, then happi's from `$HAPPI_CFG`). `launch_home.sh` activates `ctrlenv-widgets/v1.2.1` (`ENVVER`), puts this checkout's pcdswidgets (`PCDSWIDGETS_DIR`) and this package on `PYTHONPATH`, runs `subnet_check $SUBNET_CHECK`, and starts pydm in the foreground. **It connects to the real IOCs.**
+
+## A location's floorplan.yaml
+
+```yaml
+beamline: IP2_MODS          # happi beamline: every active device on it
+title: IP2 MODS Home        # window title
+toolbar: ip2_mods_toolbar.yaml
+hall:                       # the drawing: columns left to right
+  columns:
+    - { station: INJ, width: 17.2, top: 8, height: 84, color: "#d9ead3" }    # a MODS station
+    - { gap: 2.4 }
+    # LAS: { bay: Bay 1, ... }, { area: BTS, ... }, { racks: [...] }
+stations: ...               # / bays: / areas: / racks: / shutters: what each area opens
+icons: [...]                # small icons in an area, at [x %, y %], each with what it opens
+```
+
+Column types: `station` (label at the top; its happi location groups and toolbar tools), `bay` (devices of its location groups, its laser-source shutters, toolbar tools), `area` (an `opens:` list, e.g. the BTS), `racks` (R01–R20 in coloured groups; each opens the PDU of its "… (Rxx)" toolbar button, in `screens/pdu_tripplite.py`), and `gap`. See `dev/las/config/floorplan.yaml` and `dev/mods_ip1/config/floorplan.yaml` for full examples; each location's README describes its own.
+
+`opens:` entries: `device: <happi name>`, `devices: {location: [...], function: [...]}` (a sub-menu), `shutter: <LSn>`, `screen: <file>` with `macros:` and `title:` (from `screens/` here, the location's own `screens/` next to its `config/`, or an absolute path), `toolbar: [<tab>, <button>]` or `[<tab>, <button>, <title>]` (runs the toolbar button's command). One entry: a click opens it directly; several: a menu.
+
+## Files
+
+| Path | What it is |
+|---|---|
+| `home.py` | The home screen (`FloorPlanHome`): floor plan with the location's toolbar under it, an 850 px `TabDock` on the right. |
+| `launch_home.sh` | Generic launcher (see above). |
+| `floorplan.py` | `FloorPlan` / `Hall` (the drawing, from the floorplan.yaml), `AreaButton` / `IconButton`, `FloorPlanContext` (turns config entries into things to open), `DockScreen` (docked screens scroll instead of growing the window), rack → PDU matching. |
+| `devices.py` | Device list from happi's `db.json` read as plain JSON (`$HOME_DEVICE_DB`, or `$HAPPI_CFG`) or a YAML snapshot, with each entry's happi kwargs (`{{field}}` templates filled in) usable as `{tip_pv}`, `{channel}`, … in device_types.yaml; device types; the per-device screen cache. |
+| `alarm.py` | `PVAlarmCircle`, the status dot: worst alarm across a list of PVs, in typhos's colours. |
+| `config/device_types.yaml` | Device class → screen, macros, `template_kwargs` and status PVs, for every class at every location. The package tests fail if a class active at any location is missing. |
+| `screens/smaract.py` | SmarAct screen from the IOC release's own widgets (`common/smaract/R4.0.0/motorScreens`, the release `ioc-las-bts-mcs1` builds against): the expert panel with the advanced-controls tabs (Open-loop, Closed-loop, Diagnostics, Configuration) always shown under it. This is `smaract_expert_screen.py` without the collapsible section and without the PicoScale tab. It uses the release's generated widget classes, because loading `smaract_advanced_controls.ui` directly hits a circular import in that package. |
+| `screens/las_basler.ui`, `screens/las_basler_settings.ui` | LasBasler camera viewer, and its sidebar settings panel: The "LAS Basler Settings" sidebar panel of `las_basler.ui` (manufacturer, sensor, data type, trigger, binning, user sets, reset), embedded there as a `PyDMEmbeddedDisplay` so it can be edited on its own. It inherits the parent's macros (`CAM`); open it alone with `pydm -m CAM=... las_basler_settings.ui`. The embedded display has `minimumSize` width 1 so the sidebar can squeeze it like the other panels (otherwise the PV labels' text width pushes the sidebar wider than its scroll area). |
+| `screens/env_monitor.ui` | EnvironmentalMonitor (temperature / humidity). |
+| `screens/tip_tilt.py` | `screens/tip_tilt.py`, pcdswidgets' `MotorTipTiltDouble`: d-pad, step size and position per axis, invert, per-axis expert buttons. Tip (`{prefix}{tip_pv}`) is left/right, tilt is up/down, as in pcdsdevices' screen. Open-loop stages use the SmarAct step fields; the encoded one (`STYLE: MotorRecord`) its motor records |
+| `screens/qmini.py` | `screens/qmini.py`, the IOC release's own embedded screen, what LUCID opens (`common/qmini/R3.1.1/qminiScreens/QminiSpectrometer.embedded.py`): spectrum and fit plot, single exposure, save spectrum; "Parameters" / "Fit Settings" open floating windows. Scrolls in a short dock |
+| `screens/elliptec.py`, `screens/elliptec.ui` | `screens/elliptec.py` + `elliptec.ui`, one screen for every Thorlabs Elliptec (thorlabs-ell IOC, PVs `{prefix}:M{channel}:...`): status, current position, move to, jog, jog step, home / optimize / clean / stop, position names, stage info. The `STAGE` macro (`continuous`, `ell6`, `ell9`) drops the sections whose records that stage type doesn't load (see the IOC's `st.cmd`). Scrolls in a short dock |
+| `screens/power_meter.ui` | `screens/power_meter.ui` (the EJX power meter, an EL3174 analog-input channel): large `.VAL` readout with units, 5-minute trend, calibration fields (raw ADC, units, slope, offset, conversion, precision) |
+| `screens/laser_shutter.ui` | One laser source: LSS opened/closed/permission/request, entry valve, BTPS safe-to-open, destination, override, latched error + Acknowledge, user Open/Close. |
+| `screens/pdu_tripplite.py` | TrippLite PDU (pdu_snmp IOC): the PyDM version of `pduScreens/TrippLite_24.edl` (common/pdu_snmp R3.3.6), with everything that screen has: PDU info (name and location editable), PDU details (inputs, outputs, outlets, groups, phases, circuits, breakers, heatsinks), input and output details (frequency, voltage, power, current with min/max), Global Control (All On / All Off / Reboot), and per outlet its ID, name (editable), status, control state, command and ramp option. Every power command asks for confirmation; the per-outlet command is On / Off / Cycle buttons next to the current command. Power buttons are coloured by what they do: green On / All On, red Off / All Off, yellow Cycle / Reboot. The header has the IOC heartbeat and an IOC button (EDM's `ioc_soft.edl`). Fits the dock's width. |
+| `tools/gen_indicator_pvs.py` | **Dev-time only, uses ophyd** (run with the pcds conda python). Regenerates `indicator_pvs` in `config/device_types.yaml`. |
+| `tools/export_happi_devices.py` | Writes a location's `tests/devices_snapshot.yaml` from happi (`$HAPPI_CFG`, never `$HOME_DEVICE_DB`), sorted by name, e.g. `python dev/home_screen/tools/export_happi_devices.py IP2_MODS dev/mods_ip2/tests/devices_snapshot.yaml`. No happi import. |
+| `tests/` | The package's own tests (13): every device type's screen is here, every location's floorplan.yaml names its beamline / title / toolbar, and device_types.yaml covers every class active at every location. |
+
+## Adding a location
+
+1. Make `dev/<location>/` with `config/floorplan.yaml` (start from the location with the closest layout) and a copy of its `lucid_config/<HUTCH>_toolbar.yaml`.
+2. Copy a launcher (e.g. `mods_ip2/mods_ip2_home.sh`) and change its `SUBNET_CHECK` (as in the location's `pcds_shortcuts.sh` function) and comments.
+3. `python dev/home_screen/tools/export_happi_devices.py <BEAMLINE> dev/<location>/tests/devices_snapshot.yaml`, and copy the tests of a similar location, changing device names, PVs and counts.
+4. Run `dev/home_screen/tests`: if a class at the new location has no device type, add it to `config/device_types.yaml` (with a screen in `screens/` if it needs a new one) and run `tools/gen_indicator_pvs.py`.
+
+## Adding or changing a device screen
+
+Change it here once and every location picks it up. A new class goes in `config/device_types.yaml` (`screen`, `macros`, `template_kwargs`); then regenerate its `indicator_pvs` with `tools/gen_indicator_pvs.py`.
+
+## Tests
+
+```bash
+cd pcdswidgets/dev/home_screen      # and each location: cd pcdswidgets/dev/las, ...
+QT_QPA_PLATFORM=offscreen PYTHONPATH=../.. \
+  /reg/g/pcds/pyps/pixi/ctrlenv-widgets/v1.2.1/src/rhel9-x86_64/.pixi/envs/default/bin/python -m pytest tests -q
+```
+
+The tests point channel access at `127.0.0.1` only and never launch an external window. A location's tests set `HOME_FLOORPLAN` and `HOME_DEVICE_DB` to its config and snapshot (its `tests/conftest.py`).

@@ -17,6 +17,10 @@ from qtpy.QtWidgets import QWidget
 from pcdswidgets.common.dock.tab_dock import TabDock
 
 LAS_DIR = Path(__file__).resolve().parent.parent
+# The shared screen package: code, screens and device types (this location is only its config)
+PACKAGE_DIR = LAS_DIR.parent / "home_screen"
+SCREENS_DIR = PACKAGE_DIR / "screens"
+HOME = PACKAGE_DIR / "home.py"
 FORBIDDEN = ("happi", "ophyd", "pcdsdevices", "typhos", "lucid")
 
 
@@ -195,7 +199,7 @@ def test_every_pdu_rack_gets_its_prefix(context: FloorPlanContext, rack: str, pr
 def test_pdu_screen_has_the_edm_screens_content(qtbot: QtBot):
     """Everything TrippLite_24.edl (pdu_snmp R3.3.6) shows and controls, for the PDU and each of its 24 outlets."""
     display = load_file(
-        str(LAS_DIR / "screens" / "pdu_tripplite.py"),
+        str(SCREENS_DIR / "pdu_tripplite.py"),
         macros={"PRE": "LAS:LHN:PWR:07", "IOC": "IOC:LAS:LHN:PWR:07", "TITLE": "R07 PDU"},
         target=ScreenTarget.DIALOG,
     )
@@ -366,14 +370,14 @@ def test_icons_shrink_with_the_image(plan: FloorPlan):
 def test_device_types_point_at_local_screens():
     """Every configured screen is in this directory and exists."""
     types = floorplan.load_device_types()
-    assert types["pcdsdevices.epics_motor.SmarAct"].screen_path() == str(LAS_DIR / "screens" / "smaract.py")
+    assert types["pcdsdevices.epics_motor.SmarAct"].screen_path() == str(SCREENS_DIR / "smaract.py")
     assert types["pcdsdevices.epics_motor.SmarAct"].indicator_pvs == ["{prefix}.RBV"]
     # The BTPS opens through the toolbar and has no status dot, so it has no device type
     assert "pcdsdevices.lasers.btps.BtpsState" not in types
     for dtype in types.values():
         if dtype.screen_path():
             assert Path(dtype.screen_path()).is_file(), dtype.device_class
-            assert Path(dtype.screen_path()).is_relative_to(LAS_DIR), dtype.device_class
+            assert Path(dtype.screen_path()).is_relative_to(PACKAGE_DIR), dtype.device_class
 
 
 def test_btps_runs_toolbar_command(plan: FloorPlan, no_external_commands):
@@ -393,7 +397,7 @@ def test_btps_runs_toolbar_command(plan: FloorPlan, no_external_commands):
 
 def test_smaract_screen_has_expert_and_advanced_panels(qtbot: QtBot):
     display = load_file(
-        str(LAS_DIR / "screens" / "smaract.py"),
+        str(SCREENS_DIR / "smaract.py"),
         macros={"MOTOR": "LAS:BTS:MCS2:01:m1", "NAME": "las_bts_mcs2_01_m1"},
         target=ScreenTarget.DIALOG,
     )
@@ -424,7 +428,7 @@ def test_smaract_screen_has_expert_and_advanced_panels(qtbot: QtBot):
     ],
 )
 def test_screens_load(qtbot: QtBot, screen: str, macros: dict[str, str]):
-    display = load_file(str(LAS_DIR / "screens" / screen), macros=macros, target=ScreenTarget.DIALOG)
+    display = load_file(str(SCREENS_DIR / screen), macros=macros, target=ScreenTarget.DIALOG)
     qtbot.addWidget(display)
     # Embedded displays load lazily; force them so their macros are checked too
     embedded = display.findChildren(PyDMEmbeddedDisplay)
@@ -441,7 +445,7 @@ def test_screens_load(qtbot: QtBot, screen: str, macros: dict[str, str]):
 
 def test_minimum_height_fits_toolbar_and_floor_plan(qtbot: QtBot):
     """At the smallest window size, no toolbar tab scrolls and the floor plan keeps its minimum."""
-    home = load_file(str(LAS_DIR / "las_home.py"), target=None)
+    home = load_file(str(HOME), target=None)
     qtbot.addWidget(home)
     home.show()
     home.resize(home.minimumSizeHint())
@@ -462,12 +466,12 @@ def test_home_screen_imports_nothing_forbidden():
         "from pydm.display import load_file\n"
         "app = PyDMApplication(hide_nav_bar=True, hide_menu_bar=True, hide_status_bar=True)\n"
         # target=None loads in this process; the default (NEW_PROCESS) would spawn a separate pydm.
-        f"display = load_file({str(LAS_DIR / 'las_home.py')!r}, target=None)\n"
+        f"display = load_file({str(HOME)!r}, target=None)\n"
         "assert len(display.floorplan.icons) == 22\n"
         "assert display.toolbar.tab.count() == 10\n"
         f"bad = sorted(m for m in sys.modules if m.split('.')[0] in {FORBIDDEN!r})\n"
         "print('FORBIDDEN', bad)\n"
-        f"dev_dir, las_dir = {str(LAS_DIR.parent) + os.sep!r}, {str(LAS_DIR) + os.sep!r}\n"
+        f"dev_dir, las_dir = {str(LAS_DIR.parent) + os.sep!r}, {str(PACKAGE_DIR) + os.sep!r}\n"
         "files = [getattr(mod, '__file__', '') or '' for mod in list(sys.modules.values())]\n"
         "outside = sorted(f for f in files if f.startswith(dev_dir) and not f.startswith(las_dir))\n"
         "print('OUTSIDE', outside)\n"
@@ -476,7 +480,7 @@ def test_home_screen_imports_nothing_forbidden():
     )
     env = {
         **os.environ,
-        "PYTHONPATH": os.pathsep.join(filter(None, [str(LAS_DIR), os.environ.get("PYTHONPATH", "")])),
+        "PYTHONPATH": os.pathsep.join(filter(None, [str(PACKAGE_DIR), os.environ.get("PYTHONPATH", "")])),
         "QT_QPA_PLATFORM": "offscreen",
     }
     result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, env=env, timeout=120)
@@ -490,7 +494,7 @@ def test_tall_screens_never_grow_the_window():
         "import os, sys\n"
         "from pydm import PyDMApplication\n"
         "from pcdswidgets.common.dock.tab_dock import TabDock\n"
-        f"app = PyDMApplication(ui_file={str(LAS_DIR / 'las_home.py')!r}, hide_nav_bar=True, hide_menu_bar=True,"
+        f"app = PyDMApplication(ui_file={str(HOME)!r}, hide_nav_bar=True, hide_menu_bar=True,"
         " hide_status_bar=True)\n"
         "for _ in range(50):\n"
         "    app.processEvents()\n"
@@ -508,7 +512,7 @@ def test_tall_screens_never_grow_the_window():
     )
     env = {
         **os.environ,
-        "PYTHONPATH": os.pathsep.join(filter(None, [str(LAS_DIR), os.environ.get("PYTHONPATH", "")])),
+        "PYTHONPATH": os.pathsep.join(filter(None, [str(PACKAGE_DIR), os.environ.get("PYTHONPATH", "")])),
         "QT_QPA_PLATFORM": "offscreen",
     }
     result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, env=env, timeout=120)
