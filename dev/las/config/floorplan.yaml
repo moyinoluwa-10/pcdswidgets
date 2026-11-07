@@ -282,10 +282,11 @@ areas:
       - { toolbar: ["NEH Beam Transport", "BTS SRS RGA"] }
       - { toolbar: ["NEH Beam Transport", "BTS QPCs"] }
 
-# Racks R01-R20 come from the hall columns above. Each runs the LAS toolbar buttons in the "PDUs" tab
-# whose names end with the rack in parentheses, e.g. "Zone 1 TiSaph PSU/Chiller PDU (R07)" (those open
-# the IOCs' EDM PDU screens). Add a matching button to the toolbar and the rack lights up; racks with no
-# match are drawn grey (tooltip only). To override one rack, list it here with its own "opens:" list:
+# Racks R01-R20 come from the hall columns above. Each opens the LAS toolbar buttons in the "PDUs" tab
+# whose names end with the rack in parentheses, e.g. "Zone 1 TiSaph PSU/Chiller PDU (R07)": a TrippLite PDU
+# opens screens/pdu_tripplite.py in the dock, with the PV prefix its EDM launch uses; any other button runs.
+# Add a matching button to the toolbar and the rack lights up; racks with no match are drawn grey (tooltip only).
+# To override one rack, list it here with its own "opens:" list:
 #   racks:
 #     R05: { opens: [{ toolbar: ["PDUs", "Some PDU"] }] }
 rack_toolbar_tab: PDUs

@@ -8,7 +8,7 @@ import pytest
 from devices import DeviceType, _entry_to_info
 from floorplan import FloorPlan, FloorPlanContext
 from pydm.display import ScreenTarget, load_file
-from pydm.widgets import PyDMEmbeddedDisplay
+from pydm.widgets import PyDMEmbeddedDisplay, PyDMPushButton
 from pytestqt.qtbot import QtBot
 from qtpy.QtCore import QEvent, QPoint, QRect, Qt
 from qtpy.QtGui import QColor, QHelpEvent
@@ -136,7 +136,7 @@ def test_icons_stay_inside_their_area(plan: FloorPlan):
 
 
 def test_new_toolbar_pdu_lights_up_its_rack(qtbot: QtBot, context: FloorPlanContext):
-    """R05 has no PDU today; naming a toolbar button "... (R05)" is all it takes."""
+    """R05 has no PDU today; naming a toolbar button "... (R05)" is all it takes (not a TrippLite: it runs)."""
     context.toolbar["PDUs"]["buttons"]["New PDU (R05)"] = {"type": "shell", "commands": ["echo r05"]}
     dock = TabDock()
     qtbot.addWidget(dock)
@@ -155,15 +155,113 @@ def test_bay_menu_lists_controls(plan: FloorPlan):
     assert titles == ["Bay 3", "Cameras", "SmarAct Motors", "Temperature / Humidity", "Shutters", "Tools"]
 
 
-def test_rack_click_runs_its_pdu_toolbar_button(plan: FloorPlan, no_external_commands):
-    """R07 runs the toolbar's "Zone 1 TiSaph PSU/Chiller PDU (R07)" EDM launcher."""
+# Rack -> the PDU prefix its toolbar button's EDM launch uses (all TrippLite_24)
+PDU_PREFIXES = {
+    "R01": "LAS:LHN:PWR:05",
+    "R03": "LAS:LHN:PWR:02",
+    "R06": "LAS:LHN:PWR:06",
+    "R07": "LAS:LHN:PWR:07",
+    "R08": "LAS:LHN:PWR:01",
+    "R13": "LAS:LHN:PWR:04",
+    "R18": "LAS:LHN:PWR:03",
+}
+
+
+def test_rack_click_opens_its_pdu_screen(plan: FloorPlan, no_external_commands):
+    """R07 opens pdu_tripplite.py in the dock for the PDU its toolbar button launches in EDM; nothing external runs."""
     rack = next(button for button, _ in plan.areas if button.objectName() == "R07")
     target = rack.single()
     assert target.title == "Zone 1 TiSaph PSU/Chiller PDU (R07)"
+    assert target.dockable and not target.command
     rack.handle_click(Qt.LeftButton, QPoint(0, 0))
-    assert no_external_commands == [
-        "/reg/g/pcds/epics-dev/rnazir/ioc/las/ioc-las-pdu_snmp/build/iocBoot/ioc-las-lhn-pwr-07/edm-ioc-las-lhn-pwr-07.cmd"
-    ]
+    assert no_external_commands == []
+    tabs = TabDock.get_instance().get_open_tab_widget()
+    assert tabs.tabText(tabs.currentIndex()) == "Zone 1 TiSaph PSU/Chiller PDU (R07)"
+    screen = tabs.widget(tabs.currentIndex())
+    assert type(screen.display).__name__ == "TrippLitePdu"
+    assert "ca://LAS:LHN:PWR:07:Outlet:24:getPduOutletState" in channel_addresses(screen)
+
+
+@pytest.mark.parametrize("rack,prefix", sorted(PDU_PREFIXES.items()))
+def test_every_pdu_rack_gets_its_prefix(context: FloorPlanContext, rack: str, prefix: str):
+    """The prefix comes from the button's command (R08) or the edm-ioc-*.cmd script it runs (the others)."""
+    (opener,) = context.rack_openers(rack, {})
+    assert opener.dockable and opener.tooltip.endswith("pdu_tripplite.py")
+    tab, name = "PDUs", opener.title
+    macros = floorplan.pdu_macros(context.toolbar[tab]["buttons"][name]["commands"])
+    assert macros == {"PRE": prefix, "N_CHAN": "24", "IOC": f"IOC:{prefix}"}
+
+
+def test_pdu_screen_has_the_edm_screens_content(qtbot: QtBot):
+    """Everything TrippLite_24.edl (pdu_snmp R3.3.6) shows and controls, for the PDU and each of its 24 outlets."""
+    display = load_file(
+        str(LAS_DIR / "screens" / "pdu_tripplite.py"),
+        macros={"PRE": "LAS:LHN:PWR:07", "IOC": "IOC:LAS:LHN:PWR:07", "TITLE": "R07 PDU"},
+        target=ScreenTarget.DIALOG,
+    )
+    qtbot.addWidget(display)
+    pvs = {address.split("://", 1)[-1] for address in channel_addresses(display)}
+    pre = "LAS:LHN:PWR:07"
+    expected = {"IOC:LAS:LHN:PWR:07:HEARTBEAT"}
+    expected |= {
+        f"{pre}:{pv}"
+        for pv in (
+            "setDeviceName",
+            "setDeviceLocation",
+            "getDeviceStatus",
+            "getDeviceModel",
+            *(
+                f"getPduIdentNum{n}"
+                for n in ("Inputs", "Outputs", "Outlets", "OutletGroups", "Phases", "Circuits", "Breakers", "Heatsinks")
+            ),
+            "setPduControlPduOn",
+            "setPduControlPduOff",
+            "setPduControlPduReboot",
+        )
+    }
+    for n in range(1, 25):
+        expected |= {
+            f"{pre}:Outlet:{n}:{pv}"
+            for pv in (
+                "getPduOutletIndex",
+                "setPduOutletName",
+                "getPduOutletState",
+                "getPduOutletControllable",
+                "getPduOutletCommand",
+                "setPduOutletCommand",
+                "setPduOutletRampAction",
+            )
+        }
+    assert expected <= pvs, sorted(expected - pvs)
+    # Scaled readbacks, as the EDM screen's CALCs (input and output frequency / voltage / power / current)
+    calcs = [address for address in channel_addresses(display) if address.startswith("calc://")]
+    for pv in (
+        "getPduInputPhaseFrequency",
+        "getPduInputPhaseVoltage",
+        "getPduInputPhaseVoltageMin",
+        "getPduInputPhaseVoltageMax",
+        "getPduOutputFrequency",
+        "getPduOutputVoltage",
+        "getPduOutputActivePower",
+        "getPduOutputCurrent",
+        "getPduOutputCurrentMin",
+        "getPduOutputCurrentMax",
+    ):
+        assert any(f"{pre}:{pv}&" in address for address in calcs), pv
+    # Every power command asks first
+    buttons = [b for b in display.findChildren(PyDMPushButton) if "Pdu" in b.channel]
+    assert len(buttons) == 3 + 3 * 24 and all(b.showConfirmDialog for b in buttons)
+    # Fits the dock's width (850 px tabs, less a scroll bar) without scrolling sideways
+    assert display.minimumSizeHint().width() <= 835
+
+
+def test_pdu_macros_skip_commented_launches(tmp_path):
+    script = tmp_path / "edm-ioc-x.cmd"
+    script.write_text('# -m "PRE=OLD:PDU" TrippLite_8.edl\nedm -x -m "PRE=NEW:PDU" pduScreens/TrippLite_24.edl &\n')
+    # No IOC= in the launch: the screen defaults to IOC:{PRE}
+    assert floorplan.pdu_macros([str(script)]) == {"PRE": "NEW:PDU", "N_CHAN": "24"}
+    assert floorplan.pdu_macros(["echo r05"]) is None
+    assert floorplan.pdu_macros(["/no/such/edm-ioc.cmd"]) is None
 
 
 def test_racks_follow_toolbar_labels(context: FloorPlanContext):
@@ -319,6 +417,10 @@ def test_smaract_screen_has_expert_and_advanced_panels(qtbot: QtBot):
         ("smaract.py", {"MOTOR": "LAS:BTS:MCS2:01:m1", "NAME": "m1"}),
         ("las_basler.ui", {"CAM": "LAS:LHN:BAY1:CAM:01", "NAME": "cam", "DESC": "Bay 1 cam"}),
         ("las_basler_settings.ui", {"CAM": "LAS:LHN:BAY1:CAM:01"}),
+        (
+            "pdu_tripplite.py",
+            {"PRE": "LAS:LHN:PWR:07", "IOC": "IOC:LAS:LHN:PWR:07", "TITLE": "R07 PDU", "N_CHAN": "24"},
+        ),
     ],
 )
 def test_screens_load(qtbot: QtBot, screen: str, macros: dict[str, str]):

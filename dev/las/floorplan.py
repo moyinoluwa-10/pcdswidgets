@@ -60,6 +60,11 @@ logger = logging.getLogger(__name__)
 CONFIG_FILE = LAS_DIR / "config" / "floorplan.yaml"
 # "Zone 1 TiSaph PSU/Chiller PDU (R07)" -> R07
 RACK_IN_NAME = re.compile(r"\((R\d+)\)")
+# A TrippLite PDU's EDM launch: its PV prefix and outlet count, from the toolbar command or the .cmd script it runs
+PDU_PRE = re.compile(r"PRE=([A-Za-z0-9:_-]+)")
+PDU_IOC = re.compile(r"IOC=([A-Za-z0-9:_-]+)")
+PDU_EDL = re.compile(r"TrippLite_(\d+)\.edl")
+PDU_SCREEN = "pdu_tripplite.py"
 SCREENS_DIR = LAS_DIR / "screens"
 TOOLBAR_FILE = LAS_DIR / "config" / "las_toolbar.yaml"
 # Found through the pcdswidgets package on PYTHONPATH, wherever this directory is copied to
@@ -163,6 +168,28 @@ class DockScreen(QScrollArea):
         display.show()
         self.setWindowTitle(display.windowTitle())
         self.hide()
+
+
+def pdu_macros(commands: list[str]) -> dict[str, str] | None:
+    """{"PRE": ..., "N_CHAN": ..., "IOC": ...} for a TrippLite PDU's EDM launch commands, or None if they aren't one."""
+    for command in commands:
+        texts = [command]
+        script = Path(os.path.expanduser(shlex.split(command)[0])) if command.strip() else None
+        if script is not None and script.suffix == ".cmd" and script.is_file():
+            try:
+                texts.append(script.read_text(errors="replace"))
+            except OSError:
+                logger.debug("Could not read %s", script, exc_info=True)
+        for text in texts:
+            # Only lines that aren't comments: the toolbar and the .cmd scripts keep old launches commented out
+            text = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
+            pre, edl = PDU_PRE.search(text), PDU_EDL.search(text)
+            if pre and edl:
+                macros = {"PRE": pre.group(1), "N_CHAN": edl.group(1)}
+                if ioc := PDU_IOC.search(text):
+                    macros["IOC"] = ioc.group(1)
+                return macros
+    return None
 
 
 class FloorPlanContext:
@@ -290,16 +317,30 @@ class FloorPlanContext:
         """
         What a rack opens: its own ``opens`` list if it has one, otherwise every button in the
         toolbar's rack tab (the "PDUs" tab) whose name ends with the rack in parentheses, e.g. "... (R07)".
+        A TrippLite PDU button opens screens/pdu_tripplite.py in the dock; any other button runs its command.
         """
         if "opens" in cfg:
             return self.resolve(cfg["opens"])
         tab = self.config.get("rack_toolbar_tab", "PDUs")
         buttons = self.toolbar.get(tab, {}).get("buttons", {})
         return [
-            self.toolbar_opener(tab, name)
+            self.pdu_opener(tab, name)
             for name in buttons
             if (match := RACK_IN_NAME.search(name)) is not None and match.group(1) == rack
         ]
+
+    def pdu_opener(self, tab: str, button: str) -> Opener:
+        """
+        The pdu_tripplite.py screen for a toolbar PDU button, with the PV prefix and outlet count that its
+        EDM launch uses (``-m PRE=...`` and ``TrippLite_N.edl``, in the command or in the .cmd script it runs).
+        Falls back to the toolbar button itself (the EDM screen) when they can't be found.
+        """
+        commands = (self.toolbar.get(tab, {}).get("buttons", {}).get(button) or {}).get("commands") or []
+        pdu = pdu_macros(commands)
+        if pdu is None:
+            return self.toolbar_opener(tab, button)
+        entry = {"screen": PDU_SCREEN, "macros": {**pdu, "TITLE": button}, "title": button, "icon": "pdu"}
+        return self.screen_opener(entry)
 
     def resolve(self, entries: list[dict[str, Any]]) -> list[Opener]:
         """Turn an ``opens`` list from the config into Openers."""

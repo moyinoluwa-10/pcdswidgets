@@ -25,7 +25,7 @@ Environment: `ctrlenv-widgets/v1.2.1`, with this checkout's pcdswidgets and `dev
 |---|---|---|
 | **Bay 1–4** (the coloured area) | menu | Every control in the bay, as drop-downs: Cameras, SmarAct Motors, Temperature / Humidity (from happi `location_group`), then Shutters, then Tools (that bay's buttons from the LAS toolbar). Each device entry has the dock options; clicking the entry opens it in the dock. Groups have "Open All". |
 | **BTS** | menu | BTS cameras, plus the external tools BTPS Overview, BTMS Overview, Laser Hall Vacuum, Shutters, BTS motors, RGA and QPCs (marked ↗). QPCs is a sub-menu with one entry per IOC (las-pci-01 … 05), as in the toolbar. |
-| **Racks** with a plug badge (R01, R03, R06, R07, R08, R13, R18) | direct | Runs the LAS toolbar "PDUs" button whose name ends with that rack, e.g. "Zone 1 TiSaph PSU/Chiller PDU (R07)", which opens the IOC's EDM PDU screen in its own window. Matching is automatic: add a toolbar button named "... (R12)" and R12 lights up. |
+| **Racks** with a plug badge (R01, R03, R06, R07, R08, R13, R18) | direct | The PDU of the LAS toolbar "PDUs" button whose name ends with that rack, e.g. "Zone 1 TiSaph PSU/Chiller PDU (R07)", in `screens/pdu_tripplite.py` in the dock. Its PV prefix and outlet count are the ones that button's EDM launch uses (`-m PRE=...`, `TrippLite_24.edl`), read from the command or the `edm-ioc-*.cmd` script it runs. A button that isn't a TrippLite PDU runs its command instead. The EDM screen stays in the toolbar's PDUs tab. Matching is automatic: add a toolbar button named "... (R12)" and R12 lights up. |
 | Other racks (grey) | — | Tooltip only. No toolbar PDU button names them yet. All 20 racks (R01–R20) are always drawn, so a new "(R05)" button lights up R05 with no other change. |
 | **T/H** icons | direct | That environmental sensor (`screens/env_monitor.ui`). |
 | **Cameras** / **SmarAct** icons | menu | That bay's cameras or motors (`screens/las_basler.ui`, `screens/smaract.py`). |
@@ -59,8 +59,9 @@ Under the floor plan is the full LAS toolbar (`config/las_toolbar.yaml`, a copy 
 | `screens/las_basler_settings.ui` | The "LAS Basler Settings" sidebar panel of `las_basler.ui` (manufacturer, sensor, data type, trigger, binning, user sets, reset), embedded there as a `PyDMEmbeddedDisplay` so it can be edited on its own. It inherits the parent's macros (`CAM`); open it alone with `pydm -m CAM=... las_basler_settings.ui`. The embedded display has `minimumSize` width 1 so the sidebar can squeeze it like the other panels (otherwise the PV labels' text width pushes the sidebar wider than its scroll area). |
 | `tools/gen_indicator_pvs.py` | **Dev-time only, uses ophyd** (run with the pcds conda python). Regenerates `indicator_pvs` in `config/device_types.yaml`. |
 | `tools/export_happi_devices.py` | Regenerates `tests/devices_snapshot.yaml` from happi (`$HAPPI_CFG`, never `$LAS_DEVICE_DB`), sorted by name. No happi import; runs with any python that has PyYAML. |
+| `screens/pdu_tripplite.py` | TrippLite PDU (pdu_snmp IOC): the PyDM version of `pduScreens/TrippLite_24.edl` (common/pdu_snmp R3.3.6), with everything that screen has: PDU info (name and location editable), PDU details (inputs, outputs, outlets, groups, phases, circuits, breakers, heatsinks), input and output details (frequency, voltage, power, current with min/max), Global Control (All On / All Off / Reboot), and per outlet its ID, name (editable), status, control state, command and ramp option. Every power command asks for confirmation; the per-outlet command is On / Off / Cycle buttons next to the current command. Power buttons are coloured by what they do: green On / All On, red Off / All Off, yellow Cycle / Reboot. The header has the IOC heartbeat and an IOC button (EDM's `ioc_soft.edl`). Fits the dock's width. |
 | `screens/laser_shutter.ui` | **New.** One laser source: LSS opened/closed/permission/request, entry valve, BTPS safe-to-open, destination, override, latched error + Acknowledge, user Open/Close. |
-| `tests/` | pytest-qt tests (30). `tests/devices_snapshot.yaml` is a dated snapshot of the 44 active LAS happi entries that the tests use instead of the live database (the screen itself reads the live one). |
+| `tests/` | pytest-qt tests (39). `tests/devices_snapshot.yaml` is a dated snapshot of the 44 active LAS happi entries that the tests use instead of the live database (the screen itself reads the live one). |
 
 
 ## Config entry types (`opens:`)
@@ -85,7 +86,7 @@ One entry means a click opens it directly; several mean a click shows a menu.
 | What | Source |
 |---|---|
 | Bay devices | happi `db.json`, grouped by `location_group` and `functional_group`. "Bay 2 - 1um" and "Bay 2 - 800nm" count as Bay 2. "Beam Transport" goes to the BTS area. |
-| Rack → PDU | the LAS toolbar "PDUs" tab: each button whose name ends in "(Rxx)" belongs to rack Rxx. |
+| Rack → PDU | the LAS toolbar "PDUs" tab: each button whose name ends in "(Rxx)" belongs to rack Rxx; the PDU prefix is the `PRE` its EDM launch passes. |
 | Laser source → bay | BTPS screen tab names ("LS3 (Bay 2 1um)", ...) |
 | Shutter PVs | `pcdsdevices.lasers.btps` (`LTLHN:LSn:LST:*`, `LTLHN:LSn:BTPS:*`) |
 | Bay tools | LAS toolbar "Bays 3/2" tab |
@@ -106,7 +107,7 @@ The tests point channel access at `127.0.0.1` only, use the YAML device snapshot
 - the drawing lands within a few pixels of the old `bg.png` layout, and icons stay inside their area
 - all 20 racks are drawn, racks without a PDU are grey, and a new "(R05)" toolbar button lights up R05
 - the menus contain the expected entries, and multi-command toolbar buttons (BTS QPCs) are sub-menus, not one click launching all
-- rack clicks run their PDU toolbar button, icon clicks open the right screen in the dock
+- rack clicks open their PDU's screen in the dock, with the prefix from the toolbar button's EDM launch (each of the 7 racks); icon clicks open the right screen in the dock
 - status dots watch the right PVs, and the icon tooltip lists the bad ones
 - happi kwargs are filled in from the entry and usable in PV templates
 - icons shrink with the drawing
@@ -118,7 +119,7 @@ The tests point channel access at `127.0.0.1` only, use the YAML device snapshot
 
 - **Not tested against live IOCs.** The shutter PVs have only been checked offline.
 - **7 labelled racks have no PDU yet**: R02, R04, R11, R12, R16, R17 and R19. They, and the other unused rack numbers, are drawn grey and light up automatically once the toolbar has a "... (Rxx)" PDU button for them.
-- **Racks open only the PDU.** The sketch mentions "maybe some monitoring, or all of the controls in it". Rack entries already accept a list of `opens`, so adding more is a config change.
+- **Racks open only the PDU** (`pdu_tripplite.py`, not live-tested). The sketch mentions "maybe some monitoring, or all of the controls in it". Rack entries already accept a list of `opens`, so adding more is a config change.
 - **Icon positions are rough**, as the sketch says. Fine-tune them in `floorplan.yaml` (`at: [x %, y %]` within their area).
 - **SmarAct screens are pinned to R4.0.0.** When `ioc-las-bts-mcs1` moves to a new release, update `SMARACT_SCREENS` in `screens/smaract.py`, or pass it as a macro.
 - **Mixed data sources.** Rack → PDU comes from the toolbar labels, while `ioc-las-lhn-pwr-02.cfg` says "LHN Timing PDU Bay 2" for the PDU the toolbar calls "Zone 2 OPCPA Controls PDU (R03)". Confirm with the LAS team.
