@@ -5,7 +5,6 @@ toolbar: /cds/group/pcds/epics-dev/screens/pydm/lucid_config/IP2_MODS_toolbar.ya
 hall:
   aspect: 1.9
   reference_height: 520
-  inactive: "#d7d7d7"
   columns:
     - { gap: 2 }
     - { station: INJ, width: 17.2, top: 8, height: 84, color: "#d9ead3" }

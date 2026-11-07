@@ -17,7 +17,7 @@ hall:
   reference_height: 420 # preferred height in px; icons are full size at it and drop their labels below 75 %
   background: "#eeeeee" # default
   border: "#595959" # default
-  inactive: "#d7d7d7" # fill for areas with nothing to open (racks default to #b7b7b7)
+  inactive: "#d7d7d7" # default; fill for stations and racks with nothing to open
   columns:
     - { gap: 3 } # empty space
     # bay: a click opens every device in its happi locations, by function, then its shutters and tools ("bays:")

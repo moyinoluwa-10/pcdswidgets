@@ -230,7 +230,7 @@ class AreaButton(OpenerButtonMixin, QPushButton):
         self.menu_title = name
         self.label = name
         self.badge: QIcon | None = None
-        # Racks with nothing to open are greyed out; bays and areas always keep their color
+        # Stations and racks with nothing to open are greyed out; bays and areas always keep their color
         greyed = bool(inactive) and not openers
         self.color = QColor(inactive if greyed else color)
         self.border = QColor(border)

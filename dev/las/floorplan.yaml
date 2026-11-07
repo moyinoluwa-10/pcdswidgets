@@ -4,7 +4,6 @@ toolbar: /cds/group/pcds/epics-dev/screens/pydm/lucid_config/LAS_toolbar.yaml
 
 hall:
   reference_height: 660
-  inactive: "#d7d7d7"
   columns:
     - { gap: 3.5 }
     - { bay: Bay 1, width: 16, top: 12, height: 83, color: "#d9ead3" }

@@ -53,6 +53,8 @@ class Hall(QWidget):
         self.cfg = context.config["hall"]
         self.background = QColor(self.cfg.get("background", "#eeeeee"))
         self.border = QColor(self.cfg.get("border", "#595959"))
+        # Fill for stations and racks with nothing to open
+        self.inactive = self.cfg.get("inactive", "#d7d7d7")
         self.areas: dict[str, AreaButton] = {}
         row = QHBoxLayout(self)
         row.setContentsMargins(0, 0, 0, 0)
@@ -65,9 +67,7 @@ class Hall(QWidget):
                 cfg = context.config.get("stations", {}).get(name, {})
                 openers = context.station_openers(name, cfg)
                 tooltip = f"{cfg.get('title', name)}: click for all controls in the station"
-                area = self.make_area(
-                    name, openers, tooltip, column["color"], inactive=self.cfg.get("inactive"), label_top=True
-                )
+                area = self.make_area(name, openers, tooltip, column["color"], inactive=self.inactive, label_top=True)
                 row.addLayout(self.area_column(area, column), stretch(column["width"]))
             elif "bay" in column:
                 bay = column["bay"]
@@ -125,7 +125,7 @@ class Hall(QWidget):
                     openers,
                     tooltip,
                     group["color"],
-                    inactive=self.cfg.get("inactive", "#b7b7b7"),
+                    inactive=self.inactive,
                     label_size=0.03,
                 )
                 if openers:
