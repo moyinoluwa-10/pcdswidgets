@@ -20,9 +20,10 @@ from pathlib import Path
 
 import yaml
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+# home_screen's parent, so the package imports
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from devices import happi_database_path, load_devices
+from home_screen.devices import happi_database_path, load_devices  # noqa: E402
 
 
 def main():

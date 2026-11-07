@@ -14,10 +14,11 @@ import yaml
 os.environ["EPICS_CA_AUTO_ADDR_LIST"] = "NO"
 os.environ["EPICS_CA_ADDR_LIST"] = "127.0.0.1"
 
-# Only this package is added here; pcdswidgets comes from PYTHONPATH (a checkout) or the environment.
+# The home_screen package is imported from its parent directory; pcdswidgets comes from PYTHONPATH (a checkout)
+# or the environment.
 PACKAGE_DIR = Path(__file__).resolve().parent.parent
-if str(PACKAGE_DIR) not in sys.path:
-    sys.path.insert(0, str(PACKAGE_DIR))
+if str(PACKAGE_DIR.parent) not in sys.path:
+    sys.path.insert(0, str(PACKAGE_DIR.parent))
 
 # Every location that uses the package: each dev/<location> with a floorplan.yaml
 LOCATIONS = sorted(path.parent for path in PACKAGE_DIR.parent.glob("*/floorplan.yaml"))
@@ -42,7 +43,7 @@ def location(request) -> Path:
 @pytest.fixture
 def context(location: Path):
     """The location's FloorPlanContext with its snapshot: builds every opener, but no widget."""
-    from context import FloorPlanContext
+    from home_screen.context import FloorPlanContext
 
     return FloorPlanContext(config_file=location / "floorplan.yaml", device_db=snapshot(location))
 
@@ -50,7 +51,7 @@ def context(location: Path):
 @pytest.fixture(autouse=True)
 def no_external_commands(monkeypatch):
     """Never launch EDM or other external tools from the tests."""
-    import openers
+    from home_screen import openers
 
     launched = []
     monkeypatch.setattr(openers, "run_command", lambda commands: launched.extend(commands))

@@ -45,6 +45,7 @@ pydm --hide-nav-bar --hide-menu-bar --hide-status-bar las_home.py
 | Path | What it is |
 |---|---|
 | `example/` | A runnable example location (LAS devices): `example_home.py`, `example_home.sh`, and `floorplan.yaml` with every option explained. Copy it to make a location. |
+| `__init__.py` | Makes `home_screen` a Python package: its modules import each other relatively, and a location's `<location>_home.py` puts the package's parent directory on `sys.path` and imports `home_screen.home`. |
 | `home.py` | The home screen (`FloorPlanHome`): floor plan with the location's toolbar under it, an 850 px `TabDock` on the right. `location_home(floorplan)` gives the class a `<location>_home.py` opens (its `intelclass`). |
 | `launch_home.sh` | Dev launcher (see above). |
 | `config/functions.yaml` | happi functional_group → menu title and icon, in menu order, for every location; a floorplan.yaml's `functions:` adds to or overrides it. |
@@ -76,7 +77,7 @@ pydm --hide-nav-bar --hide-menu-bar --hide-status-bar las_home.py
 4. `python dev/home_screen/tools/export_happi_devices.py <BEAMLINE> dev/home_screen/tests/snapshots/<location>.yaml`: the tests pick up the new location by itself (any `dev/*/floorplan.yaml`).
 5. Run the tests: if a class at the new location has no device type, add it to `config/device_types.yaml` (with a screen in `screens/` if it needs a new one) and run `tools/gen_indicator_pvs.py`.
 
-To deploy, copy `home_screen/` once and each location's directory under it or next to it (e.g. `screens/pydm/las/home_screen/` and `screens/pydm/las/.../mods_qrix/`): `<location>_home.py` uses the nearest `home_screen/` in a parent directory.
+To deploy, copy `home_screen/` once and each location's directory under it or next to it (e.g. `screens/pydm/las/home_screen/` and `screens/pydm/las/.../mods_qrix/`): `<location>_home.py` imports the nearest `home_screen` package in a parent directory.
 
 ## Adding or changing a device screen
 

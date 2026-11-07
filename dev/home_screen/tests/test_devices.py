@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from conftest import LOCATIONS, PACKAGE_DIR, floorplan_config, snapshot
-from devices import DeviceInfo, _entry_to_info, find_device_type, load_device_types, load_devices
+from home_screen.devices import DeviceInfo, _entry_to_info, find_device_type, load_device_types, load_devices
 
 
 def test_json_database_filters_like_happi_search(tmp_path: Path):

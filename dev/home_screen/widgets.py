@@ -8,8 +8,6 @@ import functools
 import logging
 from pathlib import Path
 
-from alarm import PVAlarmCircle
-from openers import Opener
 from pydm.utilities import IconFont
 from qtpy.QtCore import QEvent, QPoint, QRect, QRectF, QSize, Qt
 from qtpy.QtGui import QBrush, QColor, QIcon, QMouseEvent, QPainter, QPen
@@ -17,6 +15,9 @@ from qtpy.QtWidgets import QMenu, QPushButton, QSizePolicy, QToolButton, QToolTi
 
 import pcdswidgets
 from pcdswidgets.common.dock.tab_dock import TabDock
+
+from .alarm import PVAlarmCircle
+from .openers import Opener
 
 logger = logging.getLogger(__name__)
 

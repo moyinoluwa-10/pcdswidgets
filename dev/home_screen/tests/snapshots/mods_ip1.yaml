@@ -1,5 +1,5 @@
 # Snapshot of active IP1_MODS devices from /reg/g/pcds/pyps/apps/hutch-python/device_config/db.json, taken 2026-11-05
-# Regenerate with: python dev/mods_ip1/tools/export_happi_devices.py IP1_MODS <this file>
+# Regenerate with: python dev/home_screen/tools/export_happi_devices.py IP1_MODS <this file>
 - name: lm1k4_atm_dp1_tf1_ff1
   device_class: pcdsdevices.areadetector.detectors.LasBasler
   prefix: 'LM1K4:ATM_DP1_TF1_FF1:'

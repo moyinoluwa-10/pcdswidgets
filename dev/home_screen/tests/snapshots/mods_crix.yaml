@@ -1,5 +1,5 @@
 # Snapshot of active CRIX_MODS devices from /reg/g/pcds/pyps/apps/hutch-python/device_config/db.json, taken 2026-11-05
-# Regenerate with: python dev/mods_crix/tools/export_happi_devices.py CRIX_MODS <this file>
+# Regenerate with: python dev/home_screen/tools/export_happi_devices.py CRIX_MODS <this file>
 - name: lm2k2_atm_dp1_ff1
   device_class: pcdsdevices.areadetector.detectors.LasBasler
   prefix: 'LM2K2:ATM_DP1_FF1:'

@@ -1,5 +1,5 @@
 # Snapshot of active QRIX_MODS devices from /reg/g/pcds/pyps/apps/hutch-python/device_config/db.json, taken 2026-11-05
-# Regenerate with: python dev/mods_qrix/tools/export_happi_devices.py QRIX_MODS <this file>
+# Regenerate with: python dev/home_screen/tools/export_happi_devices.py QRIX_MODS <this file>
 - name: lm1k2_atm_mp1_img1_bs1
   device_class: pcdsdevices.epics_motor.SmarActEncodedTipTilt
   prefix: LM1K2:ATM_MP1_IMG1_BS1

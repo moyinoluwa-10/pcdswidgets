@@ -14,6 +14,7 @@ Floor plan on top, the location's toolbar under it, dock on the right:
 
 A location is a ``<location>_home.py`` next to its ``floorplan.yaml`` (see ``example/``)::
 
+    from home_screen.home import location_home
     intelclass = location_home(Path(__file__).parent / "floorplan.yaml")
 
 Run it with ``pydm --hide-nav-bar --hide-menu-bar --hide-status-bar <location>_home.py``.
@@ -25,20 +26,15 @@ Macros:
 """
 
 import os
-import sys
-from pathlib import Path
 
-PACKAGE_DIR = Path(__file__).resolve().parent
-if str(PACKAGE_DIR) not in sys.path:
-    sys.path.insert(0, str(PACKAGE_DIR))
+from pydm import Display
+from qtpy.QtWidgets import QHBoxLayout, QStyle, QVBoxLayout
 
-from context import FloorPlanContext  # noqa: E402
-from floorplan import FloorPlan  # noqa: E402
-from pydm import Display  # noqa: E402
-from qtpy.QtWidgets import QHBoxLayout, QStyle, QVBoxLayout  # noqa: E402
+from pcdswidgets.common.dock.tab_dock import TabDock
+from pcdswidgets.common.toolbar.yaml_toolbar import YamlToolbar
 
-from pcdswidgets.common.dock.tab_dock import TabDock  # noqa: E402
-from pcdswidgets.common.toolbar.yaml_toolbar import YamlToolbar  # noqa: E402
+from .context import FloorPlanContext
+from .floorplan import FloorPlan
 
 DOCK_WIDTH = 850
 

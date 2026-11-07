@@ -18,12 +18,13 @@ The rest of the package: devices.py (happi entries and device screens), alarm.py
 import logging
 from typing import Any
 
-from context import FloorPlanContext
-from openers import Opener
 from qtpy.QtCore import QPoint, QSize
 from qtpy.QtGui import QColor, QPainter, QPen
 from qtpy.QtWidgets import QHBoxLayout, QSizePolicy, QVBoxLayout, QWidget
-from widgets import AreaButton, IconButton, make_icon
+
+from .context import FloorPlanContext
+from .openers import Opener
+from .widgets import AreaButton, IconButton, make_icon
 
 logger = logging.getLogger(__name__)
 

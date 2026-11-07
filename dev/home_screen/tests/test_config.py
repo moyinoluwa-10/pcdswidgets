@@ -5,8 +5,8 @@ from pathlib import Path
 
 import yaml
 from conftest import EXAMPLE, SNAPSHOTS, floorplan_config
-from context import FloorPlanContext
-from floorplan import rack_names
+from home_screen.context import FloorPlanContext
+from home_screen.floorplan import rack_names
 
 
 def area_openers(context: FloorPlanContext) -> dict[str, list]:

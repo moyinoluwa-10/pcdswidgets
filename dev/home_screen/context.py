@@ -12,9 +12,10 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from devices import DeviceInfo, DeviceScreenCache, find_device_type, load_device_types, load_devices, load_screen
-from openers import DockScreen, Opener
 from qtpy.QtWidgets import QWidget
+
+from .devices import DeviceInfo, DeviceScreenCache, find_device_type, load_device_types, load_devices, load_screen
+from .openers import DockScreen, Opener
 
 logger = logging.getLogger(__name__)
 
