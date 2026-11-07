@@ -88,6 +88,6 @@ racks:
 icons:
   - { in: Bay 1, at: [20, 10], icon: thermometer, label: T/H, opens: [{ device: las_lhn_bay1_env_sens_1 }] }
   - { in: Bay 1, at: [50, 30], icon: camera, label: Cameras, opens: [{ devices: { location: [Bay 1], function: [cameras] } }] }
-  - { in: Bay 1, at: [78, 40], icon: shutter, label: Shutter, opens: [{ shutter: LS1 }] }
+  - { in: Bay 1, at: [50, 65], icon: shutter, label: Shutter, opens: [{ shutter: LS1 }] }
   - { in: BTS, at: [25, 75], icon: btps, label: BTPS, status: false, opens: [{ toolbar: ["NEH Beam Transport", "BTPS Overview"] }] }
   - { in: Bay 4, at: [50, 30], icon: smaract, label: SmarAct, opens: [{ devices: { location: [Bay 4], function: [smaract] } }] }

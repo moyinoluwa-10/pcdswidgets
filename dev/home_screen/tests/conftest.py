@@ -42,7 +42,7 @@ def location(request) -> Path:
 @pytest.fixture
 def context(location: Path):
     """The location's FloorPlanContext with its snapshot: builds every opener, but no widget."""
-    from floorplan import FloorPlanContext
+    from context import FloorPlanContext
 
     return FloorPlanContext(config_file=location / "floorplan.yaml", device_db=snapshot(location))
 
@@ -50,8 +50,8 @@ def context(location: Path):
 @pytest.fixture(autouse=True)
 def no_external_commands(monkeypatch):
     """Never launch EDM or other external tools from the tests."""
-    import floorplan
+    import openers
 
     launched = []
-    monkeypatch.setattr(floorplan, "run_command", lambda commands: launched.extend(commands))
+    monkeypatch.setattr(openers, "run_command", lambda commands: launched.extend(commands))
     return launched

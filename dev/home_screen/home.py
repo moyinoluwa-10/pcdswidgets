@@ -32,7 +32,8 @@ PACKAGE_DIR = Path(__file__).resolve().parent
 if str(PACKAGE_DIR) not in sys.path:
     sys.path.insert(0, str(PACKAGE_DIR))
 
-from floorplan import FloorPlan, FloorPlanContext  # noqa: E402
+from context import FloorPlanContext  # noqa: E402
+from floorplan import FloorPlan  # noqa: E402
 from pydm import Display  # noqa: E402
 from qtpy.QtWidgets import QHBoxLayout, QStyle, QVBoxLayout  # noqa: E402
 

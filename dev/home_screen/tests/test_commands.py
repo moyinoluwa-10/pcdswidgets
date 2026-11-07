@@ -3,10 +3,10 @@
 import shlex
 from pathlib import Path
 
-import floorplan
 import pytest
 from conftest import LOCATIONS, PACKAGE_DIR, snapshot
-from floorplan import RACK_IN_NAME, FloorPlanContext, pdu_macros
+from context import FloorPlanContext
+from pdu import RACK_IN_NAME, pdu_macros
 
 LAS = PACKAGE_DIR.parent / "las"
 
@@ -91,7 +91,7 @@ def test_pdu_macros_skip_commented_launches(tmp_path: Path):
 
 
 def test_toolbar_commands_run_through_run_command(las: FloorPlanContext, no_external_commands):
-    """An external opener's command goes to run_command (replaced here, so nothing is launched)."""
+    """Running an external opener goes to run_command (replaced here, so nothing is launched)."""
     btps = las.toolbar_opener("NEH Beam Transport", "BTPS Overview")
-    floorplan.run_command(btps.command)
+    btps.run()
     assert no_external_commands == ["/cds/group/pcds/epics-dev/screens/pydm/las/bts/run_btps.sh"]

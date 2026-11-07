@@ -48,7 +48,13 @@ pydm --hide-nav-bar --hide-menu-bar --hide-status-bar las_home.py
 | `home.py` | The home screen (`FloorPlanHome`): floor plan with the location's toolbar under it, an 850 px `TabDock` on the right. `location_home(floorplan)` gives the class a `<location>_home.py` opens (its `intelclass`). |
 | `launch_home.sh` | Dev launcher (see above). |
 | `config/functions.yaml` | happi functional_group → menu title and icon, in menu order, for every location; a floorplan.yaml's `functions:` adds to or overrides it. |
-| `floorplan.py` | `FloorPlan` / `Hall` (the drawing, from the floorplan.yaml), `AreaButton` / `IconButton`, `FloorPlanContext` (turns config entries into things to open), `DockScreen` (docked screens scroll instead of growing the window), rack → PDU matching. |
+| `context.py` | `FloorPlanContext`: loads a location's floorplan.yaml, toolbar and happi devices, and turns each `opens:` entry, station, bay and rack into `Opener`s. No widgets: the core tests use it directly. |
+| `openers.py` | `Opener` (something a click opens: a dockable screen, an external command, or a group), `run_command` (runs toolbar commands detached), `DockScreen` (docked screens scroll instead of growing the window). |
+| `floorplan.py` | `FloorPlan` / `Hall`: the drawing, laid out from the floorplan.yaml's `hall`, with the icons placed on it. |
+| `buttons.py` | `AreaButton` (a station, bay, area or rack) and `IconButton` (with its status dot): what a click does. |
+| `menus.py` | Menus of openers: sub-menus per group with "Open All", TabDock options per screen, ↗ for external commands. |
+| `icons.py` | Icon names used in floorplan.yaml → icons (FontAwesome, the SmarAct icon, pcdswidgets' shutter symbol). |
+| `pdu.py` | Rack ↔ toolbar button matching ("… (R07)") and the PDU prefix / outlet count from a button's EDM launch. |
 | `devices.py` | Device list from happi's `db.json` read as plain JSON (`$HOME_DEVICE_DB`, or `$HAPPI_CFG`) or a YAML snapshot, with each entry's happi kwargs (`{{field}}` templates filled in) usable as `{tip_pv}`, `{channel}`, … in device_types.yaml; device types; the per-device screen cache. |
 | `alarm.py` | `PVAlarmCircle`, the status dot: worst alarm across a list of PVs, in typhos's colours. |
 | `config/device_types.yaml` | Device class → screen, macros, `template_kwargs` and status PVs, for every class at every location. The tests fail if a class active at any location is missing. |
