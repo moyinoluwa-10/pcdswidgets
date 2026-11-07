@@ -64,7 +64,7 @@ PACKAGE_DIR = Path(__file__).resolve().parent
 logger = logging.getLogger(__name__)
 
 # The location's floorplan.yaml when none is given (set by launch_home.sh and the tests)
-FLOORPLAN_ENV = "HOME_FLOORPLAN"
+FUNCTIONS_FILE = PACKAGE_DIR / "config" / "functions.yaml"
 # "Zone 1 TiSaph PSU/Chiller PDU (R07)" -> R07
 RACK_IN_NAME = re.compile(r"\((R\d+)\)")
 # A TrippLite PDU's EDM launch: its PV prefix and outlet count, from the toolbar command or the .cmd script it runs
@@ -204,36 +204,28 @@ def pdu_macros(commands: list[str]) -> dict[str, str] | None:
     return None
 
 
-def floorplan_file() -> str:
-    """The location's floorplan.yaml from $HOME_FLOORPLAN, for callers that don't pass one."""
-    path = os.environ.get(FLOORPLAN_ENV)
-    if not path:
-        raise RuntimeError(f"No floorplan.yaml given: pass FLOORPLAN (or config_file), or set ${FLOORPLAN_ENV}")
-    return path
-
-
 class FloorPlanContext:
     """Loads the configs once and turns ``opens`` entries into Openers."""
 
     def __init__(
         self,
-        config_file: str | os.PathLike | None = None,
+        config_file: str | os.PathLike,
         toolbar_file: str | os.PathLike | None = None,
         device_db: str | os.PathLike | None = None,
         beamline: str | None = None,
     ):
         """
-        ``config_file``: the location's floorplan.yaml (default: $HOME_FLOORPLAN). The toolbar and beamline
-        default to its ``toolbar`` (relative to it) and ``beamline`` entries.
+        ``config_file``: the location's floorplan.yaml. The toolbar and beamline default to its ``toolbar``
+        (absolute, or relative to it) and ``beamline`` entries.
         """
-        self.config_file = Path(config_file or floorplan_file()).resolve()
+        self.config_file = Path(config_file).resolve()
         with open(self.config_file) as fd:
             self.config: dict[str, Any] = yaml.safe_load(fd)
         self.beamline = beamline or self.config["beamline"]
         self.title = self.config.get("title") or f"{self.beamline} Home"
         self.toolbar_file = Path(toolbar_file) if toolbar_file else self.config_file.parent / self.config["toolbar"]
-        # A location's own screens (next to its config/), for screens only it uses
-        self.location_screens = self.config_file.parent.parent / "screens"
+        # A location's own screens (next to its floorplan.yaml), for screens only it uses
+        self.location_screens = self.config_file.parent / "screens"
         with open(self.toolbar_file) as fd:
             self.toolbar: dict[str, Any] = yaml.safe_load(fd) or {}
         self.devices = load_devices(self.beamline, device_db)
@@ -242,7 +234,9 @@ class FloorPlanContext:
         self.screens = DeviceScreenCache(self.types)
         self._screen_cache: dict[str, QWidget] = {}
         self._dock_screens: dict[str, DockScreen] = {}
-        self.functions: dict[str, dict[str, str]] = self.config.get("functions", {})
+        # happi functional_group -> menu title and icon: the package's, plus or overridden by the location's
+        with open(FUNCTIONS_FILE) as fd:
+            self.functions: dict[str, dict[str, str]] = {**yaml.safe_load(fd), **self.config.get("functions", {})}
         self.shutters: dict[str, dict[str, str]] = self.config.get("shutters", {})
 
     def dock_screen(self, key: str, make: Callable[[], QWidget]) -> DockScreen:

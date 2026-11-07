@@ -3,8 +3,8 @@
 import json
 from pathlib import Path
 
-import pytest
-from conftest import floorplan_config
+import yaml
+from conftest import EXAMPLE, SNAPSHOTS, floorplan_config
 from floorplan import FloorPlanContext, rack_names
 
 
@@ -36,7 +36,7 @@ def leaves(openers: list) -> list:
 def test_config_names_beamline_title_and_toolbar(location: Path):
     config = floorplan_config(location)
     assert config["beamline"] and config["title"]
-    assert (location / "config" / config["toolbar"]).is_file()
+    assert (location / config["toolbar"]).is_file()
 
 
 def test_hall_columns_are_consistent(context: FloorPlanContext):
@@ -94,12 +94,33 @@ def test_context_loads_its_beamline_from_a_happi_database(location: Path, tmp_pa
     }
     database = tmp_path / "db.json"
     database.write_text(json.dumps(entries))
-    context = FloorPlanContext(config_file=location / "config" / "floorplan.yaml", device_db=database)
+    context = FloorPlanContext(config_file=location / "floorplan.yaml", device_db=database)
     assert context.beamline == beamline
     assert [dev.name for dev in context.devices] == ["here"]
 
 
-def test_context_needs_a_floorplan(monkeypatch):
-    monkeypatch.delenv("HOME_FLOORPLAN", raising=False)
-    with pytest.raises(RuntimeError, match="HOME_FLOORPLAN"):
-        FloorPlanContext()
+def test_location_files_are_the_example_s(location: Path):
+    """A location is its floorplan.yaml plus the example's <location>_home.py and .sh, renamed."""
+    assert (location / f"{location.name}_home.py").read_text() == (EXAMPLE / "example_home.py").read_text()
+    launcher = (location / f"{location.name}_home.sh").read_text()
+    assert f'"$HERE/{location.name}_home.py"' in launcher
+    assert '"$HERE/../home_screen/launch_home.sh"' in launcher
+    assert "SUBNET_CHECK=" in launcher
+
+
+def test_example_resolves():
+    """The example floor plan opens only things that exist (on the LAS snapshot)."""
+    config = yaml.safe_load((EXAMPLE / "floorplan.yaml").read_text())
+    context = FloorPlanContext(config_file=EXAMPLE / "floorplan.yaml", device_db=SNAPSHOTS / "las.yaml")
+    assert context.beamline == config["beamline"] == "LAS"
+    areas = area_openers(context)
+    # Racks without a PDU button are drawn grey; every other area opens something
+    assert all(openers for name, openers in areas.items() if name not in rack_names("R01-R05"))
+    assert areas["R05"] and areas["R03"]
+    for name, openers in areas.items():
+        assert not [o.title for o in openers if "(missing)" in o.title], name
+    for icon in config["icons"]:
+        openers = context.resolve(icon["opens"])
+        assert openers and not [o.title for o in openers if "(missing)" in o.title], icon["label"]
+    # The location's functions add to the package's, which keep their order
+    assert list(context.functions)[:2] == ["cameras", "smaract"] and "BTPS" in context.functions

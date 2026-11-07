@@ -1,0 +1,58 @@
+beamline: QRIX_MODS
+title: QRIX MODS Home
+toolbar: /cds/group/pcds/epics-dev/screens/pydm/lucid_config/QRIX_MODS_toolbar.yaml
+
+hall:
+  aspect: 1.9
+  reference_height: 520
+  inactive: "#d7d7d7"
+  columns:
+    - { gap: 2 }
+    - { station: INJ, width: 17.2, top: 8, height: 84, color: "#d9ead3" }
+    - { gap: 2.4 }
+    - { station: COM, width: 17.2, top: 8, height: 84, color: "#fce5cd" }
+    - { gap: 2.4 }
+    - { station: ATM, width: 17.2, top: 8, height: 84, color: "#c9daf8" }
+    - { gap: 2.4 }
+    - { station: OPA, width: 17.2, top: 8, height: 84, color: "#d9d2e9" }
+    - { gap: 2.4 }
+    - { station: EJX, width: 17.2, top: 8, height: 84, color: "#fff2cc" }
+    - { gap: 2 }
+
+stations:
+  INJ:
+    title: Injection (1_lm1k2_inj)
+    locations: [1_lm1k2_inj]
+  COM:
+    title: Compression (2_lm1k2_com)
+    locations: [2_lm1k2_com]
+  ATM:
+    title: Arrival Time Monitor (3_lm1k2_atm)
+    locations: [3_lm1k2_atm]
+    tools:
+      - [Tools, Dispersion Scan ATM]
+  OPA:
+    title: Optical Parametric Amplification (4_lm1k2_opa)
+    locations: [4_lm1k2_opa]
+    tools:
+      - [Tools, THz 1D-scan]
+  EJX:
+    title: Ejection (5_lm1k2_ejx)
+    locations: [5_lm1k2_ejx]
+
+icons:
+  - { in: INJ, at: [50, 20], icon: camera, label: Cameras, opens: [{ devices: { location: [1_lm1k2_inj], function: [cameras] } }] }
+  - { in: INJ, at: [50, 33], icon: smaract, label: SmarAct, opens: [{ devices: { location: [1_lm1k2_inj], function: [smaract] } }] }
+  - { in: COM, at: [50, 20], icon: camera, label: Cameras, opens: [{ devices: { location: [2_lm1k2_com], function: [cameras] } }] }
+  - { in: COM, at: [50, 33], icon: smaract, label: SmarAct, opens: [{ devices: { location: [2_lm1k2_com], function: [smaract] } }] }
+  - { in: COM, at: [50, 46], icon: spectrometer, label: Spectrometer, opens: [{ devices: { location: [2_lm1k2_com], function: [spectrometers] } }] }
+  - { in: COM, at: [50, 59], icon: elliptec, label: Elliptecs, opens: [{ devices: { location: [2_lm1k2_com], function: [elliptecs] } }] }
+  - { in: ATM, at: [50, 33], icon: smaract, label: SmarAct, opens: [{ devices: { location: [3_lm1k2_atm], function: [smaract] } }] }
+  - { in: ATM, at: [50, 59], icon: elliptec, label: Elliptecs, opens: [{ devices: { location: [3_lm1k2_atm], function: [elliptecs] } }] }
+  - { in: OPA, at: [50, 20], icon: camera, label: Cameras, opens: [{ devices: { location: [4_lm1k2_opa], function: [cameras] } }] }
+  - { in: OPA, at: [50, 33], icon: smaract, label: SmarAct, opens: [{ devices: { location: [4_lm1k2_opa], function: [smaract] } }] }
+  - { in: OPA, at: [50, 59], icon: elliptec, label: Elliptecs, opens: [{ devices: { location: [4_lm1k2_opa], function: [elliptecs] } }] }
+  - { in: EJX, at: [50, 20], icon: camera, label: Cameras, opens: [{ devices: { location: [5_lm1k2_ejx], function: [cameras] } }] }
+  - { in: EJX, at: [50, 33], icon: smaract, label: SmarAct, opens: [{ devices: { location: [5_lm1k2_ejx], function: [smaract] } }] }
+  - { in: EJX, at: [50, 46], icon: spectrometer, label: Spectrometer, opens: [{ devices: { location: [5_lm1k2_ejx], function: [spectrometers] } }] }
+  - { in: EJX, at: [50, 59], icon: elliptec, label: Elliptecs, opens: [{ devices: { location: [5_lm1k2_ejx], function: [elliptecs] } }] }

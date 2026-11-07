@@ -1,35 +1,11 @@
-# Layout and click behavior for the IP2 MODS (LM2K4) floor plan.
-#
-# The table is drawn by the screen itself, from the "hall" section below: a row of stations in
-# beam order (the numbered happi location groups 1_lm2k4_inj ... 5_lm2k4_ejx), with relative widths
-# and heights, laid out by Qt. Icons are placed inside their station by percentage, so they move and
-# scale with it. The proportions are rough; tune them here.
-#
-# What a click opens is a list of "opens" entries. One entry: a click opens it directly
-# (ctrl+click new tab, shift+click new window, right click for the menu). Several: a click shows a menu.
-#   device: <happi name>                  that device's screen (dev/home_screen/config/device_types.yaml)
-#   devices: {location: [...], function: [...]}   every matching happi device, as a sub-menu
-#   screen: <file>, macros: {...}, title: ...   any pydm screen (home_screen/screens/, this location's screens/, or absolute)
-#   toolbar: [<tab>, <button>]            run that button's command from the toolbar yaml (external window)
-#   toolbar: [<tab>, <button>, <title>]   one command of a button that has several (its "titles")
-#
-# icon names: camera, smaract, thermometer, shutter, spectrometer, elliptec, power-meter, wavefront,
-# or any FontAwesome 5 name.
-
-# What this location is: its happi beamline (every active device on it), the window title, and its toolbar
-# (a copy of lucid_config's, relative to this file). dev/home_screen builds the screen from this file.
 beamline: IP2_MODS
 title: IP2 MODS Home
-toolbar: ip2_mods_toolbar.yaml
+toolbar: /cds/group/pcds/epics-dev/screens/pydm/lucid_config/IP2_MODS_toolbar.yaml
 
-# The table, left to right in beam order. width = relative share of the drawing width (gaps included);
-# top / height = % of the drawing height.
 hall:
-  aspect: 1.9 # width / height of the whole drawing
-  reference_height: 520 # preferred height in px (icon scale 1.0); icons drop their labels below 75 % of it
-  background: "#eeeeee"
-  border: "#595959"
-  inactive: "#d7d7d7" # stations with nothing to open
+  aspect: 1.9
+  reference_height: 520
+  inactive: "#d7d7d7"
   columns:
     - { gap: 2 }
     - { station: INJ, width: 17.2, top: 8, height: 84, color: "#d9ead3" }
@@ -43,30 +19,16 @@ hall:
     - { station: EJX, width: 17.2, top: 8, height: 84, color: "#fff2cc" }
     - { gap: 2 }
 
-# happi functional_group -> menu title and icon, for auto-generated station menus
-functions:
-  cameras: { title: Cameras, icon: camera }
-  smaract: { title: SmarAct Motors, icon: smaract }
-  spectrometers: { title: Spectrometers, icon: spectrometer }
-  elliptecs: { title: Elliptecs, icon: elliptec }
-  power meters: { title: Power Meters, icon: power-meter }
-  wavefront sensors: { title: Wavefront Sensors, icon: wavefront }
-  env sensors: { title: Temperature / Humidity, icon: thermometer }
-
-# Each station: its happi location groups, and the toolbar tools that belong to it
 stations:
   INJ:
     title: Injection (1_lm2k4_inj)
     locations: [1_lm2k4_inj]
-    tools: []
   COM:
     title: Compression (2_lm2k4_com)
     locations: [2_lm2k4_com]
-    tools: []
   HRM:
     title: Harmonics (3_lm2k4_hrm)
     locations: [3_lm2k4_hrm]
-    tools: []
   ATM:
     title: Arrival Time Monitor (4_lm2k4_atm)
     locations: [4_lm2k4_atm]
@@ -78,30 +40,21 @@ stations:
     tools:
       - [Tools, EJX non-LSS Shutter]
 
-# Small icons inside each station: in = the station name, at = [x %, y %] of that station (icon center).
-# One row per function, at the same height in every station, so rows line up across the table.
-# Only functions a station has active devices for get an icon (an empty one would open nothing).
-#   cameras 20, smaract 33, spectrometers 46, elliptecs 59, shutter 72, T/H 87
 icons:
-  # INJ
   - { in: INJ, at: [50, 20], icon: camera, label: Cameras, opens: [{ devices: { location: [1_lm2k4_inj], function: [cameras] } }] }
   - { in: INJ, at: [50, 33], icon: smaract, label: SmarAct, opens: [{ devices: { location: [1_lm2k4_inj], function: [smaract] } }] }
   - { in: INJ, at: [50, 46], icon: spectrometer, label: Spectrometer, opens: [{ devices: { location: [1_lm2k4_inj], function: [spectrometers] } }] }
   - { in: INJ, at: [50, 87], icon: thermometer, label: T/H, opens: [{ device: lm2k4_inj_env_sens }] }
-  # COM
   - { in: COM, at: [50, 20], icon: camera, label: Cameras, opens: [{ devices: { location: [2_lm2k4_com], function: [cameras] } }] }
   - { in: COM, at: [50, 33], icon: smaract, label: SmarAct, opens: [{ devices: { location: [2_lm2k4_com], function: [smaract] } }] }
   - { in: COM, at: [50, 59], icon: elliptec, label: Elliptecs, opens: [{ devices: { location: [2_lm2k4_com], function: [elliptecs] } }] }
   - { in: COM, at: [50, 87], icon: thermometer, label: T/H, opens: [{ device: lm2k4_com_env_sens }] }
-  # HRM
   - { in: HRM, at: [50, 33], icon: smaract, label: SmarAct, opens: [{ devices: { location: [3_lm2k4_hrm], function: [smaract] } }] }
   - { in: HRM, at: [50, 87], icon: thermometer, label: T/H, opens: [{ device: lm2k4_hrm_env_sens }] }
-  # ATM
   - { in: ATM, at: [50, 20], icon: camera, label: Cameras, opens: [{ devices: { location: [4_lm2k4_atm], function: [cameras] } }] }
   - { in: ATM, at: [50, 33], icon: smaract, label: SmarAct, opens: [{ devices: { location: [4_lm2k4_atm], function: [smaract] } }] }
   - { in: ATM, at: [50, 59], icon: elliptec, label: Elliptecs, opens: [{ devices: { location: [4_lm2k4_atm], function: [elliptecs] } }] }
   - { in: ATM, at: [50, 72], icon: shutter, label: Shutter, opens: [{ toolbar: [Tools, ATM non-LSS Shutter] }] }
-  # EJX
   - { in: EJX, at: [50, 20], icon: camera, label: Cameras, opens: [{ devices: { location: [5_lm2k4_ejx], function: [cameras] } }] }
   - { in: EJX, at: [50, 33], icon: smaract, label: SmarAct, opens: [{ devices: { location: [5_lm2k4_ejx], function: [smaract] } }] }
   - { in: EJX, at: [50, 46], icon: spectrometer, label: Spectrometer, opens: [{ devices: { location: [5_lm2k4_ejx], function: [spectrometers] } }] }

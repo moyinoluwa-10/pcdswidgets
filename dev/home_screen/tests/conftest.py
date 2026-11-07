@@ -19,8 +19,9 @@ PACKAGE_DIR = Path(__file__).resolve().parent.parent
 if str(PACKAGE_DIR) not in sys.path:
     sys.path.insert(0, str(PACKAGE_DIR))
 
-# Every location that uses the package: each dev/<location> with a config/floorplan.yaml
-LOCATIONS = sorted(path.parent.parent for path in PACKAGE_DIR.parent.glob("*/config/floorplan.yaml"))
+# Every location that uses the package: each dev/<location> with a floorplan.yaml
+LOCATIONS = sorted(path.parent for path in PACKAGE_DIR.parent.glob("*/floorplan.yaml"))
+EXAMPLE = PACKAGE_DIR / "example"
 # A dated snapshot of each location's active happi devices (tools/export_happi_devices.py), used instead of happi
 SNAPSHOTS = PACKAGE_DIR / "tests" / "snapshots"
 
@@ -30,7 +31,7 @@ def snapshot(location: Path) -> Path:
 
 
 def floorplan_config(location: Path) -> dict:
-    return yaml.safe_load((location / "config" / "floorplan.yaml").read_text())
+    return yaml.safe_load((location / "floorplan.yaml").read_text())
 
 
 @pytest.fixture(params=LOCATIONS, ids=lambda path: path.name)
@@ -43,7 +44,7 @@ def context(location: Path):
     """The location's FloorPlanContext with its snapshot: builds every opener, but no widget."""
     from floorplan import FloorPlanContext
 
-    return FloorPlanContext(config_file=location / "config" / "floorplan.yaml", device_db=snapshot(location))
+    return FloorPlanContext(config_file=location / "floorplan.yaml", device_db=snapshot(location))
 
 
 @pytest.fixture(autouse=True)

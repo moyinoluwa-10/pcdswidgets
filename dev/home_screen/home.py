@@ -12,17 +12,19 @@ Floor plan on top, the location's toolbar under it, dock on the right:
     |   toolbar tabs                    |                |
     +-----------------------------------+----------------+
 
-Run it through a location's launcher (e.g. ``dev/las/las_home.sh``), or directly::
+A location is a ``<location>_home.py`` next to its ``floorplan.yaml`` (see ``example/``)::
 
-    pydm --hide-nav-bar --hide-menu-bar --hide-status-bar -m '{"FLOORPLAN": "dev/las/config/floorplan.yaml"}' \
-        dev/home_screen/home.py
+    intelclass = location_home(Path(__file__).parent / "floorplan.yaml")
+
+Run it with ``pydm --hide-nav-bar --hide-menu-bar --hide-status-bar <location>_home.py``.
 
 Macros:
-    FLOORPLAN   the location's floorplan.yaml (default: $HOME_FLOORPLAN)
-    TOOLBAR     toolbar yaml (default: the floorplan.yaml's ``toolbar``, relative to it)
+    FLOORPLAN   the location's floorplan.yaml (set by location_home)
+    TOOLBAR     toolbar yaml (default: the floorplan.yaml's ``toolbar``)
     DEVICE_DB   happi JSON database or YAML snapshot (default: $HOME_DEVICE_DB, then happi's from $HAPPI_CFG)
 """
 
+import os
 import sys
 from pathlib import Path
 
@@ -57,8 +59,10 @@ class FloorPlanHome(Display):
     def __init__(self, parent=None, args=None, macros=None):
         super().__init__(parent=parent, args=args, macros=macros)
         macros = macros or {}
+        if not macros.get("FLOORPLAN"):
+            raise RuntimeError("No FLOORPLAN macro: open a <location>_home.py, not home.py")
         self.context = FloorPlanContext(
-            config_file=macros.get("FLOORPLAN") or None,
+            config_file=macros["FLOORPLAN"],
             toolbar_file=macros.get("TOOLBAR") or None,
             device_db=macros.get("DEVICE_DB") or None,
         )
@@ -90,3 +94,13 @@ class FloorPlanHome(Display):
         layout.addLayout(left, stretch=1)
         layout.addWidget(self.dock)
         self.setLayout(layout)
+
+
+def location_home(floorplan: str | os.PathLike) -> type[FloorPlanHome]:
+    """The home screen class for one location's floorplan.yaml (a <location>_home.py's ``intelclass``)."""
+
+    class LocationHome(FloorPlanHome):
+        def __init__(self, parent=None, args=None, macros=None):
+            super().__init__(parent=parent, args=args, macros={"FLOORPLAN": str(floorplan), **(macros or {})})
+
+    return LocationHome

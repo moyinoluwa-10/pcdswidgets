@@ -1,10 +1,10 @@
 # LAS floor-plan home screen (lasdev style)
 
-A proof of concept of the **lasdev** home-screen style applied to the **LAS** PVs: a drawing of the laser hall in which you click a bay, rack or icon to open the matching screen in a `TabDock`. The hall is drawn by Qt from `config/floorplan.yaml`, not from a background image.
+A proof of concept of the **lasdev** home-screen style applied to the **LAS** PVs: a drawing of the laser hall in which you click a bay, rack or icon to open the matching screen in a `TabDock`. The hall is drawn by Qt from `floorplan.yaml`, not from a background image.
 
 How `lasdev` works today is in [lasdev_launch_internals.md](lasdev_launch_internals.md).
 
-**This directory is only the location's config**: `config/floorplan.yaml` (the drawing, what each click opens, and its happi `beamline`, window `title` and `toolbar`), the toolbar copy, and the launcher. The screen itself (code, device screens, `device_types.yaml`, tools) is the shared [home_screen](../home_screen/README.md) package, the same for every location.
+**This directory is only the location**: `floorplan.yaml` (the drawing, what each click opens, and its happi `beamline`, window `title` and `toolbar`), `las_home.py` (the home screen) and `las_home.sh` (dev launcher). The screen itself (code, device screens, `device_types.yaml`, tools) is the shared [home_screen](../home_screen/README.md) package, the same for every location.
 
 It has **no runtime dependency on happi, ophyd, pcdsdevices, typhos or lucid**, and nothing outside `dev/` was changed.
 
@@ -12,14 +12,13 @@ It has **no runtime dependency on happi, ophyd, pcdsdevices, typhos or lucid**, 
 
 ```bash
 pcdswidgets/dev/las/las_home.sh &      # foreground without "&", like the production las_home.sh
-pcdswidgets/dev/las/las_home.sh -m '{"TOOLBAR": "/cds/group/pcds/pyps/apps/hutch-python/lucid_config/LAS_toolbar.yaml"}' &   # live toolbar
 ```
 
-Environment: `ctrlenv-widgets/v1.2.1`, with this checkout's pcdswidgets and `dev/home_screen` first on `PYTHONPATH`. **It connects to the real IOCs.**
+Environment: `ctrlenv-widgets/v1.2.1`, with this checkout's pcdswidgets first on `PYTHONPATH`. In production (the org launcher's "Option 4"), from this directory: `pydm --hide-nav-bar --hide-menu-bar --hide-status-bar las_home.py`. **It connects to the real IOCs.**
 
 ## What you can click
 
-![floor plan](bg-with-exp.png)
+![floor plan](floorplan.png)
 
 | Where | Click | Opens |
 |---|---|---|
@@ -38,24 +37,23 @@ Each icon uses the same glyph pcdswidgets uses for the screen it opens: `CameraV
 
 The drawing keeps its proportions and scales with the window; text stays sharp at any size. Below 75 % scale the icons drop their labels.
 
-Under the floor plan is the full LAS toolbar (`config/las_toolbar.yaml`, a copy of `lucid_config/LAS_toolbar.yaml`).
+Under the floor plan is the full LAS toolbar (the live `lucid_config/LAS_toolbar.yaml`).
 
 ## Files
 
 | Path | What it is |
 |---|---|
 | [`../home_screen/`](../home_screen/README.md) | The shared package: home screen, floor-plan code, every device screen, `home_screen/config/device_types.yaml` (device class → screen, macros, status PVs) and the tools (`gen_indicator_pvs.py`, `export_happi_devices.py`). |
-| `bg-with-exp.png` | The annotated sketch of what each area should do. Documentation only. |
 | `floorplan.png` | Screenshot of the floor plan as built (documentation only). |
-| `config/floorplan.yaml` | **All layout and behaviour**: the hall drawing (columns left to right, with relative widths, heights and colours; racks generated as R01–R20 in coloured groups of five), icon positions (percent of their area), what each opens, laser source → bay, bay tools, which toolbar tab racks are matched against, and `reference_height` (the drawing height at icon scale 1.0, the old `bg.png`'s 659 px). A rack can override the automatic match with its own `opens:` list. Edit this to move or add things; no code changes needed. |
-| `las_home.sh` | Launcher: sets this location's `subnet_check` arguments and runs `../home_screen/launch_home.sh` with `config/floorplan.yaml` (ctrlenv-widgets, this checkout's pcdswidgets and the package on `PYTHONPATH`; `HOME_SCREEN_DIR` to use another copy of the package). |
-| `config/las_toolbar.yaml` | The LAS toolbar (copy of `lucid_config/LAS_toolbar.yaml`, refreshed 2026-11-04). Rack → PDU matching, the bay tools and the BTS tools come from here, by tab and button name. **When deploying, switch to the live file** (`/cds/group/pcds/pyps/apps/hutch-python/lucid_config/LAS_toolbar.yaml`, e.g. via the `TOOLBAR` macro or the `toolbar:` entry in `config/floorplan.yaml`); a renamed button the floor plan refers to then shows as "(missing)". |
+| `floorplan.yaml` | **All layout and behaviour**: the hall drawing (columns left to right, with relative widths, heights and colours; racks generated as R01–R20 in coloured groups of five), icon positions (percent of their area), what each opens, laser source → bay, bay tools, and `reference_height` (the drawing height at icon scale 1.0, the old `bg.png`'s 659 px). A rack can override the automatic match with its own `opens:` list. Its `toolbar:` is the live `/cds/group/pcds/epics-dev/screens/pydm/lucid_config/LAS_toolbar.yaml`: a renamed button the floor plan refers to shows as "(missing)". Defaults (menu `functions`, colours) come from the package. Edit this to move or add things; no code changes needed. |
+| `las_home.py` | The home screen: the shared `home_screen/example/example_home.py`, opening this directory's `floorplan.yaml`. Production runs it directly with pydm. |
+| `las_home.sh` | Dev launcher: this location's `subnet_check` arguments, then `../home_screen/launch_home.sh las_home.py` (ctrlenv-widgets, this checkout's pcdswidgets on `PYTHONPATH`). |
 
 
 ## Config entry types (`opens:`)
 
 ```yaml
-- device: las_lhn_bay1_env_sens_1                        # a happi device, via config/device_types.yaml
+- device: las_lhn_bay1_env_sens_1                        # a happi device, via home_screen/config/device_types.yaml
 - devices: {location: [Bay 3], function: [cameras]}      # all matching happi devices, as a sub-menu
 - shutter: LS5                                           # the laser_shutter.ui screen for that source
 - screen: laser_shutter.ui                               # any pydm screen in screens/ (or an absolute path)
@@ -81,13 +79,13 @@ One entry means a click opens it directly; several mean a click shows a menu.
 
 ## Tests
 
-This location has no tests of its own: the [home_screen](../home_screen/README.md#tests) package's core tests check every location's `config/floorplan.yaml` (references resolve, every happi device is in exactly one menu, status PVs are filled in, toolbar commands) against its toolbar and its happi snapshot, `home_screen/tests/snapshots/las.yaml`.
+This location has no tests of its own: the [home_screen](../home_screen/README.md#tests) package's core tests check every location's `floorplan.yaml` (references resolve, every happi device is in exactly one menu, status PVs are filled in, toolbar commands) against its toolbar and its happi snapshot, `home_screen/tests/snapshots/las.yaml`.
 
 ## Known gaps / next steps
 
 - **Not tested against live IOCs.** The shutter PVs have only been checked offline.
 - **7 labelled racks have no PDU yet**: R02, R04, R11, R12, R16, R17 and R19. They, and the other unused rack numbers, are drawn grey and light up automatically once the toolbar has a "... (Rxx)" PDU button for them.
-- **Racks open only the PDU** (`pdu_tripplite.py`, not live-tested). The sketch mentions "maybe some monitoring, or all of the controls in it". Rack entries already accept a list of `opens`, so adding more is a config change.
-- **Icon positions are rough**, as the sketch says. Fine-tune them in `floorplan.yaml` (`at: [x %, y %]` within their area).
+- **Racks open only the PDU** (`pdu_tripplite.py`, not live-tested). The original design sketch mentioned "maybe some monitoring, or all of the controls in it". Rack entries already accept a list of `opens`, so adding more is a config change.
+- **Icon positions are rough.** Fine-tune them in `floorplan.yaml` (`at: [x %, y %]` within their area).
 - **SmarAct screens are pinned to R4.0.0.** When `ioc-las-bts-mcs1` moves to a new release, update `SMARACT_SCREENS` in `home_screen/screens/smaract.py`, or pass it as a macro.
 - **Mixed data sources.** Rack → PDU comes from the toolbar labels, while `ioc-las-lhn-pwr-02.cfg` says "LHN Timing PDU Bay 2" for the PDU the toolbar calls "Zone 2 OPCPA Controls PDU (R03)". Confirm with the LAS team.

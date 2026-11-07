@@ -1,0 +1,93 @@
+# Example floor plan: every option, with what it does. It runs (example_home.sh): a small LAS layout with one of
+# each kind of area. To make a location, copy example_home.py, example_home.sh (fix its paths and SUBNET_CHECK) and
+# this file into the location's directory, rename them <location>_home.*, and keep only what the location needs.
+
+# Required: the happi beamline (every active device on it is loaded), the window title, and the LUCID-style
+# toolbar yaml (absolute, or relative to this file).
+beamline: LAS
+title: Example Home
+toolbar: /cds/group/pcds/epics-dev/screens/pydm/lucid_config/LAS_toolbar.yaml
+
+# The drawing: a row of columns, left to right, laid out by Qt (no coordinates).
+#   width        relative share of the drawing width (gaps included; they don't need to add up to 100)
+#   top, height  % of the drawing height
+#   color        the area's fill
+hall:
+  aspect: 2.0 # width / height of the drawing (default 2.0)
+  reference_height: 420 # preferred height in px; icons are full size at it and drop their labels below 75 %
+  background: "#eeeeee" # default
+  border: "#595959" # default
+  inactive: "#d7d7d7" # fill for areas with nothing to open (racks default to #b7b7b7)
+  columns:
+    - { gap: 3 } # empty space
+    # bay: a click opens every device in its happi locations, by function, then its shutters and tools ("bays:")
+    - { bay: Bay 1, width: 18, top: 12, height: 80, color: "#d9ead3" }
+    - { gap: 4 }
+    # racks: stacks of racks, each group in its own color. A rack opens the toolbar buttons in the "PDUs" tab whose
+    # name ends with the rack in parentheses, e.g. "... PDU (R03)": a TrippLite PDU opens screens/pdu_tripplite.py.
+    - racks: [{ range: R01-R05, color: "#f9cb9c" }]
+      width: 6
+      top: 5 # top and bottom margin, %
+      group_gap: 4 # % between groups
+    - { gap: 4 }
+    # area: a click opens its "opens" list ("areas:")
+    - { area: BTS, width: 26, top: 40, height: 28, color: "#d9d2e9" }
+    - { gap: 4 }
+    # station (MODS style, label at the top): like a bay, without shutters ("stations:")
+    - { station: Bay 4, width: 18, top: 12, height: 80, color: "#c9daf8" }
+    - { gap: 3 }
+
+# Optional. happi functional_group -> menu title and icon, added to or replacing the package's
+# (home_screen/config/functions.yaml). Menus list functions in that order.
+functions:
+  BTPS: { title: Beam Transport Protection, icon: btps }
+
+# Bays. locations: happi location_group values (default: [<bay name>]). tools: toolbar buttons, as
+# [<tab>, <button>] or [<tab>, <button>, <title>] for one command of a button that has several.
+bays:
+  Bay 1:
+    locations: [Bay 1]
+    tools:
+      - ["NEH Beam Transport", "Shutters"]
+
+# Functions left out of every bay's menu (e.g. the BTPS, which happi puts in Bay 1)
+bay_menu_skip_functions: [BTPS]
+
+# Laser shutters, shown in their bay's menu: <LS name>: { bay, title }
+shutters:
+  LS1: { bay: Bay 1, title: LS1 (Bay 1) }
+
+# Stations: same keys as bays. title: the tooltip.
+stations:
+  Bay 4:
+    title: Bay 4, drawn as a station
+    locations: [Bay 4]
+
+# Areas: what a click opens. One entry opens it directly (ctrl+click new tab, shift+click new window,
+# right click for the menu); several show a menu.
+#   device: <happi name>                           that device's screen (home_screen/config/device_types.yaml)
+#   devices: { location: [...], function: [...] }  every matching device, a sub-menu per function (function optional)
+#   shutter: <LS name>                             a laser shutter screen ("shutters:")
+#   screen: <file>, macros: {...}, title: ...      any pydm screen: absolute, in screens/ next to this file, or in
+#                                                  home_screen/screens/
+#   toolbar: [<tab>, <button>(, <title>)]          run that toolbar button's command (its own window)
+areas:
+  BTS:
+    opens:
+      - { devices: { location: [Beam Transport], function: [cameras] } }
+      - { toolbar: ["NEH Beam Transport", "BTPS Overview"] }
+      - { toolbar: ["NEH Beam Transport", "BTMS Overview"] }
+
+# Optional: a rack's own "opens" list, instead of the PDUs tab ("rack_toolbar_tab" changes the tab, default PDUs)
+racks:
+  R05: { opens: [{ toolbar: ["NEH Beam Transport", "Shutters"] }] }
+
+# Small icons on the areas. in: the area's name. at: [x %, y %] of that area (the icon's center).
+# icon: camera, smaract, thermometer, shutter, spectrometer, elliptec, power-meter, wavefront, btps, pdu, or any
+# FontAwesome 5 name. opens: as in "areas:". status: false hides the status dot (default: worst alarm of what it opens).
+icons:
+  - { in: Bay 1, at: [20, 10], icon: thermometer, label: T/H, opens: [{ device: las_lhn_bay1_env_sens_1 }] }
+  - { in: Bay 1, at: [50, 30], icon: camera, label: Cameras, opens: [{ devices: { location: [Bay 1], function: [cameras] } }] }
+  - { in: Bay 1, at: [78, 40], icon: shutter, label: Shutter, opens: [{ shutter: LS1 }] }
+  - { in: BTS, at: [25, 75], icon: btps, label: BTPS, status: false, opens: [{ toolbar: ["NEH Beam Transport", "BTPS Overview"] }] }
+  - { in: Bay 4, at: [50, 30], icon: smaract, label: SmarAct, opens: [{ devices: { location: [Bay 4], function: [smaract] } }] }

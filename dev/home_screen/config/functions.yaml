@@ -1,0 +1,9 @@
+# happi functional_group -> menu title and icon, for the auto-generated device menus, in menu order.
+# A location's floorplan.yaml can add to or override these under "functions:".
+cameras: { title: Cameras, icon: camera }
+smaract: { title: SmarAct Motors, icon: smaract }
+spectrometers: { title: Spectrometers, icon: spectrometer }
+elliptecs: { title: Elliptecs, icon: elliptec }
+power meters: { title: Power Meters, icon: power-meter }
+wavefront sensors: { title: Wavefront Sensors, icon: wavefront }
+env sensors: { title: Temperature / Humidity, icon: thermometer }

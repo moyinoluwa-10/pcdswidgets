@@ -1,0 +1,77 @@
+beamline: IP1_MODS
+title: IP1 MODS Home
+toolbar: /cds/group/pcds/epics-dev/screens/pydm/lucid_config/IP1_MODS_toolbar.yaml
+
+hall:
+  aspect: 1.9
+  reference_height: 520
+  inactive: "#d7d7d7"
+  columns:
+    - { gap: 2 }
+    - { station: INJ, width: 14, top: 8, height: 84, color: "#d9ead3" }
+    - { gap: 2.4 }
+    - { station: COM, width: 14, top: 8, height: 84, color: "#fce5cd" }
+    - { gap: 2.4 }
+    - { station: OPA, width: 14, top: 8, height: 84, color: "#d9d2e9" }
+    - { gap: 2.4 }
+    - { station: HRM, width: 14, top: 8, height: 84, color: "#ead1dc" }
+    - { gap: 2.4 }
+    - { station: ATM, width: 14, top: 8, height: 84, color: "#c9daf8" }
+    - { gap: 2.4 }
+    - { station: EJX, width: 14, top: 8, height: 84, color: "#fff2cc" }
+    - { gap: 2 }
+
+stations:
+  INJ:
+    title: Injection (1_lm1k4_inj)
+    locations: [1_lm1k4_inj]
+    tools:
+      - [Tools, WFS Expert Screen]
+  COM:
+    title: Compression (2_lm1k4_com)
+    locations: [2_lm1k4_com]
+    tools:
+      - [Tools, nf-ff-alignment, COM_DP1]
+  OPA:
+    title: Optical Parametric Amplification (3_lm1k4_opa)
+    locations: [3_lm1k4_opa]
+  HRM:
+    title: Harmonics (3/4_lm1k4_hrm, 4_lm1k4_int)
+    locations: [3_lm1k4_hrm, 4_lm1k4_hrm, 4_lm1k4_int]
+  ATM:
+    title: Arrival Time Monitor (5_lm1k4_atm)
+    locations: [5_lm1k4_atm]
+    tools:
+      - [Tools, nf-ff-alignment, ATM_DP1]
+      - [Tools, ATM non-LSS Shutter]
+  EJX:
+    title: Ejection (6_lm1k4_ejx)
+    locations: [6_lm1k4_ejx]
+    tools:
+      - [Tools, EJX non-LSS Shutter]
+
+icons:
+  - { in: INJ, at: [50, 20], icon: camera, label: Cameras, opens: [{ devices: { location: [1_lm1k4_inj], function: [cameras] } }] }
+  - { in: INJ, at: [50, 33], icon: smaract, label: SmarAct, opens: [{ devices: { location: [1_lm1k4_inj], function: [smaract] } }] }
+  - { in: INJ, at: [50, 46], icon: spectrometer, label: Spectrometer, opens: [{ devices: { location: [1_lm1k4_inj], function: [spectrometers] } }] }
+  - { in: INJ, at: [50, 87], icon: thermometer, label: T/H, opens: [{ device: lm1k4_inj_env_sens }] }
+  - { in: COM, at: [50, 20], icon: camera, label: Cameras, opens: [{ devices: { location: [2_lm1k4_com], function: [cameras] } }] }
+  - { in: COM, at: [50, 33], icon: smaract, label: SmarAct, opens: [{ devices: { location: [2_lm1k4_com], function: [smaract] } }] }
+  - { in: COM, at: [50, 46], icon: spectrometer, label: Spectrometer, opens: [{ devices: { location: [2_lm1k4_com], function: [spectrometers] } }] }
+  - { in: COM, at: [50, 87], icon: thermometer, label: T/H, opens: [{ device: lm1k4_com_env_sens }] }
+  - { in: OPA, at: [50, 33], icon: smaract, label: SmarAct, opens: [{ devices: { location: [3_lm1k4_opa], function: [smaract] } }] }
+  - { in: HRM, at: [50, 33], icon: smaract, label: SmarAct, opens: [{ devices: { location: [3_lm1k4_hrm, 4_lm1k4_hrm, 4_lm1k4_int], function: [smaract] } }] }
+  - { in: HRM, at: [50, 46], icon: spectrometer, label: Spectrometer, opens: [{ devices: { location: [3_lm1k4_hrm, 4_lm1k4_hrm], function: [spectrometers] } }] }
+  - { in: ATM, at: [50, 20], icon: camera, label: Cameras, opens: [{ devices: { location: [5_lm1k4_atm], function: [cameras] } }] }
+  - { in: ATM, at: [50, 33], icon: smaract, label: SmarAct, opens: [{ devices: { location: [5_lm1k4_atm], function: [smaract] } }] }
+  - { in: ATM, at: [50, 46], icon: spectrometer, label: Spectrometer, opens: [{ devices: { location: [5_lm1k4_atm], function: [spectrometers] } }] }
+  - { in: ATM, at: [50, 59], icon: elliptec, label: Elliptecs, opens: [{ devices: { location: [5_lm1k4_atm], function: [elliptecs] } }] }
+  - { in: ATM, at: [50, 72], icon: shutter, label: Shutter, opens: [{ toolbar: [Tools, ATM non-LSS Shutter] }] }
+  - { in: ATM, at: [50, 87], icon: thermometer, label: T/H, opens: [{ device: lm1k4_atm_env_sens }] }
+  - { in: EJX, at: [50, 20], icon: camera, label: Cameras, opens: [{ devices: { location: [6_lm1k4_ejx], function: [cameras] } }] }
+  - { in: EJX, at: [50, 33], icon: smaract, label: SmarAct, opens: [{ devices: { location: [6_lm1k4_ejx], function: [smaract] } }] }
+  - { in: EJX, at: [50, 46], icon: spectrometer, label: Spectrometers, opens: [{ devices: { location: [6_lm1k4_ejx], function: [spectrometers] } }] }
+  - { in: EJX, at: [50, 59], icon: elliptec, label: Elliptecs, opens: [{ devices: { location: [6_lm1k4_ejx], function: [elliptecs] } }] }
+  - { in: EJX, at: [25, 72], icon: power-meter, label: Power, opens: [{ devices: { location: [6_lm1k4_ejx], function: [power meters] } }] }
+  - { in: EJX, at: [75, 72], icon: shutter, label: Shutter, opens: [{ toolbar: [Tools, EJX non-LSS Shutter] }] }
+  - { in: EJX, at: [50, 87], icon: thermometer, label: T/H, opens: [{ device: lm1k4_ejx_env_sens }] }

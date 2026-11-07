@@ -15,16 +15,14 @@ LAS = PACKAGE_DIR.parent / "las"
 def las() -> FloorPlanContext:
     if LAS not in LOCATIONS:
         pytest.skip("no dev/las")
-    return FloorPlanContext(config_file=LAS / "config" / "floorplan.yaml", device_db=snapshot(LAS))
+    return FloorPlanContext(config_file=LAS / "floorplan.yaml", device_db=snapshot(LAS))
 
 
 def test_toolbar_button_with_several_commands(tmp_path: Path):
     """A button with a command per title: pick one by title, or get one opener per command."""
     toolbar = tmp_path / "toolbar.yaml"
     toolbar.write_text("Tools:\n  buttons:\n    align:\n      titles: [A, B]\n      commands: [run a, run b]\n")
-    context = FloorPlanContext(
-        config_file=LAS / "config" / "floorplan.yaml", toolbar_file=toolbar, device_db=snapshot(LAS)
-    )
+    context = FloorPlanContext(config_file=LAS / "floorplan.yaml", toolbar_file=toolbar, device_db=snapshot(LAS))
     assert context.toolbar_opener("Tools", "align", "B").command == ["run b"]
     both = context.toolbar_opener("Tools", "align")
     assert [(child.title, child.command) for child in both.children] == [("A", ["run a"]), ("B", ["run b"])]

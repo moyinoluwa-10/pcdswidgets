@@ -2,7 +2,7 @@
 
 A pcdswidgets rebuild of the `mods_ip1` home screen: a drawing of the IP1 MODS table, with its optical stations in beam order: INJ (Injection) → COM (Compression) → OPA (Optical Parametric Amplification) → HRM (Harmonics) → ATM (Arrival Time Monitor) → EJX (Ejection). Click a station or an icon to open the matching screen in a `TabDock`. It is built from the `dev/las` template and follows the same structure.
 
-**This directory is only the location's config**: `config/floorplan.yaml` (the drawing, what each click opens, and its happi `beamline`, window `title` and `toolbar`), the toolbar copy, and the launcher. The screen itself (code, device screens, `device_types.yaml`, tools) is the shared [home_screen](../home_screen/README.md) package, the same for every location.
+**This directory is only the location**: `floorplan.yaml` (the drawing, what each click opens, and its happi `beamline`, window `title` and `toolbar`), `mods_ip1_home.py` (the home screen) and `mods_ip1_home.sh` (dev launcher). The screen itself (code, device screens, `device_types.yaml`, tools) is the shared [home_screen](../home_screen/README.md) package, the same for every location.
 
 It has **no runtime dependency on happi, ophyd, pcdsdevices, typhos or lucid**, and nothing outside `dev/` was changed.
 
@@ -10,10 +10,9 @@ It has **no runtime dependency on happi, ophyd, pcdsdevices, typhos or lucid**, 
 
 ```bash
 pcdswidgets/dev/mods_ip1/mods_ip1_home.sh &      # foreground without "&", like the production launchers
-pcdswidgets/dev/mods_ip1/mods_ip1_home.sh -m '{"TOOLBAR": "/cds/group/pcds/pyps/apps/hutch-python/lucid_config/IP1_MODS_toolbar.yaml"}' &   # live toolbar
 ```
 
-Environment: `ctrlenv-widgets/v1.2.1`, with this checkout's pcdswidgets and `dev/home_screen` first on `PYTHONPATH`. **It connects to the real IOCs.**
+Environment: `ctrlenv-widgets/v1.2.1`, with this checkout's pcdswidgets first on `PYTHONPATH`. In production (the org launcher's "Option 4"), from this directory: `pydm --hide-nav-bar --hide-menu-bar --hide-status-bar mods_ip1_home.py`. **It connects to the real IOCs.**
 
 ## What `mods_ip1` runs today
 
@@ -44,7 +43,7 @@ Station → happi location groups: INJ `1_lm1k4_inj`, COM `2_lm1k4_com`, OPA `3_
 
 Each icon has a small status dot: the worst alarm (typhos colours) across the PVs of everything it opens. When it isn't green, hovering the icon also lists the PVs that aren't OK. The drawing keeps its proportions and scales with the window; below 75 % scale the icons drop their labels.
 
-Under the floor plan is the full IP1_MODS toolbar (`config/ip1_mods_toolbar.yaml`, a copy of `lucid_config/IP1_MODS_toolbar.yaml`).
+Under the floor plan is the full IP1_MODS toolbar (the live `lucid_config/IP1_MODS_toolbar.yaml`).
 
 ## Device screens
 
@@ -71,15 +70,15 @@ Tip/tilt stages and Elliptecs can't be described by `{prefix}` alone: their PVs 
 | Path | What it is |
 |---|---|
 | [`../home_screen/`](../home_screen/README.md) | The shared package: home screen, floor-plan code, every device screen, `home_screen/config/device_types.yaml` (device class → screen, macros, status PVs) and the tools (`gen_indicator_pvs.py`, `export_happi_devices.py`). |
-| `config/floorplan.yaml` | **All layout and behaviour**: the drawing (stations left to right, relative widths/heights, colours, preferred height), station → location groups and tools, icon positions (percent of their station) and what each opens. Edit this to move or add things; no code changes needed. |
-| `mods_ip1_home.sh` | Launcher: sets this location's `subnet_check` arguments and runs `../home_screen/launch_home.sh` with `config/floorplan.yaml` (ctrlenv-widgets, this checkout's pcdswidgets and the package on `PYTHONPATH`; `HOME_SCREEN_DIR` to use another copy of the package). |
-| `config/ip1_mods_toolbar.yaml` | The toolbar (copy of `lucid_config/IP1_MODS_toolbar.yaml`, taken 2026-11-05). Station tools and shutter icons refer to it by tab, button and title. **When deploying, switch to the live file** (e.g. via the `TOOLBAR` macro); a renamed button the floor plan refers to then shows as "(missing)". |
+| `floorplan.yaml` | **All layout and behaviour**: the drawing (stations left to right, relative widths/heights, colours, preferred height), station → location groups and tools, icon positions (percent of their station) and what each opens. Its `toolbar:` is the live `/cds/group/pcds/epics-dev/screens/pydm/lucid_config/IP1_MODS_toolbar.yaml`: a renamed button the floor plan refers to shows as "(missing)". Defaults (menu `functions`, colours) come from the package. Edit this to move or add things; no code changes needed. |
+| `mods_ip1_home.py` | The home screen: the shared `home_screen/example/example_home.py`, opening this directory's `floorplan.yaml`. Production runs it directly with pydm. |
+| `mods_ip1_home.sh` | Dev launcher: this location's `subnet_check` arguments, then `../home_screen/launch_home.sh mods_ip1_home.py` (ctrlenv-widgets, this checkout's pcdswidgets on `PYTHONPATH`). |
 | `floorplan.png` | Screenshot of the floor plan (documentation only). |
 
 ## Config entry types (`opens:`)
 
 ```yaml
-- device: lm1k4_inj_env_sens                                  # a happi device, via config/device_types.yaml
+- device: lm1k4_inj_env_sens                                  # a happi device, via home_screen/config/device_types.yaml
 - devices: {location: [6_lm1k4_ejx], function: [elliptecs]}   # all matching happi devices, as a sub-menu
 - screen: env_monitor.ui                                      # any pydm screen in screens/ (or an absolute path)
   macros: {PREFIX: LM1K4:INJ_BHC_AI_01, NAME: inj}
@@ -92,9 +91,9 @@ One entry means a click opens it directly; several mean a click shows a menu.
 
 ## Tests
 
-This location has no tests of its own: the [home_screen](../home_screen/README.md#tests) package's core tests check every location's `config/floorplan.yaml` (references resolve, every happi device is in exactly one menu, status PVs are filled in, toolbar commands) against its toolbar and its happi snapshot, `home_screen/tests/snapshots/mods_ip1.yaml`.
+This location has no tests of its own: the [home_screen](../home_screen/README.md#tests) package's core tests check every location's `floorplan.yaml` (references resolve, every happi device is in exactly one menu, status PVs are filled in, toolbar commands) against its toolbar and its happi snapshot, `home_screen/tests/snapshots/mods_ip1.yaml`.
 
 ## Known gaps / next steps
 
 - **Spectrometer status dots watch big waveforms.** `QminiSpectrometer`'s generated `indicator_pvs` include `:SPECTRUM` and `:WAVELENGTHS` (the same signals typhos watched). They work, but each update is a full array; trimming them to `:STATUS` / `:W0_FIT` would be cheaper. `gen_indicator_pvs.py` would put them back on the next run, so this needs a small exclude option there first.
-- **Station layout is schematic** (equal boxes in beam order), not the real table. Fine-tune widths, heights and icon positions in `config/floorplan.yaml`, or replace with a sketch of the table.
+- **Station layout is schematic** (equal boxes in beam order), not the real table. Fine-tune widths, heights and icon positions in `floorplan.yaml`, or replace with a sketch of the table.
