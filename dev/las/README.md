@@ -4,7 +4,7 @@ A proof of concept of the **lasdev** home-screen style applied to the **LAS** PV
 
 How `lasdev` works today is in [lasdev_launch_internals.md](lasdev_launch_internals.md).
 
-**This directory is only the location's config**: `config/floorplan.yaml` (the drawing, what each click opens, and its happi `beamline`, window `title` and `toolbar`), the toolbar copy, the launcher and its tests. The screen itself (code, device screens, `device_types.yaml`, tools) is the shared [home_screen](../home_screen/README.md) package, the same for every location.
+**This directory is only the location's config**: `config/floorplan.yaml` (the drawing, what each click opens, and its happi `beamline`, window `title` and `toolbar`), the toolbar copy, and the launcher. The screen itself (code, device screens, `device_types.yaml`, tools) is the shared [home_screen](../home_screen/README.md) package, the same for every location.
 
 It has **no runtime dependency on happi, ophyd, pcdsdevices, typhos or lucid**, and nothing outside `dev/` was changed.
 
@@ -50,7 +50,6 @@ Under the floor plan is the full LAS toolbar (`config/las_toolbar.yaml`, a copy 
 | `config/floorplan.yaml` | **All layout and behaviour**: the hall drawing (columns left to right, with relative widths, heights and colours; racks generated as R01–R20 in coloured groups of five), icon positions (percent of their area), what each opens, laser source → bay, bay tools, which toolbar tab racks are matched against, and `reference_height` (the drawing height at icon scale 1.0, the old `bg.png`'s 659 px). A rack can override the automatic match with its own `opens:` list. Edit this to move or add things; no code changes needed. |
 | `las_home.sh` | Launcher: sets this location's `subnet_check` arguments and runs `../home_screen/launch_home.sh` with `config/floorplan.yaml` (ctrlenv-widgets, this checkout's pcdswidgets and the package on `PYTHONPATH`; `HOME_SCREEN_DIR` to use another copy of the package). |
 | `config/las_toolbar.yaml` | The LAS toolbar (copy of `lucid_config/LAS_toolbar.yaml`, refreshed 2026-11-04). Rack → PDU matching, the bay tools and the BTS tools come from here, by tab and button name. **When deploying, switch to the live file** (`/cds/group/pcds/pyps/apps/hutch-python/lucid_config/LAS_toolbar.yaml`, e.g. via the `TOOLBAR` macro or the `toolbar:` entry in `config/floorplan.yaml`); a renamed button the floor plan refers to then shows as "(missing)". |
-| `tests/` | pytest-qt tests (39). `tests/devices_snapshot.yaml` is a dated snapshot of the 44 active LAS happi entries that the tests use instead of the live database (the screen itself reads the live one). |
 
 
 ## Config entry types (`opens:`)
@@ -82,27 +81,7 @@ One entry means a click opens it directly; several mean a click shows a menu.
 
 ## Tests
 
-```bash
-cd pcdswidgets/dev/las
-QT_QPA_PLATFORM=offscreen PYTHONPATH=../.. \
-  /reg/g/pcds/pyps/pixi/ctrlenv-widgets/v1.2.1/src/rhel9-x86_64/.pixi/envs/default/bin/python -m pytest tests -q
-```
-
-The tests point channel access at `127.0.0.1` only, use the YAML device snapshot in `config/`, and replace `run_command` so no EDM window is ever launched. They check that:
-
-- every config reference resolves
-- every active LAS device appears in exactly one bay or area menu
-- the hall config is consistent and every icon sits in a known area
-- the drawing lands within a few pixels of the old `bg.png` layout, and icons stay inside their area
-- all 20 racks are drawn, racks without a PDU are grey, and a new "(R05)" toolbar button lights up R05
-- the menus contain the expected entries, and multi-command toolbar buttons (BTS QPCs) are sub-menus, not one click launching all
-- rack clicks open their PDU's screen in the dock, with the prefix from the toolbar button's EDM launch (each of the 7 racks); icon clicks open the right screen in the dock
-- status dots watch the right PVs, and the icon tooltip lists the bad ones
-- happi kwargs are filled in from the entry and usable in PV templates
-- icons shrink with the drawing
-- docking a tall screen (SmarAct, camera) doesn't grow the window
-- the new screens load with all macros filled, including embedded displays (forced to load)
-- the home screen imports nothing forbidden, and nothing from `dev/` but the `home_screen` package
+This location has no tests of its own: the [home_screen](../home_screen/README.md#tests) package's core tests check every location's `config/floorplan.yaml` (references resolve, every happi device is in exactly one menu, status PVs are filled in, toolbar commands) against its toolbar and its happi snapshot, `home_screen/tests/snapshots/las.yaml`.
 
 ## Known gaps / next steps
 

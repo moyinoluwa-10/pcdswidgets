@@ -9,7 +9,6 @@ dev/<location>/
   <location>_home.sh           launcher: its subnet_check arguments, then home_screen/launch_home.sh with its floorplan.yaml
   config/floorplan.yaml        the drawing and what each click opens, plus beamline:, title: and toolbar:
   config/<hutch>_toolbar.yaml  copy of lucid_config/<HUTCH>_toolbar.yaml
-  tests/                       its own tests (its config, devices and toolbar) and its happi snapshot
   README.md, floorplan.png
 ```
 
@@ -54,7 +53,7 @@ Column types: `station` (label at the top; its happi location groups and toolbar
 | `floorplan.py` | `FloorPlan` / `Hall` (the drawing, from the floorplan.yaml), `AreaButton` / `IconButton`, `FloorPlanContext` (turns config entries into things to open), `DockScreen` (docked screens scroll instead of growing the window), rack → PDU matching. |
 | `devices.py` | Device list from happi's `db.json` read as plain JSON (`$HOME_DEVICE_DB`, or `$HAPPI_CFG`) or a YAML snapshot, with each entry's happi kwargs (`{{field}}` templates filled in) usable as `{tip_pv}`, `{channel}`, … in device_types.yaml; device types; the per-device screen cache. |
 | `alarm.py` | `PVAlarmCircle`, the status dot: worst alarm across a list of PVs, in typhos's colours. |
-| `config/device_types.yaml` | Device class → screen, macros, `template_kwargs` and status PVs, for every class at every location. The package tests fail if a class active at any location is missing. |
+| `config/device_types.yaml` | Device class → screen, macros, `template_kwargs` and status PVs, for every class at every location. The tests fail if a class active at any location is missing. |
 | `screens/smaract.py` | SmarAct screen from the IOC release's own widgets (`common/smaract/R4.0.0/motorScreens`, the release `ioc-las-bts-mcs1` builds against): the expert panel with the advanced-controls tabs (Open-loop, Closed-loop, Diagnostics, Configuration) always shown under it. This is `smaract_expert_screen.py` without the collapsible section and without the PicoScale tab. It uses the release's generated widget classes, because loading `smaract_advanced_controls.ui` directly hits a circular import in that package. |
 | `screens/las_basler.ui`, `screens/las_basler_settings.ui` | LasBasler camera viewer, and its sidebar settings panel: The "LAS Basler Settings" sidebar panel of `las_basler.ui` (manufacturer, sensor, data type, trigger, binning, user sets, reset), embedded there as a `PyDMEmbeddedDisplay` so it can be edited on its own. It inherits the parent's macros (`CAM`); open it alone with `pydm -m CAM=... las_basler_settings.ui`. The embedded display has `minimumSize` width 1 so the sidebar can squeeze it like the other panels (otherwise the PV labels' text width pushes the sidebar wider than its scroll area). |
 | `screens/env_monitor.ui` | EnvironmentalMonitor (temperature / humidity). |
@@ -65,15 +64,15 @@ Column types: `station` (label at the top; its happi location groups and toolbar
 | `screens/laser_shutter.ui` | One laser source: LSS opened/closed/permission/request, entry valve, BTPS safe-to-open, destination, override, latched error + Acknowledge, user Open/Close. |
 | `screens/pdu_tripplite.py` | TrippLite PDU (pdu_snmp IOC): the PyDM version of `pduScreens/TrippLite_24.edl` (common/pdu_snmp R3.3.6), with everything that screen has: PDU info (name and location editable), PDU details (inputs, outputs, outlets, groups, phases, circuits, breakers, heatsinks), input and output details (frequency, voltage, power, current with min/max), Global Control (All On / All Off / Reboot), and per outlet its ID, name (editable), status, control state, command and ramp option. Every power command asks for confirmation; the per-outlet command is On / Off / Cycle buttons next to the current command. Power buttons are coloured by what they do: green On / All On, red Off / All Off, yellow Cycle / Reboot. The header has the IOC heartbeat and an IOC button (EDM's `ioc_soft.edl`). Fits the dock's width. |
 | `tools/gen_indicator_pvs.py` | **Dev-time only, uses ophyd** (run with the pcds conda python). Regenerates `indicator_pvs` in `config/device_types.yaml`. |
-| `tools/export_happi_devices.py` | Writes a location's `tests/devices_snapshot.yaml` from happi (`$HAPPI_CFG`, never `$HOME_DEVICE_DB`), sorted by name, e.g. `python dev/home_screen/tools/export_happi_devices.py IP2_MODS dev/mods_ip2/tests/devices_snapshot.yaml`. No happi import. |
-| `tests/` | The package's own tests (13): every device type's screen is here, every location's floorplan.yaml names its beamline / title / toolbar, and device_types.yaml covers every class active at every location. |
+| `tools/export_happi_devices.py` | Writes a location's snapshot, `tests/snapshots/<location>.yaml`, from happi (`$HAPPI_CFG`, never `$HOME_DEVICE_DB`), sorted by name, e.g. `python dev/home_screen/tools/export_happi_devices.py IP2_MODS dev/home_screen/tests/snapshots/mods_ip2.yaml`. No happi import. |
+| `tests/` | Core tests (61), no UI: device data and types (`test_devices.py`), every location's config (`test_config.py`) and toolbar commands (`test_commands.py`). `tests/snapshots/<location>.yaml`: a dated snapshot of each location's active happi devices, used instead of happi. |
 
 ## Adding a location
 
 1. Make `dev/<location>/` with `config/floorplan.yaml` (start from the location with the closest layout) and a copy of its `lucid_config/<HUTCH>_toolbar.yaml`.
 2. Copy a launcher (e.g. `mods_ip2/mods_ip2_home.sh`) and change its `SUBNET_CHECK` (as in the location's `pcds_shortcuts.sh` function) and comments.
-3. `python dev/home_screen/tools/export_happi_devices.py <BEAMLINE> dev/<location>/tests/devices_snapshot.yaml`, and copy the tests of a similar location, changing device names, PVs and counts.
-4. Run `dev/home_screen/tests`: if a class at the new location has no device type, add it to `config/device_types.yaml` (with a screen in `screens/` if it needs a new one) and run `tools/gen_indicator_pvs.py`.
+3. `python dev/home_screen/tools/export_happi_devices.py <BEAMLINE> dev/home_screen/tests/snapshots/<location>.yaml`: the tests pick up the new location by itself (any `dev/*/config/floorplan.yaml`).
+4. Run the tests: if a class at the new location has no device type, add it to `config/device_types.yaml` (with a screen in `screens/` if it needs a new one) and run `tools/gen_indicator_pvs.py`.
 
 ## Adding or changing a device screen
 
@@ -82,9 +81,16 @@ Change it here once and every location picks it up. A new class goes in `config/
 ## Tests
 
 ```bash
-cd pcdswidgets/dev/home_screen      # and each location: cd pcdswidgets/dev/las, ...
-QT_QPA_PLATFORM=offscreen PYTHONPATH=../.. \
-  /reg/g/pcds/pyps/pixi/ctrlenv-widgets/v1.2.1/src/rhel9-x86_64/.pixi/envs/default/bin/python -m pytest tests -q
+cd pcdswidgets/dev/home_screen
+PYTHONPATH=../.. /reg/g/pcds/pyps/pixi/ctrlenv-widgets/v1.2.1/src/rhel9-x86_64/.pixi/envs/default/bin/python -m pytest tests -q
 ```
 
-The tests point channel access at `127.0.0.1` only and never launch an external window. A location's tests set `HOME_FLOORPLAN` and `HOME_DEVICE_DB` to its config and snapshot (its `tests/conftest.py`).
+Core tests only: no widget is created or shown (no Qt application or display needed), channel access is pointed at `127.0.0.1`, and `run_command` is replaced so nothing external is launched. Every location (each `dev/*/config/floorplan.yaml`) is checked against its toolbar and its happi snapshot:
+
+- happi entries load and filter like `happi search` (beamline, active), happi kwargs are filled in, and the `{...}` templates fill macros and status PVs
+- device_types.yaml: every screen is in `screens/`, and every class active at every location has an entry
+- each floorplan.yaml names its beamline, title and toolbar; its hall columns and icons are consistent
+- every device, screen and toolbar button a config names exists, and every icon opens something
+- every active happi device is in exactly one area's menu (the LAS BTPS: the toolbar instead), and status PVs are filled in
+- with a happi JSON database only the floorplan.yaml's beamline is loaded
+- toolbar commands: multi-command buttons split by title, quoted arguments stay whole, the LAS racks open their PDU's screen with the prefix from its EDM launch

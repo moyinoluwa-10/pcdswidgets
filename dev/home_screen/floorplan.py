@@ -19,6 +19,7 @@ Every clickable thing resolves to a list of ``Opener`` objects:
 - anything else: click shows a menu with a sub-menu per opener
 """
 
+import functools
 import logging
 import os
 import re
@@ -90,6 +91,7 @@ FA_ALIASES = {
 }
 
 
+@functools.lru_cache(maxsize=None)
 def make_icon(name: str) -> QIcon:
     """Icons that match the screens they open: the same glyphs pcdswidgets uses for those widgets."""
     if name == "smaract" and SMARACT_ICON.is_file():
@@ -125,7 +127,8 @@ class Opener:
     """Something a click can open: a dockable screen, an external command, or a group of openers."""
 
     title: str
-    icon: QIcon | None = None
+    # Icon name (make_icon): kept as a name so building openers from the config needs no Qt application
+    icon: str = ""
     build: Callable[[], QWidget] | None = None
     command: list[str] = field(default_factory=list)
     children: list["Opener"] = field(default_factory=list)
@@ -255,7 +258,7 @@ class FloorPlanContext:
         function = self.functions.get(device.functional_group, {})
         return Opener(
             title=title or device.name,
-            icon=make_icon(function.get("icon", "cube")),
+            icon=function.get("icon", "cube"),
             build=lambda: self.dock_screen(f"device|{device.name}", lambda: self.screens.display_for_device(device)),
             channels=dtype.indicator_channels_for(device) if dtype is not None else [],
             tooltip=f"{device.name}\n{device.device_class}\n{device.prefix}",
@@ -281,7 +284,7 @@ class FloorPlanContext:
             openers.append(
                 Opener(
                     title=cfg.get("title", function),
-                    icon=make_icon(cfg.get("icon", "cube")),
+                    icon=cfg.get("icon", "cube"),
                     children=[self.device_opener(dev) for dev in sorted(groups[function], key=lambda d: d.name)],
                 )
             )
@@ -321,7 +324,7 @@ class FloorPlanContext:
                 self._screen_cache[key] = load_screen(path, macros, title)
             return self.dock_screen(f"screen|{key}", lambda: self._screen_cache[key])
 
-        return Opener(title=title, icon=make_icon(entry.get("icon", icon)), build=build, tooltip=str(path))
+        return Opener(title=title, icon=entry.get("icon", icon), build=build, tooltip=str(path))
 
     def toolbar_opener(self, tab: str, button: str, title: str = "") -> Opener:
         """
@@ -336,14 +339,14 @@ class FloorPlanContext:
                 commands = [commands[titles.index(title)]]
         except (KeyError, ValueError):
             logger.error("No toolbar button %r %r in tab %r", button, title, tab)
-            return Opener(title=f"{title or button} (missing)", icon=make_icon("exclamation-triangle"))
-        external = {"icon": make_icon("external"), "tooltip": "Opens in its own window"}
+            return Opener(title=f"{title or button} (missing)", icon="exclamation-triangle")
+        external = {"icon": "external", "tooltip": "Opens in its own window"}
         if not title and len(titles) == len(commands) > 1:
             children = [
                 Opener(title=name, command=[command], **external)
                 for name, command in zip(titles, commands, strict=True)
             ]
-            return Opener(title=button, icon=make_icon("external"), children=children)
+            return Opener(title=button, icon="external", children=children)
         return Opener(title=title or button, command=commands, **external)
 
     def rack_openers(self, rack: str, cfg: dict[str, Any]) -> list[Opener]:
@@ -404,7 +407,7 @@ class FloorPlanContext:
         openers = self.function_groups(self.devices_matching(cfg.get("locations", [station])))
         tools = [self.toolbar_opener(*tool) for tool in cfg.get("tools", [])]
         if tools:
-            openers.append(Opener(title="Tools", icon=make_icon("tools"), children=tools))
+            openers.append(Opener(title="Tools", icon="tools", children=tools))
         return openers
 
     def bay_openers(self, bay: str, cfg: dict[str, Any]) -> list[Opener]:
@@ -416,10 +419,10 @@ class FloorPlanContext:
         openers = self.function_groups(devices)
         shutters = [self.shutter_opener(src) for src, scfg in self.shutters.items() if scfg.get("bay") == bay]
         if shutters:
-            openers.append(Opener(title="Shutters", icon=make_icon("shutter"), children=shutters))
+            openers.append(Opener(title="Shutters", icon="shutter", children=shutters))
         tools = [self.toolbar_opener(*tool) for tool in cfg.get("tools", [])]
         if tools:
-            openers.append(Opener(title="Tools", icon=make_icon("tools"), children=tools))
+            openers.append(Opener(title="Tools", icon="tools", children=tools))
         return openers
 
 
@@ -447,8 +450,8 @@ def fill_menu(menu: QMenu, openers: list[Opener]):
             add_dockable_menu(menu, opener)
         elif opener.command:
             action = menu.addAction(opener.title + " ↗")
-            if opener.icon is not None:
-                action.setIcon(opener.icon)
+            if opener.icon:
+                action.setIcon(make_icon(opener.icon))
             action.setToolTip(opener.tooltip)
             action.triggered.connect(lambda _=False, cmd=opener.command: run_command(cmd))
         else:
@@ -459,8 +462,8 @@ def fill_menu(menu: QMenu, openers: list[Opener]):
 def add_group_menu(menu: QMenu, opener: Opener):
     """A sub-menu for a group, with "Open All" at the top when there are several screens."""
     sub = ClickableSubmenuMenu(opener.title, menu)
-    if opener.icon is not None:
-        sub.setIcon(opener.icon)
+    if opener.icon:
+        sub.setIcon(make_icon(opener.icon))
     dockable = [leaf for leaf in opener.leaves() if leaf.dockable]
     if len(dockable) > 1 and TabDock.dock_exists():
         many = ClickableSubmenuMenu("Open All", sub)
@@ -478,8 +481,8 @@ def add_group_menu(menu: QMenu, opener: Opener):
 def add_dockable_menu(menu: QMenu, opener: Opener):
     """A sub-menu with the TabDock options for one screen. Clicking the entry itself opens it in the dock."""
     sub = ClickableSubmenuMenu(opener.title, menu)
-    if opener.icon is not None:
-        sub.setIcon(opener.icon)
+    if opener.icon:
+        sub.setIcon(make_icon(opener.icon))
     if opener.tooltip:
         sub.setToolTip(opener.tooltip)
     if TabDock.dock_exists():

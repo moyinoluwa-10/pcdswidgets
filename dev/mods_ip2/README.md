@@ -2,7 +2,7 @@
 
 A pcdswidgets rebuild of the `mods_ip2` home screen: a drawing of the IP2 MODS table, with its optical stations in beam order: INJ (Injection) → COM (Compression) → HRM (Harmonics) → ATM (Arrival Time Monitor) → EJX (Ejection). Click a station or an icon to open the matching screen in a `TabDock`. It is a copy of `dev/mods_ip1` (same code and screens) with the IP2_MODS config: its floor plan, toolbar and happi snapshot.
 
-**This directory is only the location's config**: `config/floorplan.yaml` (the drawing, what each click opens, and its happi `beamline`, window `title` and `toolbar`), the toolbar copy, the launcher and its tests. The screen itself (code, device screens, `device_types.yaml`, tools) is the shared [home_screen](../home_screen/README.md) package, the same for every location.
+**This directory is only the location's config**: `config/floorplan.yaml` (the drawing, what each click opens, and its happi `beamline`, window `title` and `toolbar`), the toolbar copy, and the launcher. The screen itself (code, device screens, `device_types.yaml`, tools) is the shared [home_screen](../home_screen/README.md) package, the same for every location.
 
 It has **no runtime dependency on happi, ophyd, pcdsdevices, typhos or lucid**, and nothing outside `dev/` was changed.
 
@@ -76,7 +76,6 @@ Tip/tilt stages and Elliptecs can't be described by `{prefix}` alone: their PVs 
 | `mods_ip2_home.sh` | Launcher: sets this location's `subnet_check` arguments and runs `../home_screen/launch_home.sh` with `config/floorplan.yaml` (ctrlenv-widgets, this checkout's pcdswidgets and the package on `PYTHONPATH`; `HOME_SCREEN_DIR` to use another copy of the package). |
 | `config/ip2_mods_toolbar.yaml` | The toolbar (copy of `lucid_config/IP2_MODS_toolbar.yaml`, taken 2026-11-05). Station tools and shutter icons refer to it by tab, button and title. **When deploying, switch to the live file** (e.g. via the `TOOLBAR` macro); a renamed button the floor plan refers to then shows as "(missing)". |
 | `floorplan.png` | Screenshot of the floor plan (documentation only). |
-| `tests/` | pytest-qt tests (36). `tests/devices_snapshot.yaml` is a dated snapshot of the 45 active IP2_MODS happi entries that the tests use instead of the live database. |
 
 ## Config entry types (`opens:`)
 
@@ -94,26 +93,7 @@ One entry means a click opens it directly; several mean a click shows a menu.
 
 ## Tests
 
-```bash
-cd pcdswidgets/dev/mods_ip2
-QT_QPA_PLATFORM=offscreen PYTHONPATH=../.. \
-  /reg/g/pcds/pyps/pixi/ctrlenv-widgets/v1.2.1/src/rhel9-x86_64/.pixi/envs/default/bin/python -m pytest tests -q
-```
-
-The tests point channel access at `127.0.0.1` only, use the YAML device snapshot, and replace `run_command` so no external window is ever launched. They check that:
-
-- every config reference resolves, and every icon has something to open
-- every active IP2_MODS device appears in exactly one station menu, and every active class has a device type
-- stations are in beam order, and icons sit inside their station without overlapping
-- the station menus contain the expected entries
-- multi-command toolbar buttons split by title
-- station tools and shutter icons run their toolbar commands; icon clicks open the right screen in the dock
-- status dots fill in per-device happi kwargs (tip/tilt suffixes, Elliptec channels), and the icon tooltip lists bad PVs
-- spectrometers open the Qmini screen, which scrolls in a short dock; tip/tilts open the tip/tilt screen with the right axes; each Elliptec type gets exactly its sections; classes without a screen open the placeholder
-- icons shrink with the drawing; at the minimum window size no toolbar tab scrolls
-- screens taller than the dock (SmarAct, camera) scroll in it, and the window keeps its height
-- the screens load with all macros filled
-- the home screen imports nothing forbidden, and nothing from `dev/` but the `home_screen` package
+This location has no tests of its own: the [home_screen](../home_screen/README.md#tests) package's core tests check every location's `config/floorplan.yaml` (references resolve, every happi device is in exactly one menu, status PVs are filled in, toolbar commands) against its toolbar and its happi snapshot, `home_screen/tests/snapshots/mods_ip2.yaml`.
 
 ## Known gaps / next steps
 

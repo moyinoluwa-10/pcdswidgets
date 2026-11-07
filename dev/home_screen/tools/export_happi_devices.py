@@ -8,8 +8,8 @@ Runs with any python that has PyYAML.
 
 Usage::
 
-    python dev/home_screen/tools/export_happi_devices.py IP2_MODS dev/mods_ip2/tests/devices_snapshot.yaml
-    HOME_DEVICE_DB=dev/mods_ip2/tests/devices_snapshot.yaml dev/mods_ip2/mods_ip2_home.sh
+    python dev/home_screen/tools/export_happi_devices.py IP2_MODS dev/home_screen/tests/snapshots/mods_ip2.yaml
+    HOME_DEVICE_DB=dev/home_screen/tests/snapshots/mods_ip2.yaml dev/mods_ip2/mods_ip2_home.sh
 """
 
 import argparse

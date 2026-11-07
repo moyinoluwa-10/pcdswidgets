@@ -2,7 +2,7 @@
 
 Home screens rebuilt from pcdswidgets and PyDM, with no runtime dependency on happi, ophyd, pcdsdevices, typhos or lucid. They need only PyDM and a pcdswidgets.
 
-The floor-plan screens (`las` and the `mods_*` hutches) are **one package, [home_screen](home_screen/README.md)**, plus a small directory per location. The package has the code, every device screen, the tools, and `config/device_types.yaml`, the one source of truth for what each device class opens and which PVs its status dot watches. A location directory is only its launcher, `config/floorplan.yaml` (the drawing, what each click opens, its happi `beamline`, window `title` and `toolbar`), its toolbar copy, and its tests.
+The floor-plan screens (`las` and the `mods_*` hutches) are **one package, [home_screen](home_screen/README.md)**, plus a small directory per location. The package has the code, every device screen, the tools, and `config/device_types.yaml`, the one source of truth for what each device class opens and which PVs its status dot watches. A location directory is only its launcher, `config/floorplan.yaml` (the drawing, what each click opens, its happi `beamline`, window `title` and `toolbar`), and its toolbar copy.
 
 | Directory | Replaces | Style | Run |
 |---|---|---|---|
@@ -18,6 +18,6 @@ Each location has a `floorplan.png` screenshot of its floor plan; `v1` has `grid
 
 ## Making another one
 
-See [home_screen: Adding a location](home_screen/README.md#adding-a-location): a new `dev/<location>/` with its `config/floorplan.yaml` (start from the location with the closest layout), its toolbar copy, a launcher with its `subnet_check` arguments, a happi snapshot and tests. A device class that no location had yet goes in `home_screen/config/device_types.yaml` (and its screen in `home_screen/screens/`), once, for everyone.
+See [home_screen: Adding a location](home_screen/README.md#adding-a-location): a new `dev/<location>/` with its `config/floorplan.yaml` (start from the location with the closest layout), its toolbar copy, a launcher with its `subnet_check` arguments, and a happi snapshot in `home_screen/tests/snapshots/`. A device class that no location had yet goes in `home_screen/config/device_types.yaml` (and its screen in `home_screen/screens/`), once, for everyone.
 
-Each directory's README lists what its tests check.
+The [home_screen tests](home_screen/README.md#tests) are core tests (no UI) and check every location.
