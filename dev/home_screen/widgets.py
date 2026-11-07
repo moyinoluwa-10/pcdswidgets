@@ -1,13 +1,154 @@
-"""The clickable widgets: ``AreaButton`` (a station, bay, area or rack) and ``IconButton`` (with its status dot)."""
+"""
+The floor plan's clickable widgets: ``AreaButton`` (a station, bay, area or rack) and ``IconButton`` (with its
+status dot), the menus they show (groups as sub-menus with "Open All", screens with the TabDock options,
+commands marked ↗), and the icons, by the names floorplan.yaml uses.
+"""
+
+import functools
+import logging
+from pathlib import Path
 
 from alarm import PVAlarmCircle
-from menus import ClickableSubmenuMenu, fill_menu, show_floating
 from openers import Opener
+from pydm.utilities import IconFont
 from qtpy.QtCore import QEvent, QPoint, QRect, QRectF, QSize, Qt
-from qtpy.QtGui import QColor, QIcon, QMouseEvent, QPainter, QPen
+from qtpy.QtGui import QBrush, QColor, QIcon, QMouseEvent, QPainter, QPen
 from qtpy.QtWidgets import QMenu, QPushButton, QSizePolicy, QToolButton, QToolTip, QWidget
 
+import pcdswidgets
 from pcdswidgets.common.dock.tab_dock import TabDock
+
+logger = logging.getLogger(__name__)
+
+# Icons
+
+# Found through the pcdswidgets package on PYTHONPATH, wherever this directory is copied to
+SMARACT_ICON = Path(pcdswidgets.__file__).resolve().parent / "icons" / "smaract_tip_tilt_qt_icon.png"
+
+ifont = IconFont()
+
+# icon name in floorplan.yaml -> FontAwesome name, for the ones that are not literal FontAwesome names
+FA_ALIASES = {
+    "thermometer": "thermometer-half",
+    "pdu": "plug",
+    "btps": "shield-alt",
+    "spectrometer": "wave-square",
+    "elliptec": "sync-alt",
+    "power-meter": "tachometer-alt",
+    "wavefront": "bullseye",
+    "external": "external-link-alt",
+}
+
+
+@functools.lru_cache(maxsize=None)
+def make_icon(name: str) -> QIcon:
+    """Icons that match the screens they open: the same glyphs pcdswidgets uses for those widgets."""
+    if name == "smaract" and SMARACT_ICON.is_file():
+        return QIcon(str(SMARACT_ICON))
+    if name == "shutter":
+        return shutter_icon()
+    return ifont.icon(FA_ALIASES.get(name, name))
+
+
+_SHUTTER_ICON = None
+
+
+def shutter_icon() -> QIcon:
+    """Render pcdswidgets' FastShutterSymbolIcon into a QIcon."""
+    global _SHUTTER_ICON
+    if _SHUTTER_ICON is None:
+        try:
+            from pcdswidgets.symbols.valves import FastShutterSymbolIcon
+
+            symbol = FastShutterSymbolIcon()
+            symbol.brush = QBrush(QColor(90, 90, 90))
+            symbol.resize(32, 32)
+            _SHUTTER_ICON = QIcon(symbol.grab())
+            symbol.deleteLater()
+        except Exception:
+            logger.debug("Falling back to a FontAwesome shutter icon", exc_info=True)
+            _SHUTTER_ICON = ifont.icon("door-closed")
+    return _SHUTTER_ICON
+
+
+# Menus
+
+
+class ClickableSubmenuMenu(QMenu):
+    """A QMenu where clicking a sub-menu entry runs its default action (opens it in the dock)."""
+
+    def mousePressEvent(self, event: QMouseEvent) -> None:  # type: ignore
+        if event.button() == Qt.LeftButton:
+            action = self.actionAt(event.pos())
+            submenu = action.menu() if action is not None else None
+            default = submenu.defaultAction() if submenu is not None else None
+            if default is not None:
+                default.trigger()
+                self.close()
+                return
+        super().mousePressEvent(event)
+
+
+def fill_menu(menu: QMenu, openers: list[Opener]):
+    """Add openers to a menu: groups become sub-menus, screens get the TabDock options."""
+    for opener in openers:
+        if opener.children:
+            add_group_menu(menu, opener)
+        elif opener.dockable:
+            add_dockable_menu(menu, opener)
+        elif opener.command:
+            action = menu.addAction(opener.title + " ↗")
+            if opener.icon:
+                action.setIcon(make_icon(opener.icon))
+            action.setToolTip(opener.tooltip)
+            action.triggered.connect(lambda _=False, o=opener: o.run())
+        else:
+            menu.addAction(opener.title).setEnabled(False)
+    menu.setToolTipsVisible(True)
+
+
+def add_group_menu(menu: QMenu, opener: Opener):
+    """A sub-menu for a group, with "Open All" at the top when there are several screens."""
+    sub = ClickableSubmenuMenu(opener.title, menu)
+    if opener.icon:
+        sub.setIcon(make_icon(opener.icon))
+    dockable = [leaf for leaf in opener.leaves() if leaf.dockable]
+    if len(dockable) > 1 and TabDock.dock_exists():
+        many = ClickableSubmenuMenu("Open All", sub)
+        TabDock.add_many_to_dock_user_menu(
+            widget_list=lambda d=dockable: [leaf.build() for leaf in d],
+            title_list=[leaf.title for leaf in dockable],
+            menu=many,
+        )
+        sub.addMenu(many)
+        sub.addSeparator()
+    fill_menu(sub, opener.children)
+    menu.addMenu(sub)
+
+
+def add_dockable_menu(menu: QMenu, opener: Opener):
+    """A sub-menu with the TabDock options for one screen. Clicking the entry itself opens it in the dock."""
+    sub = ClickableSubmenuMenu(opener.title, menu)
+    if opener.icon:
+        sub.setIcon(make_icon(opener.icon))
+    if opener.tooltip:
+        sub.setToolTip(opener.tooltip)
+    if TabDock.dock_exists():
+        TabDock.add_to_dock_user_menu(widget=opener.build, title=opener.title, menu=sub)
+    else:
+        sub.addAction("Open in New Window").triggered.connect(lambda _=False, o=opener: show_floating(o))
+    sub.setDefaultAction(sub.actions()[0])
+    menu.addMenu(sub)
+
+
+def show_floating(opener: Opener):
+    """Open a screen as its own window, for when there is no TabDock."""
+    widget = opener.build()
+    widget.setWindowTitle(opener.title)
+    TabDock.show_widget_at_cursor(widget)
+
+
+# Buttons
 
 
 class OpenerButtonMixin:

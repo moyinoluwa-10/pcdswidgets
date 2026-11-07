@@ -4,27 +4,26 @@ icons, built from that location's ``floorplan.yaml``.
 
 The drawing (``Hall``) is laid out by Qt from the floorplan.yaml "hall" section: columns of stations, bays,
 areas and racks. ``FloorPlan`` keeps its aspect ratio and places the icons on it. What each area and icon opens
-comes from ``FloorPlanContext`` (context.py) as a list of ``Opener`` objects (openers.py):
+comes from ``FloorPlanContext`` (context.py) as a list of ``Opener`` objects (openers.py). A click on an area
+or icon (widgets.py) does this with them:
 
 - one dockable opener: left click opens it in the dock (ctrl: new tab, shift: new window),
   right click shows the dock options menu
 - one external opener: click runs the command (EDM and other standalone tools)
-- anything else: click shows a menu with a sub-menu per opener (menus.py)
+- anything else: click shows a menu with a sub-menu per opener
 
-The rest of the package: buttons.py (the area and icon widgets), icons.py, pdu.py (racks and PDUs),
-devices.py (happi entries and device screens), alarm.py (status dots).
+The rest of the package: devices.py (happi entries and device screens), alarm.py (status dots).
 """
 
 import logging
 from typing import Any
 
-from buttons import AreaButton, IconButton
 from context import FloorPlanContext
-from icons import make_icon
 from openers import Opener
 from qtpy.QtCore import QPoint, QSize
 from qtpy.QtGui import QColor, QPainter, QPen
 from qtpy.QtWidgets import QHBoxLayout, QSizePolicy, QVBoxLayout, QWidget
+from widgets import AreaButton, IconButton, make_icon
 
 logger = logging.getLogger(__name__)
 

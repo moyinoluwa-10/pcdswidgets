@@ -5,8 +5,7 @@ from pathlib import Path
 
 import pytest
 from conftest import LOCATIONS, PACKAGE_DIR, snapshot
-from context import FloorPlanContext
-from pdu import RACK_IN_NAME, pdu_macros
+from context import RACK_IN_NAME, FloorPlanContext, pdu_macros
 
 LAS = PACKAGE_DIR.parent / "las"
 
