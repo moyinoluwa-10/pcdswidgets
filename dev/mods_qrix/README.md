@@ -1,99 +1,43 @@
-# QRIX MODS (LM1K2) floor-plan home screen
+# QRIX MODS (LM1K2) home screen
 
-A pcdswidgets rebuild of the `mods_qrix` home screen: a drawing of the QRIX MODS table, with its optical stations in beam order: INJ (Injection) → COM (Compression) → ATM (Arrival Time Monitor) → OPA (Optical Parametric Amplification) → EJX (Ejection), in the order of their numbered happi location groups. Click a station or an icon to open the matching screen in a `TabDock`. It is a copy of `dev/mods_ip1` (same code and screens) with the QRIX_MODS config: its floor plan, toolbar and happi snapshot.
+The `mods_qrix` home screen on the shared [home_screen](../home_screen/README.md) package: the QRIX MODS table, stations in beam order INJ → COM → ATM → OPA → EJX. How clicking, docking and status dots work: [Using a home screen](../home_screen/README.md#using-a-home-screen).
 
-**This directory is only the location**: `floorplan.yaml` (the drawing, what each click opens, and its happi `beamline`, window `title` and `toolbar`), `mods_qrix_home.py` (the home screen) and `mods_qrix_home.sh` (dev launcher). The screen itself (code, device screens, `device_types.yaml`, tools) is the shared [home_screen](../home_screen/README.md) package, the same for every location.
-
-It has **no runtime dependency on happi, ophyd, pcdsdevices, typhos or lucid**, and nothing outside `dev/` was changed.
+![floor plan](floorplan.png)
 
 ## Run it
 
 ```bash
-pcdswidgets/dev/mods_qrix/mods_qrix_home.sh &      # foreground without "&", like the production launchers
+pcdswidgets/dev/mods_qrix/mods_qrix_home.sh &                               # dev
+pydm --hide-nav-bar --hide-menu-bar --hide-status-bar mods_qrix_home.py     # production ("Option 4"), from this directory
 ```
 
-Environment: `ctrlenv-widgets/v1.2.1`, with this checkout's pcdswidgets first on `PYTHONPATH`. In production (the org launcher's "Option 4"), from this directory: `pydm --hide-nav-bar --hide-menu-bar --hide-status-bar mods_qrix_home.py`. **It connects to the real IOCs.**
-
-## What `mods_qrix` runs today
-
-```
-mods_qrix                                  (bash function, /cds/group/pcds/setup/pcds_shortcuts.sh:430)
- ├─ subnet_check qrix las rix              (read-only / write-enabled message)
- └─ $PYPS_SITE_TOP/config/las/mods_qrix_home.sh &
-      └─ $EPICS_SETUP/lucid-launcher.sh QRIX_MODS          ("Option 2: lucid launcher with dev_conda")
-           └─ lucid QRIX_MODS --toolbar=$LUCID_CONFIG/QRIX_MODS_toolbar.yaml
-```
-
-LUCID builds a grid of every active happi device with `beamline: QRIX_MODS`, grouped by `location_group` × `functional_group`, and opens typhos screens. This rebuild uses the same happi data, the same toolbar and the same `subnet_check`.
+It connects to the real IOCs. Today the `mods_qrix` shell function runs `subnet_check qrix las rix`, then `$PYPS_SITE_TOP/config/las/mods_qrix_home.sh`, which starts LUCID.
 
 ## What you can click
 
-![floor plan](floorplan.png)
-
-| Where | Click | Opens |
-|---|---|---|
-| **Station** (INJ, COM, ATM, OPA, EJX) | menu | Every control in the station, as drop-downs by function (Cameras, SmarAct Motors, Spectrometers, Elliptecs), then Tools (that station's toolbar buttons). Groups have "Open All". |
-| **Cameras** / **SmarAct** / **Spectrometer** / **Elliptecs** icons | menu | That station's devices of that function. |
-
-Station → happi location groups: INJ `1_lm1k2_inj`, COM `2_lm1k2_com`, ATM `3_lm1k2_atm`, OPA `4_lm1k2_opa`, EJX `5_lm1k2_ejx`. Station tools: ATM "Dispersion Scan ATM" (by its name) and OPA "THz 1D-scan" (it scans `LM1K2:OPA_MP1_DLY1`). The other toolbar buttons (LCLS Home, Cam Viewer, Environmental Sensors, TPR, iocmanager, Dispersion Scan Pump, the digitizers) are only in the toolbar. QRIX_MODS has no environmental sensors in happi (the Raritan "Environmental Sensors" screen is a toolbar button) and no shutters, so there are no T/H or shutter icons.
-
-"Direct" items follow the `TabDock` conventions: a click replaces the current tab, ctrl+click opens a new tab, shift+click opens a new window, and a right click shows the options menu. External tools always open in their own window.
-
-Each icon has a small status dot: the worst alarm (typhos colours) across the PVs of everything it opens. When it isn't green, hovering the icon also lists the PVs that aren't OK. The drawing keeps its proportions and scales with the window; below 75 % scale the icons drop their labels.
-
-Under the floor plan is the full QRIX_MODS toolbar (the live `lucid_config/QRIX_MODS_toolbar.yaml`).
-
-## Device screens
-
-42 active devices, 8 classes:
-
-| Class | Count | Screen |
-|---|---|---|
-| `SmarAct` | 13 | `home_screen/screens/smaract.py`, the IOC release's own widgets (`common/smaract/R4.0.0`) |
-| `SmarActEncodedTipTilt` (7), `SmarActTipTilt` (4) | 11 | `home_screen/screens/tip_tilt.py`, pcdswidgets' `MotorTipTiltDouble`: d-pad, step size and position per axis, invert, per-axis expert buttons. Tip (`{prefix}{tip_pv}`) is left/right, tilt is up/down. The encoded stages (`STYLE: MotorRecord`) use their motor records; the open-loop ones (COM BS7 and MR4, OPA MP1 MR2, EJX MR3) the SmarAct step fields |
-| `EllRotation` (5), `EllLinear` (4), `Ell9` (1) | 10 | `home_screen/screens/elliptec.py` + `elliptec.ui`, one screen for every Thorlabs Elliptec (thorlabs-ell IOC, PVs `{prefix}:M{channel}:...`). The `STAGE` macro (`continuous`, `ell6`, `ell9`) drops the sections whose records that stage type doesn't load. Scrolls in a short dock |
-| `LasBasler` | 6 | `home_screen/screens/las_basler.ui` (camera viewer + settings panel `home_screen/screens/las_basler_settings.ui`) |
-| `QminiSpectrometer` | 2 | `home_screen/screens/qmini.py`, the IOC release's own embedded screen (`common/qmini/R3.1.1/qminiScreens/QminiSpectrometer.embedded.py`). Scrolls in a short dock |
-
-`home_screen/config/device_types.yaml` is mods_ip1's, without the power meter (`El3174AiCh`). It keeps `Ell6` and `EnvironmentalMonitor` (none in QRIX_MODS today), whose screens are here, so such a device added to happi just works.
-
-Every active class has a screen. A class without `screen:` in `home_screen/config/device_types.yaml` opens a placeholder (name, class, prefix, "no screen yet") and still has a status dot.
-
-### Per-device happi kwargs
-
-Tip/tilt stages and Elliptecs can't be described by `{prefix}` alone: their PVs depend on happi kwargs (`tip_pv: '{{ioc_tip_suffix}}'`, `channel: '{{ioc_channel}}'`, `port: '15'`). `devices.py` keeps each entry's kwargs, with the `{{field}}` templates filled in from the entry, and makes them available as `{tip_pv}`, `{channel}`, ... in `device_types.yaml`. For example, `LM1K2:COM_MP2_MR4` with `tip_pv: _TIP1` gives `{prefix}{tip_pv}:STEP_COUNT` → `LM1K2:COM_MP2_MR4_TIP1:STEP_COUNT`. `home_screen/tools/gen_indicator_pvs.py` builds such classes with the placeholders listed under `template_kwargs:`.
-
-## Files
-
-| Path | What it is |
+| Where | Opens |
 |---|---|
-| [`../home_screen/`](../home_screen/README.md) | The shared package: home screen, floor-plan code, every device screen, `home_screen/config/device_types.yaml` (device class → screen, macros, status PVs) and the tools (`gen_indicator_pvs.py`, `export_happi_devices.py`). |
-| `floorplan.yaml` | **All layout and behaviour**: the drawing (stations left to right, relative widths/heights, colours, preferred height), station → location groups and tools, icon positions (percent of their station) and what each opens. Its `toolbar:` is the live `/cds/group/pcds/epics-dev/screens/pydm/lucid_config/QRIX_MODS_toolbar.yaml`: a renamed button the floor plan refers to shows as "(missing)". Defaults (menu `functions`, colours) come from the package. Edit this to move or add things; no code changes needed. |
-| `mods_qrix_home.py` | The home screen: the shared `home_screen/example/example_home.py`, opening this directory's `floorplan.yaml`. Production runs it directly with pydm. |
-| `mods_qrix_home.sh` | Dev launcher: this location's `subnet_check` arguments, then `../home_screen/launch_home.sh mods_qrix_home.py` (ctrlenv-widgets, this checkout's pcdswidgets on `PYTHONPATH`). |
-| `floorplan.png` | Screenshot of the floor plan (documentation only). |
+| **Station** | Its devices by function (Cameras, SmarAct Motors, Spectrometers, Elliptecs), then its Tools. |
+| **Cameras** / **SmarAct** / **Spectrometer** / **Elliptecs** icons | That station's devices of that function. |
 
-## Config entry types (`opens:`)
+| Station | happi location group | Tools |
+|---|---|---|
+| INJ | `1_lm1k2_inj` | |
+| COM | `2_lm1k2_com` | |
+| ATM | `3_lm1k2_atm` | Dispersion Scan ATM |
+| OPA | `4_lm1k2_opa` | THz 1D-scan |
+| EJX | `5_lm1k2_ejx` | |
 
-```yaml
-- device: lm1k2_inj_env_sens                                  # a happi device, via home_screen/config/device_types.yaml
-- devices: {location: [5_lm1k2_ejx], function: [elliptecs]}   # all matching happi devices, as a sub-menu
-- screen: env_monitor.ui                                      # any pydm screen in screens/ (or an absolute path)
-  macros: {PREFIX: LM1K2:INJ_BHC_AI_01, NAME: inj}
-  title: INJ T/H
-- toolbar: [Tools, THz 1D-scan]                               # run a toolbar button's command (external)
-- toolbar: [Tools, <button>, <title>]                         # one command of a button with several titles
-```
+QRIX_MODS has no environmental sensors in happi and no shutters, so there are no T/H or shutter icons. Every other toolbar button is only in the toolbar.
 
-One entry means a click opens it directly; several mean a click shows a menu.
+## Devices
 
-## Tests
+42 active devices (snapshot: `home_screen/tests/snapshots/mods_qrix.yaml`):
 
-This location has no tests of its own: the [home_screen](../home_screen/README.md#tests) package's core tests check every location's `floorplan.yaml` (references resolve, every happi device is in exactly one menu, status PVs are filled in, toolbar commands) against its toolbar and its happi snapshot, `home_screen/tests/snapshots/mods_qrix.yaml`.
-
-## Known gaps / next steps
-
-- **Spectrometer status dots watch big waveforms.** `QminiSpectrometer`'s generated `indicator_pvs` include `:SPECTRUM` and `:WAVELENGTHS` (the same signals typhos watched). They work, but each update is a full array; trimming them to `:STATUS` / `:W0_FIT` would be cheaper. `gen_indicator_pvs.py` would put them back on the next run, so this needs a small exclude option there first.
-- **Station layout is schematic** (equal boxes in beam order), not the real table. Fine-tune widths, heights and icon positions in `floorplan.yaml`, or replace with a sketch of the table.
-- **Station order** follows the happi location-group numbers (ATM 3, OPA 4); reorder `hall: columns:` if the table is laid out differently.
-- **Not yet tried against the live LM1K2 IOCs.** The code and screens are the ones tested live on IP1; the QRIX config (floor plan, snapshot, toolbar) has only been checked offline.
+| Class | Count | Screen (`home_screen/screens/`) |
+|---|---|---|
+| `SmarAct` | 13 | `smaract.py` |
+| `SmarActEncodedTipTilt`, `SmarActTipTilt` | 7 + 4 | `tip_tilt.py` |
+| `EllRotation`, `EllLinear`, `Ell9` | 5 + 4 + 1 | `elliptec.py` |
+| `LasBasler` | 6 | `las_basler.ui` |
+| `QminiSpectrometer` | 2 | `qmini.py` |

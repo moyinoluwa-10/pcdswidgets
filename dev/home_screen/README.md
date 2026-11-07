@@ -32,6 +32,14 @@ pydm --hide-nav-bar --hide-menu-bar --hide-status-bar las_home.py
 
 `opens:` entries: `device: <happi name>`, `devices: {location: [...], function: [...]}` (a sub-menu), `shutter: <LSn>`, `screen: <file>` with `macros:` and `title:` (from `screens/` here, a `screens/` next to the location's floorplan.yaml, or an absolute path), `toolbar: [<tab>, <button>]` or `[<tab>, <button>, <title>]` (runs the toolbar button's command). One entry: a click opens it directly; several: a menu.
 
+## Using a home screen
+
+- **Areas** (stations, bays) open a menu of every control in them, by function, then their shutters and Tools (toolbar buttons). Groups have "Open All". **Icons** open their own entries: one entry directly, several as a menu.
+- Opening follows the `TabDock` conventions: a click replaces the current tab, ctrl+click opens a new tab, shift+click a new window, a right click shows the options menu. Docked screens taller than the dock scroll. External tools (toolbar commands, EDM, marked ↗) open in their own window.
+- Each icon has a status dot: the worst alarm (typhos colours) across the PVs of everything it opens. Hovering lists the PVs that aren't OK.
+- The drawing keeps its proportions and scales with the window; below 75 % of `reference_height` icons drop their labels. The location's full toolbar is under it.
+- A device class without a `screen:` in `config/device_types.yaml` opens a placeholder (name, class, prefix) and still has a status dot.
+
 ## Files
 
 | Path | What it is |
@@ -71,6 +79,8 @@ To deploy, copy `home_screen/` once and each location's directory under it or ne
 
 Change it here once and every location picks it up. A new class goes in `config/device_types.yaml` (`screen`, `macros`, `template_kwargs`); then regenerate its `indicator_pvs` with `tools/gen_indicator_pvs.py`.
 
+Some classes' PVs depend on happi kwargs, not only `{prefix}` (tip/tilt stages: `tip_pv: '{{ioc_tip_suffix}}'`; Elliptecs: `channel: '{{ioc_channel}}'`). `devices.py` keeps each entry's kwargs with the `{{field}}` templates filled in from the entry, as `{tip_pv}`, `{channel}`, ... in `device_types.yaml`: `LM1K2:COM_MP2_MR4` with `tip_pv: _TIP1` gives `{prefix}{tip_pv}:STEP_COUNT` → `LM1K2:COM_MP2_MR4_TIP1:STEP_COUNT`. `gen_indicator_pvs.py` builds such classes with the placeholders listed under `template_kwargs:`.
+
 ## Tests
 
 ```bash
@@ -89,3 +99,7 @@ Core tests only: no widget is created or shown (no Qt application or display nee
 - every active happi device is in exactly one area's menu (the LAS BTPS: the toolbar instead), and status PVs are filled in
 - with a happi JSON database only the floorplan.yaml's beamline is loaded
 - toolbar commands: multi-command buttons split by title, quoted arguments stay whole, the LAS racks open their PDU's screen with the prefix from its EDM launch
+
+## Known gaps
+
+- **Spectrometer status dots watch big waveforms.** `QminiSpectrometer`'s `indicator_pvs` include `:SPECTRUM` and `:WAVELENGTHS` (what typhos watched): every update is a full array. `:STATUS` / `:W0_FIT` would be cheaper, but `gen_indicator_pvs.py` needs an exclude option first, or it puts them back.

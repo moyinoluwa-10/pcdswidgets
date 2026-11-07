@@ -14,7 +14,7 @@ The floor-plan screens (`las` and the `mods_*` hutches) are **one package, [home
 | [mods_crix](mods_crix/README.md) | `mods_crix` (LUCID, `CRIX_MODS`, LM2K2) | CRIX table (INJ → COM → ATM → HRM → EJX) | `dev/mods_crix/mods_crix_home.sh` |
 | [v1](v1/README.md) | `las` (LUCID), in LUCID's own style | LUCID look-alike: auto-generated device grid (location × function) + toolbar + TabDock. Standalone (its own copies of the device code and screens) | `dev/v1/las_home.sh` |
 
-Each location has a `floorplan.png` screenshot of its floor plan; `v1` has `grid.png`, its device grid. mods_ip1 has been tested against live IOCs; mods_ip2, mods_qrix and mods_crix have so far only been checked offline.
+Each location has a `floorplan.png` screenshot of its floor plan; `v1` has `grid.png`, its device grid. All five floor-plan locations have been tested against live IOCs.
 
 ## Making another one
 
