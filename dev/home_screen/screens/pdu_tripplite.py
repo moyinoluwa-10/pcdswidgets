@@ -1,9 +1,10 @@
 """
 TrippLite PDU screen (pdu_snmp IOC, TrippLitePdu_N.db): the PyDM version of pduScreens/TrippLite_24.edl.
 
-Same content as the EDM screen (common/pdu_snmp R3.3.6), grouped the same way:
+Same content as the EDM screen (common/pdu_snmp R3.3.6), without its IOC screen link and heartbeat, grouped the
+same way:
 
-- header: PDU type, prefix, IOC screen (EDM's ioc_soft.edl) and IOC heartbeat
+- header: PDU type, prefix
 - Power Distribution Unit Info: name and location (editable, autosaved), status, model
 - PDU Details: number of inputs, outputs, outlets, groups, phases, circuits, breakers, heatsinks
 - Input Details: frequency, voltage, voltage min / max
@@ -16,19 +17,15 @@ command menu is On / Off / Cycle buttons here, with the outlet's current command
 
 Macros:
     PRE     PDU PV prefix, e.g. LAS:LHN:PWR:07
-    IOC     IOC PV prefix, for the heartbeat and IOC screen (default: IOC:{PRE})
     TITLE   heading text, e.g. the toolbar button's name (optional)
     N_CHAN  number of outlets (default 24)
 """
 
 from pydm import Display
-from pydm.widgets import PyDMEnumComboBox, PyDMLabel, PyDMLineEdit, PyDMPushButton, PyDMShellCommand
+from pydm.widgets import PyDMEnumComboBox, PyDMLabel, PyDMLineEdit, PyDMPushButton
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QFont
 from qtpy.QtWidgets import QGridLayout, QGroupBox, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout
-
-# The IOC screen the EDM header links to (iocAdmin's ioc_soft.edl)
-IOC_SCREEN = "/reg/g/pcds/epics/iocAdmin/R3.1.16-1.3.2/iocScreens/ioc_soft.edl"
 
 # setPduOutletCommand states
 TURN_OFF = 1
@@ -64,7 +61,7 @@ def color_button(button: PyDMPushButton, kind: str) -> PyDMPushButton:
     """Green for on, red for off, yellow for cycle / reboot; faded when disabled (no write access or disconnected)."""
     bg, hover, fg, disabled_bg, disabled_fg = BUTTON_COLORS[kind]
     button.setStyleSheet(
-        f"PyDMPushButton {{ background-color: {bg}; color: {fg}; font-weight: 500;"
+        f"PyDMPushButton {{ background-color: {bg}; color: {fg};"
         f" border: 1px solid rgba(0, 0, 0, 90); border-radius: 3px; padding: 2px 2px; }}"
         f"PyDMPushButton:hover {{ background-color: {hover}; }}"
         f"PyDMPushButton:pressed {{ border: 2px solid rgba(0, 0, 0, 150); }}"
@@ -102,7 +99,6 @@ class TrippLitePdu(Display):
         super().__init__(parent=parent, args=args, macros=macros)
         macros = macros or {}
         self.pre = macros["PRE"]
-        self.ioc = macros.get("IOC") or f"IOC:{self.pre}"
         self.n_chan = int(macros.get("N_CHAN", 24))
         self.setWindowTitle(macros.get("TITLE") or self.pre)
         self.setup_ui(macros.get("TITLE", ""))
@@ -139,18 +135,6 @@ class TrippLitePdu(Display):
         row.addSpacing(24)
         row.addWidget(prefix)
         row.addStretch()
-        ioc = PyDMShellCommand()
-        ioc.setText("IOC")
-        ioc.setToolTip(f"{self.ioc}: IOC status screen (EDM)")
-        ioc.commands = [f'edm -x -eolc -m "ioc={self.ioc}" {IOC_SCREEN}']
-        ioc.showIcon = False
-        row.addWidget(ioc)
-        heartbeat = value_label(f"ca://{self.ioc}:HEARTBEAT", 60, f"{self.ioc}:HEARTBEAT", alarm=True)
-        heartbeat.alarmSensitiveBorder = True
-        # Fixed, not Ignored: with a zero size hint the row's stretch would leave it no room
-        heartbeat.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
-        heartbeat.setFixedWidth(60)
-        row.addWidget(heartbeat)
         return row
 
     def info_box(self) -> QGroupBox:

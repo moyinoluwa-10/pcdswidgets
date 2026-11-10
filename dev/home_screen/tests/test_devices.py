@@ -48,7 +48,7 @@ def test_templates_fill_macros_and_status_pvs():
     )
     dtype = types["pcdsdevices.epics_motor.SmarActTipTilt"]
     assert dtype.macros_for(tip_tilt)["TIP"] == "LM1K4:OPA_MP1_MR1_TIP1"
-    assert "ca://LM1K4:OPA_MP1_MR1_TILT1:STEP_COUNT" in dtype.indicator_channels_for(tip_tilt)
+    assert "ca://LM1K4:OPA_MP1_MR1_TILT1.RBV" in dtype.indicator_channels_for(tip_tilt)
     elliptec = DeviceInfo(
         name="wp1", device_class="pcdsdevices.device_types.Ell9", prefix="LM1K4:EJX:ELL:1", kwargs={"channel": "3"}
     )

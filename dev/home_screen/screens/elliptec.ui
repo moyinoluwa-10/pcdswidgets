@@ -100,7 +100,7 @@
           </size>
          </property>
          <property name="toolTip">
-          <string>Controller status (STATUS)</string>
+          <string>Controller status</string>
          </property>
          <property name="alarmSensitiveBorder">
           <bool>true</bool>
@@ -160,7 +160,7 @@
              </size>
             </property>
             <property name="toolTip">
-             <string>Current position (CURPOS)</string>
+             <string>Current position</string>
             </property>
             <property name="showUnits">
              <bool>true</bool>
@@ -202,7 +202,7 @@
           <item>
            <widget class="PyDMLineEdit" name="move_value">
             <property name="toolTip">
-             <string>Target position (MOVE)</string>
+             <string>Target position</string>
             </property>
             <property name="showUnits">
              <bool>true</bool>
@@ -215,7 +215,7 @@
           <item>
            <widget class="PyDMEnumComboBox" name="move_choice">
             <property name="toolTip">
-             <string>Target position (MOVE)</string>
+             <string>Target position</string>
             </property>
             <property name="channel">
              <string>ca://${MOTOR}:MOVE</string>
@@ -254,7 +254,7 @@
           <item>
            <widget class="PyDMPushButton" name="jog_bwd">
             <property name="toolTip">
-             <string>Jog backward by the jog step (MOVE_BWD)</string>
+             <string>Jog backward by the jog step</string>
             </property>
             <property name="text">
              <string>◀ Back</string>
@@ -270,7 +270,7 @@
           <item>
            <widget class="PyDMPushButton" name="jog_fwd">
             <property name="toolTip">
-             <string>Jog forward by the jog step (MOVE_FWD)</string>
+             <string>Jog forward by the jog step</string>
             </property>
             <property name="text">
              <string>Fwd ▶</string>
@@ -327,7 +327,7 @@
              </size>
             </property>
             <property name="toolTip">
-             <string>Jog step size (GET_JOG)</string>
+             <string>Jog step size</string>
             </property>
             <property name="showUnits">
              <bool>true</bool>
@@ -340,7 +340,7 @@
           <item>
            <widget class="PyDMLineEdit" name="jog_step_set">
             <property name="toolTip">
-             <string>Set the jog step size (SET_JOG)</string>
+             <string>Set the jog step size</string>
             </property>
             <property name="channel">
              <string>ca://${MOTOR}:SET_JOG</string>
@@ -366,7 +366,7 @@
           <item>
            <widget class="PyDMPushButton" name="home">
             <property name="toolTip">
-             <string>Home the stage (HOME)</string>
+             <string>Home the stage</string>
             </property>
             <property name="text">
              <string>Home</string>
@@ -382,7 +382,7 @@
           <item>
            <widget class="PyDMPushButton" name="optimize">
             <property name="toolTip">
-             <string>Optimize the motor frequencies (OPTIMIZE)</string>
+             <string>Optimize the motor frequencies</string>
             </property>
             <property name="text">
              <string>Optimize</string>
@@ -398,7 +398,7 @@
           <item>
            <widget class="PyDMPushButton" name="clean">
             <property name="toolTip">
-             <string>Clean the mechanics: runs the stage over its range (CLEAN_MECH)</string>
+             <string>Clean the mechanics: runs the stage over its range</string>
             </property>
             <property name="text">
              <string>Clean</string>
@@ -414,7 +414,7 @@
           <item>
            <widget class="PyDMPushButton" name="stop">
             <property name="toolTip">
-             <string>Stop cleaning / optimizing (STOP)</string>
+             <string>Stop cleaning / optimizing</string>
             </property>
             <property name="text">
              <string>Stop</string>
@@ -448,7 +448,7 @@
         <item row="0" column="1">
          <widget class="PyDMLineEdit" name="name0">
           <property name="toolTip">
-           <string>Name of position 0 (NAME0)</string>
+           <string>Name of position 0</string>
           </property>
           <property name="channel">
            <string>ca://${MOTOR}:NAME0</string>
@@ -465,7 +465,7 @@
         <item row="0" column="3">
          <widget class="PyDMLineEdit" name="name1">
           <property name="toolTip">
-           <string>Name of position 1 (NAME1)</string>
+           <string>Name of position 1</string>
           </property>
           <property name="channel">
            <string>ca://${MOTOR}:NAME1</string>
@@ -482,7 +482,7 @@
         <item row="1" column="1">
          <widget class="PyDMLineEdit" name="name2">
           <property name="toolTip">
-           <string>Name of position 2 (NAME2)</string>
+           <string>Name of position 2</string>
           </property>
           <property name="channel">
            <string>ca://${MOTOR}:NAME2</string>
@@ -499,7 +499,7 @@
         <item row="1" column="3">
          <widget class="PyDMLineEdit" name="name3">
           <property name="toolTip">
-           <string>Name of position 3 (NAME3)</string>
+           <string>Name of position 3</string>
           </property>
           <property name="channel">
            <string>ca://${MOTOR}:NAME3</string>
@@ -536,9 +536,6 @@
             <height>0</height>
            </size>
           </property>
-          <property name="toolTip">
-           <string>${MOTOR}:STAGE_TYPE</string>
-          </property>
           <property name="channel">
            <string>ca://${MOTOR}:STAGE_TYPE</string>
           </property>
@@ -564,9 +561,6 @@
             <width>60</width>
             <height>0</height>
            </size>
-          </property>
-          <property name="toolTip">
-           <string>${MOTOR}:SERIAL_NO</string>
           </property>
           <property name="channel">
            <string>ca://${MOTOR}:SERIAL_NO</string>
@@ -594,9 +588,6 @@
             <height>0</height>
            </size>
           </property>
-          <property name="toolTip">
-           <string>${MOTOR}:FIRMWARE_VER</string>
-          </property>
           <property name="channel">
            <string>ca://${MOTOR}:FIRMWARE_VER</string>
           </property>
@@ -622,9 +613,6 @@
             <width>60</width>
             <height>0</height>
            </size>
-          </property>
-          <property name="toolTip">
-           <string>${MOTOR}:TRAVEL_RANGE</string>
           </property>
           <property name="channel">
            <string>ca://${MOTOR}:TRAVEL_RANGE</string>

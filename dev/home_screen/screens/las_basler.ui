@@ -189,13 +189,13 @@
        <rect>
         <x>430</x>
         <y>70</y>
-        <width>450</width>
+        <width>390</width>
         <height>340</height>
        </rect>
       </property>
       <property name="minimumSize">
        <size>
-        <width>450</width>
+        <width>390</width>
         <height>340</height>
        </size>
       </property>

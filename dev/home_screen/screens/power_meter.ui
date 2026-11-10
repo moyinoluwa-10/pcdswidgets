@@ -54,7 +54,7 @@
       </font>
      </property>
      <property name="toolTip">
-      <string>Measured power (.VAL)</string>
+      <string>Measured power</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
